@@ -1,0 +1,8 @@
+# Decision demo (synthetic) - exercises if / jump / directional sensing.
+# Worker at x=2. West neighbour is a data cube, so the "if w == datacube" branch
+# runs: step west onto the cube, then west again into the hole -> exit.
+# (Not the real Year 05 grid; a self-consistent test of control flow.)
+name Decision Demo
+dim 5 1
+row O1@.O
+goal all_exited

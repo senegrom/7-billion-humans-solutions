@@ -1,0 +1,11 @@
+# Year 03 - Transport Squad (single-worker reconstruction).
+# Move the data cube down to the delivery pad. Self-consistent regression case:
+# the community's known-good solution wins; a hand-authored grid, not game data.
+name Transport Squad
+dim 1 4
+# x=0 column, y increases downward
+row @
+row 5
+row .
+row G
+goal cubes_on_goals

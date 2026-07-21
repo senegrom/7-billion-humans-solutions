@@ -1,0 +1,9 @@
+# Year 14 - Intro to Shredding (single-worker reconstruction).
+# Pick up the cube and feed it to the shredder. Self-consistent regression case.
+name Intro to Shredding
+dim 1 4
+row @
+row 5
+row .
+row S
+goal shredded 1
