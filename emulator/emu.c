@@ -77,6 +77,7 @@ typedef struct {
     int  tgt_x, tgt_y;   /* aligned-hole-exit target (or -1) */
     MemVal mem[NMEM];
     int  fe_idx[MAXFOREACH];      /* foreachdir loop positions */
+    unsigned char fe_ord[MAXFOREACH][8];   /* per-sweep direction order */
     bool listening;               /* parked on a listenfor */
     bool heard;                   /* release flag set by a matching tell */
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
@@ -483,7 +484,7 @@ static void load_level(const char *path, Level *L) {
     fclose(f);
     if (L->w == 0 || L->h == 0) die("level missing dim");
     for (int i = 0; i < L->ncubes; i++)
-        if (L->cubes[i].mode != CB_FIXED) L->has_random = true;
+        if (L->cubes[i].mode == CB_RANDU) L->has_random = true;   /* -1 = blank, not random */
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++)
             if (L->terr[y][x] == T_PRINTER) L->has_random = true;
@@ -682,7 +683,13 @@ static void parse_line(Program *P, char *src) {
             ins->op = OP_ASSIGN; ins->akind = 1;
             char ov[24] = {0};
             if (sscanf(rest, "%23s", ov) == 1 && operand_from(ov, &ins->op1)) ;
-            else ins->op = OP_UNSUPPORTED;
+            else if (!strncmp(rest, "nothing", 7)) ins->akind = 4;   /* clear slot */
+            else {
+                /* multi-tile form "set sw,n": remember one of them at random */
+                ins->akind = 3;
+                parse_dirs(ins, rest);
+                if (ins->op != OP_ASSIGN || ins->ndirs == 0) ins->op = OP_UNSUPPORTED;
+            }
         } else if (!strcmp(kw, "calc")) {
             ins->op = OP_ASSIGN; ins->akind = 2;
             char a[24] = {0}, o[8] = {0}, b[24] = {0};
@@ -822,6 +829,11 @@ static void check_palette(const Level *L, const Program *P) {
         bool ok = false;
         for (int j = 0; j < L->npalette; j++)
             if (!strcmp(L->palette[j], name)) { ok = true; break; }
+        /* set and calc are facets of the same assignment block in the game's
+         * editor (levels with only "set" accept calc arithmetic) */
+        if (!ok && (!strcmp(name, "calc") || !strcmp(name, "set")))
+            for (int j = 0; j < L->npalette; j++)
+                if (!strcmp(L->palette[j], "set") || !strcmp(L->palette[j], "calc")) { ok = true; break; }
         if (!ok) {
             fprintf(stderr, "error: command '%s' is not available in this level\n", name);
             exit(3);
@@ -860,6 +872,7 @@ typedef struct {
     bool    door_exit;           /* the door acts as a walk-in exit */
     int     feeds_this_beat;
     int     beat;
+    long    st_steps, st_bumps, st_items, st_waits;   /* speed-model counters */
     unsigned rng;
 } Sim;
 
@@ -884,7 +897,9 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
     for (int i = 0; i < L->ncubes; i++) {
         CubeDef *c = &L->cubes[i];
         int v = c->value;
-        if (c->mode == CB_RAND)  v = (int)(rnd(S) % (unsigned)(L->randmax + 1));
+        /* mode -1 = a BLANK cube (no number printed; reads as 0) -- levels
+         * needing real random numbers use mode -2 (distinct draws) */
+        if (c->mode == CB_RAND)  v = 0;
         if (c->mode == CB_RANDU) { v = pool[pi]; pi = (pi + 1) % pn; }
         S->grid[c->y][c->x].has_cube = true;
         S->grid[c->y][c->x].cube = v;
@@ -961,16 +976,31 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
 
     S->glory_x = S->glory_y = -1;
     if (L->win == G_GLORY_DIVE) {
-        /* the special hole is the one whose tile distance matches every cube */
+        /* the special hole is the one whose WALKING distance (8-dir, around
+         * walls and other holes) matches every cube's label */
+        static int gd[MAXH][MAXW];
+        static int q[MAXW*MAXH];
         for (int hy = 0; hy < L->h && S->glory_x < 0; hy++)
             for (int hx = 0; hx < L->w && S->glory_x < 0; hx++) {
                 if (L->terr[hy][hx] != T_HOLE) continue;
-                bool ok = true;
-                for (int i = 0; i < S->nic && ok; i++) {
-                    int dx = abs(S->icx[i]-hx), dy = abs(S->icy[i]-hy);
-                    int cheb = dx > dy ? dx : dy;
-                    if (cheb != S->icv[i]) ok = false;
+                for (int y = 0; y < L->h; y++)
+                    for (int x = 0; x < L->w; x++) gd[y][x] = -1;
+                int head = 0, tail = 0;
+                gd[hy][hx] = 0;
+                q[tail++] = hy * MAXW + hx;
+                while (head < tail) {
+                    int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
+                    for (int d = 0; d < 8; d++) {
+                        int nx = cx + DX[d], ny = cy + DY[d];
+                        if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
+                        if (gd[ny][nx] >= 0 || L->terr[ny][nx] != T_FLOOR) continue;
+                        gd[ny][nx] = gd[cy][cx] + 1;
+                        q[tail++] = ny * MAXW + nx;
+                    }
                 }
+                bool ok = true;
+                for (int i = 0; i < S->nic && ok; i++)
+                    if (gd[S->icy[i]][S->icx[i]] != S->icv[i]) ok = false;
                 if (ok) { S->glory_x = hx; S->glory_y = hy; }
             }
     }
@@ -1039,12 +1069,15 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
     }
 }
 
-/* Numeric value visible on a tile: a floor cube (even under a worker), else
- * the item held by the worker standing there ("your workers are smart enough"
- * -- in-game tip). */
-static bool value_at(Sim *S, int x, int y, const Worker *self, int *out) {
+/* Numeric value visible on a tile: a floor cube (even under a worker). A cube
+ * held aloft by the worker standing there is visible ONLY in a comparison
+ * against myitem ("your workers are smart enough to know you want to compare
+ * their items" -- Number Royale tip); plain reads see floor cubes only (the
+ * Neighborly Sweeper tip). */
+static bool value_at2(Sim *S, int x, int y, const Worker *self, bool see_held, int *out) {
     if (x < 0 || y < 0 || x >= S->L->w || y >= S->L->h) return false;
     if (S->grid[y][x].has_cube) { *out = S->grid[y][x].cube; return true; }
+    if (!see_held) return false;
     for (int i = 0; i < S->nw; i++)
         if (&S->w[i] != self && S->w[i].alive && S->w[i].x == x && S->w[i].y == y) {
             if (S->w[i].holding) { *out = S->w[i].held; return true; }
@@ -1052,6 +1085,7 @@ static bool value_at(Sim *S, int x, int y, const Worker *self, int *out) {
         }
     return false;
 }
+
 
 static bool num_cmp(CmpOp op, int a, int b) {
     switch (op) {
@@ -1062,16 +1096,19 @@ static bool num_cmp(CmpOp op, int a, int b) {
     return false;
 }
 
-/* numeric value of an operand; false when there is no value to read */
+/* numeric value of an operand; false when there is no value to read.
+ * Pointing a DIRECTION at a neighbor reads their held item too ("compare
+ * their items" -- Number Royale tip); a remembered TILE reads only what lies
+ * on the floor of that square (Neighborly Sweeper tip). */
 static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
     switch (o->kind) {
         case 0: *out = o->num; return true;
-        case 1: return value_at(S, w->x + DX[o->dir], w->y + DY[o->dir], w, out);
+        case 1: return value_at2(S, w->x + DX[o->dir], w->y + DY[o->dir], w, true, out);
         case 3: if (w->holding) { *out = w->held; return true; } return false;
         case 2: {
             MemVal *m = &w->mem[o->mem];
             if (m->k == MV_NUM)  { *out = m->num; return true; }
-            if (m->k == MV_TILE) return value_at(S, m->x, m->y, w, out);
+            if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, false, out);
             return false;
         }
     }
@@ -1149,6 +1186,15 @@ static int worker_at(Sim *S, int x, int y, int self) {
     return -1;
 }
 
+/* movement blocking only: a worker whose program has ended sits down and no
+ * longer blocks the aisle (12 deliveries through one shredder ring require it) */
+static int blocking_worker_at(Sim *S, int x, int y, int self) {
+    for (int i = 0; i < S->nw; i++)
+        if (i != self && S->w[i].alive && !S->w[i].done
+            && S->w[i].x == x && S->w[i].y == y) return i;
+    return -1;
+}
+
 static bool walkable(Sim *S, int x, int y) {
     if (x < 0 || y < 0 || x >= S->L->w || y >= S->L->h) return false;
     if (S->door_exit && x == S->L->door_x && y == S->L->door_y) return true;
@@ -1185,7 +1231,7 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
             Terrain t = S->grid[ny][nx].terrain;
             bool pass = (t == T_FLOOR) || (t == T_HOLE && target_tile);
             if (!pass) continue;
-            if (block_workers && worker_at(S, nx, ny, (int)(self - S->w)) >= 0) continue;
+            if (block_workers && blocking_worker_at(S, nx, ny, (int)(self - S->w)) >= 0) continue;
             from[ny][nx] = d;
             if (ISGOAL(nx, ny)) { goal = ny * MAXW + nx; break; }
             if (t != T_HOLE) q[tail++] = ny * MAXW + nx;
@@ -1208,7 +1254,7 @@ static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_
     int d = path_step(S, self, tx, ty, adjacent_ok, false);
     if (d == -2 || d == -1) return d;
     int nx = self->x + DX[d], ny = self->y + DY[d];
-    if (worker_at(S, nx, ny, (int)(self - S->w)) < 0) return d;
+    if (blocking_worker_at(S, nx, ny, (int)(self - S->w)) < 0) return d;
     int d2 = path_step(S, self, tx, ty, adjacent_ok, true);
     return (d2 >= 0) ? d2 : d;   /* fall back to the blocked route (bump/wait) */
 }
@@ -1719,16 +1765,28 @@ static bool level_won(Sim *S) {
             return n == S->nic;
         }
         case G_FLOWER_SUMS: {
-            for (int k = 0; k < S->nic; k++) {
-                if (!(L->cubes[k].mode == CB_FIXED)) continue;   /* centers */
-                int sum = 0;
-                for (int j = 0; j < S->nic; j++)
-                    if (j != k && abs(S->icx[j]-S->icx[k]) <= 1 && abs(S->icy[j]-S->icy[k]) <= 1)
-                        sum += S->icv[j];
-                Tile *t = &S->grid[S->icy[k]][S->icx[k]];
-                if (!t->has_cube || t->cube != sum) return false;
-            }
-            return true;
+            /* a flower = 8 cubes ringing an initially-EMPTY tile; the carried
+             * result cube must land in that middle showing the ring's sum */
+            bool any = false;
+            for (int y = 0; y < L->h; y++)
+                for (int x = 0; x < L->w; x++) {
+                    if (L->terr[y][x] != T_FLOOR) continue;
+                    bool was_cube = false;
+                    int ring = 0, sum = 0;
+                    for (int j = 0; j < S->nic; j++) {
+                        if (S->icx[j] == x && S->icy[j] == y) was_cube = true;
+                        else if (abs(S->icx[j]-x) <= 1 && abs(S->icy[j]-y) <= 1
+                                 && L->cubes[j].mode != CB_FIXED) {
+                            ring++;
+                            sum += S->icv[j];
+                        }
+                    }
+                    if (was_cube || ring != 8) continue;
+                    any = true;
+                    Tile *t = &S->grid[y][x];
+                    if (!t->has_cube || t->cube != sum) return false;
+                }
+            return any;
         }
         case G_SHRED_MAX_PER_GROUP: {
             if (S->nshrev != S->ngroups) return false;
@@ -1911,15 +1969,22 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         else if (o->kind == 2) *m = w->mem[o->mem];
         else if (o->kind == 3) { if (w->holding) { m->k = MV_NUM; m->num = w->held; } }
         else { m->k = MV_NUM; m->num = o->num; }
+    } else if (ins->akind == 3) {               /* set <dir,dir,...>: random pick */
+        Dir d = ins->dirs[ins->ndirs == 1 ? 0 : (int)(rnd(S) % (unsigned)ins->ndirs)];
+        m->k = MV_TILE; m->x = w->x + DX[d]; m->y = w->y + DY[d];
+    } else if (ins->akind == 4) {               /* set nothing: clear the slot */
+        ;                                       /* m already reset to nothing */
     } else {                                    /* calc <a> <op> <b> */
-        int a, b;
-        if (operand_value(S, w, &ins->op1, &a) && operand_value(S, w, &ins->op2, &b)) {
-            switch (ins->calcop) {
-                case '+': m->k = MV_NUM; m->num = a + b; break;
-                case '-': m->k = MV_NUM; m->num = a - b; break;
-                case '*': m->k = MV_NUM; m->num = a * b; break;
-                case '/': if (b != 0) { m->k = MV_NUM; m->num = a / b; } break;
-            }
+        /* a missing operand counts as 0 ("1 + wall" labels the line's first
+         * cube 1 in Identify Yourselves); only division by zero fails */
+        int a = 0, b = 0;
+        operand_value(S, w, &ins->op1, &a);
+        operand_value(S, w, &ins->op2, &b);
+        switch (ins->calcop) {
+            case '+': m->k = MV_NUM; m->num = a + b; break;
+            case '-': m->k = MV_NUM; m->num = a - b; break;
+            case '*': m->k = MV_NUM; m->num = a * b; break;
+            case '/': if (b != 0) { m->k = MV_NUM; m->num = a / b; } break;
         }
     }
 }
@@ -2047,11 +2112,23 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     case OP_ASSIGN: exec_assign(S, w, ins); w->pc++; continue;
                     case OP_FOREACH: {
                         int *fi = &w->fe_idx[ins->fe_slot];
+                        unsigned char *ord = w->fe_ord[ins->fe_slot];
+                        if (*fi == 0) {
+                            /* fresh sweep: visit the listed tiles in a random
+                             * order (deterministic order locks wandering
+                             * programs into permanent orbits) */
+                            for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
+                            for (int k = ins->ndirs - 1; k > 0; k--) {
+                                int j = (int)(rnd(S) % (unsigned)(k + 1));
+                                unsigned char t = ord[k]; ord[k] = ord[j]; ord[j] = t;
+                            }
+                        }
                         if (*fi < ins->ndirs) {
-                            Dir d = ins->dirs[(*fi)++];
+                            Dir d = ins->dirs[ord[(*fi)++]];
                             w->mem[ins->slot].k = MV_TILE;
                             w->mem[ins->slot].x = w->x + DX[d];
                             w->mem[ins->slot].y = w->y + DY[d];
+                            w->mem[ins->slot].ntype = -1;
                             w->pc++;
                         } else { *fi = 0; w->pc = ins->target + 1; }
                         continue;
@@ -2103,6 +2180,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 if (w->x != w->last_x || w->y != w->last_y) {
                     w->last_x = w->x; w->last_y = w->y; w->blocked_beats = 0;
                 } else w->blocked_beats++;
+                /* pickup goes to STAND ON the thing (you lift what's under
+                 * you); giveto/takefrom act from an adjacent tile */
+                bool onto = (ins->op == OP_PICKUP);
+                #define ARRIVED() (onto ? (w->x == tx && w->y == ty) \
+                                        : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
                 if (((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
                     || (ins->op == OP_GIVETO && !w->holding)) {
                     nactors++;
@@ -2110,15 +2192,14 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 } else if (!mem_tile(w, ins->mem_target, &tx, &ty)) {
                     nactors++;
                     it[i].action = w->pc;        /* nothing remembered: no-op */
-                } else if (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1) {
+                } else if (ARRIVED()) {
                     /* arrived -- but if the remembered thing is gone from this
                      * tile, chase its kind to the next nearest and keep going */
-                    if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty)
-                        || (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1)) {
+                    if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || ARRIVED()) {
                         nactors++;
                         it[i].action = w->pc;    /* act (or no-op) this beat */
                     } else {
-                        int d = route_step(S, w, tx, ty, true);
+                        int d = route_step(S, w, tx, ty, !onto);
                         if (d >= 0) {
                             nactors++;
                             it[i].action = w->pc;
@@ -2128,7 +2209,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     }
                 } else {
                     if (S->L->rules & R_NOWALK) S->failed = true;
-                    int d = route_step(S, w, tx, ty, true);
+                    int d = route_step(S, w, tx, ty, !onto);
                     if (d >= 0 && w->blocked_beats > 3) {
                         /* jammed in a crowd: shuffle to any free floor tile */
                         int cand[8], nc = 0;
@@ -2136,7 +2217,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                             int nx = w->x + DX[k], ny = w->y + DY[k];
                             if (nx>=0&&ny>=0&&nx<S->L->w&&ny<S->L->h
                                 && S->grid[ny][nx].terrain == T_FLOOR
-                                && worker_at(S, nx, ny, i) < 0) cand[nc++] = k;
+                                && blocking_worker_at(S, nx, ny, i) < 0) cand[nc++] = k;
                         }
                         if (nc > 0) d = cand[rnd(S) % (unsigned)nc];
                     }
@@ -2147,6 +2228,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
                     } else nidle++;              /* no route: wait */
                 }
+                #undef ARRIVED
             } else {
                 nactors++;
                 it[i].action = w->pc;
@@ -2177,6 +2259,8 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
         /* phase B: resolve movement simultaneously (swaps, chains, bumps) */
         #define IS_MOVER(i) (it[i].tx >= 0 && it[i].action >= 0 \
             && (it[i].walk_only || P->instr[it[i].action].op == OP_STEP))
+        int prex[MAXWORKERS], prey[MAXWORKERS];
+        for (int i = 0; i < S->nw; i++) { prex[i] = S->w[i].x; prey[i] = S->w[i].y; }
         bool resolved[MAXWORKERS] = { false };
         if (g_nochain) {
             /* variant: a move only succeeds into a tile that was free at beat
@@ -2191,7 +2275,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 for (int j = 0; j < S->nw; j++)
                     if (j != i && S->w[j].alive && px[j] == it[i].tx && py[j] == it[i].ty) { occ = j; break; }
                 if (occ < 0) {
-                    if (worker_at(S, it[i].tx, it[i].ty, i) < 0) {
+                    if (blocking_worker_at(S, it[i].tx, it[i].ty, i) < 0) {
                         w->x = it[i].tx; w->y = it[i].ty; resolved[i] = true;
                     }
                 } else if (!resolved[occ] && IS_MOVER(occ)
@@ -2209,7 +2293,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 Worker *w = &S->w[i];
                 if (!w->alive || w->done || resolved[i]) continue;
                 if (!IS_MOVER(i)) continue;
-                int occ = worker_at(S, it[i].tx, it[i].ty, i);
+                int occ = blocking_worker_at(S, it[i].tx, it[i].ty, i);
                 if (occ < 0) {
                     w->x = it[i].tx; w->y = it[i].ty;
                     resolved[i] = true; progress = true;
@@ -2232,7 +2316,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             bool cyc = false;
             while (cn < S->nw) {
                 chain[cn++] = cur;
-                int occ = worker_at(S, it[cur].tx, it[cur].ty, cur);
+                int occ = blocking_worker_at(S, it[cur].tx, it[cur].ty, cur);
                 if (occ < 0 || resolved[occ] || !IS_MOVER(occ)) break;
                 if (occ == i) { cyc = true; break; }
                 bool seen = false;
@@ -2249,6 +2333,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             }
         }
         }
+        for (int i = 0; i < S->nw; i++)
+            if (IS_MOVER(i)) {
+                if (S->w[i].x != prex[i] || S->w[i].y != prey[i]) S->st_steps++;
+                else S->st_bumps++;
+            }
         #undef IS_MOVER
         for (int i = 0; i < S->nw; i++)
             if (S->w[i].alive && !S->w[i].done && it[i].action >= 0 && !it[i].walk_only
@@ -2285,8 +2374,20 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     break;
                 }
                 case OP_DROP: {
+                    if (!w->holding) break;
                     Tile *t = &S->grid[w->y][w->x];
-                    if (w->holding && !t->has_cube && t->terrain == T_FLOOR) {
+                    if (t->has_cube && t->terrain == T_FLOOR) {
+                        /* standing on a cube: place the held one beside you
+                         * (first free neighbor; the Data Backup swap needs it) */
+                        for (int d = 0; d < 8 && t->has_cube; d++) {
+                            int nx = w->x + DX[d], ny = w->y + DY[d];
+                            if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+                            Tile *n = &S->grid[ny][nx];
+                            if (n->terrain == T_FLOOR && !n->has_cube
+                                && worker_at(S, nx, ny, i) < 0) t = n;
+                        }
+                    }
+                    if (!t->has_cube && t->terrain == T_FLOOR) {
                         t->has_cube = true; t->cube = w->held; t->owner = w->held_owner;
                         w->holding = false;
                         S->drops++;
@@ -2397,8 +2498,10 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     break;
                 default: break;
             }
+            if (ins->op != OP_STEP) S->st_items++;
             if (!w->done || ins->op == OP_END) w->pc++;
         }
+        S->st_waits += nidle;
 
         S->beat++;
         rounds++;
@@ -2453,14 +2556,17 @@ int main(int argc, char **argv) {
             }
     }
 
-    bool prog_random = false;    /* multi-direction steps choose randomly */
+    bool prog_random = false;    /* multi-dir steps / foreachdir sweeps randomize */
     for (int i = 0; i < P.n; i++)
-        if (P.instr[i].op == OP_STEP && P.instr[i].ndirs > 1) prog_random = true;
+        if ((P.instr[i].op == OP_STEP && P.instr[i].ndirs > 1)
+            || P.instr[i].op == OP_FOREACH
+            || (P.instr[i].op == OP_ASSIGN && P.instr[i].akind == 3)) prog_random = true;
     int trials = (argc == 4) ? atoi(argv[3]) : ((L.has_random || prog_random) ? 20 : 1);
     if (trials < 1) trials = 1;
 
     static Sim S;
     int wins = 0, min_r = -1, max_r = -1, first_fail = -1;
+    long sum_r = 0, sum_steps = 0, sum_bumps = 0, sum_items = 0, sum_waits = 0;
     for (int t = 0; t < trials; t++) {
         sim_reset(&S, &L, (unsigned)(t + 1));
         int rounds = 0;
@@ -2469,6 +2575,9 @@ int main(int argc, char **argv) {
             wins++;
             if (min_r < 0 || rounds < min_r) min_r = rounds;
             if (rounds > max_r) max_r = rounds;
+            sum_r += rounds;
+            sum_steps += S.st_steps; sum_bumps += S.st_bumps;
+            sum_items += S.st_items; sum_waits += S.st_waits;
         } else if (first_fail < 0) first_fail = t + 1;
     }
 
@@ -2479,8 +2588,12 @@ int main(int argc, char **argv) {
     printf("size    : %d commands\n", program_size(&P));
     printf("trials  : %d, wins %d%s\n", trials, wins,
            first_fail > 0 ? " (first fail: trial seed above)" : "");
-    if (wins)
+    if (wins) {
         printf("rounds  : %d..%d  (raw lockstep rounds; NOT the game's speed metric)\n", min_r, max_r);
+        printf("stats   : beats=%.1f steps=%.1f bumps=%.1f items=%.1f waits=%.1f (avg over wins)\n",
+               (double)sum_r/wins, (double)sum_steps/wins, (double)sum_bumps/wins,
+               (double)sum_items/wins, (double)sum_waits/wins);
+    }
     /* a solution that wins some trials but not all is a luck-based ("retry
      * until it works") solution -- report it distinctly */
     printf("result  : %s\n", all ? "WIN" : wins ? "PROBABILISTIC" : "FAIL");

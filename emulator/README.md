@@ -95,22 +95,30 @@ against real level geometry — the large majority of Years 2–43 pass):
   `memN = nearest <type>`, `memN = set <x>`, `memN = calc <a> <op> <b>`
   (integer arithmetic, division by zero yields nothing), and
   `memN = foreachdir <dirs>:` ... `endfor` loops.
-- Memory-slot targets: `step/pickup/giveto/takefrom memN` walk to the
-  remembered thing first (BFS pathfinding, jams break up by shuffling), then
-  act; a stale `nearest` reference re-resolves to the next nearest of its kind
-  on arrival — and `nearest datacube` also finds a cube in a carrier's hands,
-  so crowds chase the thing rather than besiege a square. `nearest` looks
-  around you, never under your own feet. Actions that would no-op (take while
-  holding, give while empty) skip without walking.
-- Mechanics: multi-direction steps pick randomly among passable choices, the
+- Memory-slot targets: `pickup memN` walks ONTO the remembered cube's tile
+  (you lift what is under your feet -- the Data Backup swap depends on it);
+  `giveto/takefrom memN` walk to an adjacent tile (BFS pathfinding, jams break
+  up by shuffling). A stale `nearest` reference re-resolves to the next
+  nearest of its kind on arrival -- and `nearest datacube` also finds a cube
+  in a carrier's hands, so crowds chase the thing rather than besiege a
+  square; `nearest` includes the tile you stand on. Actions that would no-op
+  (take while holding, give while empty) skip without walking. A worker whose
+  program has ended sits down and stops blocking the aisle.
+- Mechanics: multi-direction steps pick randomly among passable choices,
+  `foreachdir` sweeps visit their tiles in a random order per sweep, the
   walk-swap rule, movement chains and rotation cycles resolve simultaneously,
   waiting on unmet conditions, holes destroying what falls in, tell/listen
   synchronization (a beat's give-aways resolve before its take-froms).
+  Standing on a cube, `drop` places the held cube on a free neighboring tile.
 - Sensing: a tile is a *set* of contents -- a worker standing on a floor cube
   matches both `worker` and `datacube`; a cube held up in the air is not a
-  floor cube; numeric reads see the floor cube first, else the held item of
-  the worker standing there. `myitem == datacube/something/nothing` tests
-  holding. `mem == mem` on two remembered tiles compares identity.
+  floor cube. Numeric reads: pointing a DIRECTION at a neighbor also reads
+  the item in their hands ("compare their items"); a remembered TILE reads
+  only what lies on the floor there. `calc` treats a missing operand as 0
+  (only division by zero yields nothing). `myitem ==
+  datacube/something/nothing` tests holding. `mem == mem` on two remembered
+  tiles compares identity. Blank cubes (the game's numberless ones) read 0;
+  only the distinct-random kind carries drawn values.
 - Special rules: no-walking, unique shredder use, exploding label cubes, one
   shredder at a time, speak-in-turn.
 - SIZE: every command except labels, comments, `else`, `endif`, and `endfor`.
@@ -124,8 +132,10 @@ Not yet faithful / deliberately refused at runtime rather than guessed:
   per-command durations need measuring against the real game. Rounds are
   printed only as a coarse signal.
 - Dense multi-worker choreography can resolve differently than the game's
-  crowd behavior (known cases: Injection Sites 2 (size), Neural Pathways,
-  Checkerboard Organization, Data Backup Day); heavily scripted
-  position-dependent speed solutions are similarly sensitive.
+  crowd behavior (known cases: Injection Sites 2 (size), Checkerboard
+  Organization, Neighborly Sweeper, Data Flowers); heavily scripted
+  position-dependent speed solutions are similarly sensitive. Some of these
+  hinge on per-command durations (item ops are much quicker than steps in the
+  real game), which is the same missing piece as the Speed metric.
 
 `--trace` prints the board and per-worker actions each round for debugging.
