@@ -127,15 +127,23 @@ Not yet faithful / deliberately refused at runtime rather than guessed:
 
 - The three counting-machine levels (their sensors/display are not part of the
   extracted grid) refuse to run.
-- **The Speed metric.** Recorded community speeds vs this emulator's raw
-  lockstep rounds differ by a non-constant factor (0.5x-3x across levels), so
-  per-command durations need measuring against the real game. Rounds are
-  printed only as a coarse signal.
 - Dense multi-worker choreography can resolve differently than the game's
   crowd behavior (known cases: Injection Sites 2 (size), Checkerboard
   Organization, Neighborly Sweeper, Data Flowers); heavily scripted
-  position-dependent speed solutions are similarly sensitive. Some of these
-  hinge on per-command durations (item ops are much quicker than steps in the
-  real game), which is the same missing piece as the Speed metric.
+  position-dependent speed solutions are similarly sensitive.
 
-`--trace` prints the board and per-worker actions each round for debugging.
+## The Speed model
+
+Workers run asynchronously on their own clocks: commands have per-command
+durations and the reported `speed` is the win moment in whole seconds --
+matching the game's TIME metric. The durations (step 333 ms; pick/drop/give/
+take 250 ms; printers 1200 ms; shredders 750 ms; a condition check 333 ms;
+tell 1 s; everything else free) were calibrated against the recorded
+community speeds in this repo's README and reproduce a growing set of them
+exactly (all early years, Content Creators, Reverse Line, Automated
+Pleasantries...). Blocked workers leave a standing step intent, so two
+workers walking into each other still trade places even when their programs
+have drifted out of phase. Treat close calls (within a second or two) as
+needing in-game verification; congested crowd levels still drift more.
+
+`--trace` prints the board and per-worker actions each event for debugging.

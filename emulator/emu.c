@@ -74,6 +74,9 @@ typedef struct {
     bool done;      /* program finished (END or ran off the end); stays on board */
     bool exited;    /* left via a hole */
     int  exit_x, exit_y, exit_beat;
+    long next_ms;   /* when this worker's current command completes */
+    int  pend_x, pend_y; /* standing step intent left by a blocked step (-1 none):
+                            if the blocker later steps toward us, we swap */
     int  tgt_x, tgt_y;   /* aligned-hole-exit target (or -1) */
     MemVal mem[NMEM];
     int  fe_idx[MAXFOREACH];      /* foreachdir loop positions */
@@ -872,9 +875,18 @@ typedef struct {
     bool    door_exit;           /* the door acts as a walk-in exit */
     int     feeds_this_beat;
     int     beat;
+    long    now_ms, win_ms;      /* event clock; when the win state was reached */
     long    st_steps, st_bumps, st_items, st_waits;   /* speed-model counters */
     unsigned rng;
 } Sim;
+
+/* per-command durations in milliseconds (from the game's tuning constants;
+ * confirmed against recorded speeds: step 333, item ops 250; printers and
+ * shredders carry their machine animation) */
+enum {
+    MS_STEP = 333, MS_ITEM = 250, MS_PRINTER = 1200, MS_SHRED = 750,
+    MS_TELL = 1000, MS_IF = 333
+};
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
 
@@ -900,6 +912,14 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         /* mode -1 = a BLANK cube (no number printed; reads as 0) -- levels
          * needing real random numbers use mode -2 (distinct draws) */
         if (c->mode == CB_RAND)  v = 0;
+        if (c->mode == CB_RAND && L->win == G_LINE_REVERSED) {
+            /* blank cubes get hidden serials so "reversed" is meaningful
+             * (the game tracks cube identity; equal blanks would make the
+             * check degenerate) */
+            v = 1;
+            for (int j = 0; j < L->ncubes; j++)
+                if (L->cubes[j].x < c->x) v++;
+        }
         if (c->mode == CB_RANDU) { v = pool[pi]; pi = (pi + 1) % pn; }
         S->grid[c->y][c->x].has_cube = true;
         S->grid[c->y][c->x].cube = v;
@@ -1012,6 +1032,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->x = L->sx[i]; w->y = L->sy[i];
         w->alive = true;
         w->exit_x = w->exit_y = -1;
+        w->pend_x = w->pend_y = -1;
         w->tgt_x = w->tgt_y = -1;
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = -1;
@@ -2039,6 +2060,43 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
 static bool g_trace = false;
 static bool g_nochain = false;              /* experimental movement variant */
 
+/* how long the worker is busy after starting this command */
+static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
+    switch (ins->op) {
+        case OP_STEP: return MS_STEP;
+        case OP_PICKUP: case OP_TAKEFROM: {
+            if (ins->mem_target >= 0) {
+                int tx, ty;
+                if (mem_tile(w, ins->mem_target, &tx, &ty)
+                    && S->grid[ty][tx].terrain == T_PRINTER) return MS_PRINTER;
+            } else
+                for (int k = 0; k < ins->ndirs; k++) {
+                    int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                    if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
+                        && S->grid[ny][nx].terrain == T_PRINTER) return MS_PRINTER;
+                }
+            return MS_ITEM;
+        }
+        case OP_GIVETO: {
+            if (ins->mem_target >= 0) {
+                int tx, ty;
+                if (mem_tile(w, ins->mem_target, &tx, &ty)
+                    && S->grid[ty][tx].terrain == T_SHREDDER) return MS_SHRED;
+            } else
+                for (int k = 0; k < ins->ndirs; k++) {
+                    int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                    if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
+                        && S->grid[ny][nx].terrain == T_SHREDDER) return MS_SHRED;
+                }
+            return MS_ITEM;
+        }
+        case OP_DROP: case OP_WRITE: return MS_ITEM;
+        case OP_TELL: return MS_TELL;
+        case OP_IF: return MS_IF;
+        default: return 0;
+    }
+}
+
 static void trace_board(Sim *S, int round) {
     fprintf(stderr, "-- round %d  shredded %d --\n", round, S->shredded);
     for (int y = 0; y < S->L->h; y++) {
@@ -2076,17 +2134,28 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
 
     while (rounds < CAP) {
         bool any_active = false;
-        int nactors = 0, nidle = 0;
+        int nactors = 0, nidle = 0, nbusy = 0;
         Intent it[MAXWORKERS];
         S->feeds_this_beat = 0;
 
-        /* phase A: every worker flows through control ops and picks its action
-         * (sensing sees the pre-move board, so mutual swaps are symmetric).
-         * A worker whose control flow finds no action this beat idles (waits). */
+        /* event clock: this batch happens at the earliest pending completion.
+         * Workers still mid-command (next_ms > t) hold their tiles but do not
+         * act; they are "busy", not idle. */
+        long t = -1;
+        for (int i = 0; i < S->nw; i++)
+            if (S->w[i].alive && !S->w[i].done
+                && (t < 0 || S->w[i].next_ms < t)) t = S->w[i].next_ms;
+        if (t < 0) break;                 /* nobody left to act */
+        S->now_ms = t;
+
+        /* phase A: every due worker flows through control ops and picks its
+         * action (sensing sees the pre-move board, so mutual swaps are
+         * symmetric). A worker whose control flow finds no action idles. */
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
             it[i].action = -1; it[i].tx = -1; it[i].walk_only = false;
             if (!w->alive || w->done) continue;
+            if (w->next_ms > t) { nbusy++; any_active = true; continue; }
             int guard = 0, budget = P->n * 2 + 16;
             bool idle = false;
             for (;;) {
@@ -2096,17 +2165,9 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 switch (ins->op) {
                     case OP_NOP: case OP_LABEL: w->pc++; continue;
                     case OP_JUMP: w->pc = ins->target; continue;
-                    case OP_IF:
-                        if (ins->nconds == 0) {
-                            fprintf(stderr, "error: unsupported condition: %s\n", ins->raw);
-                            exit(3);
-                        }
-                        /* false: jump into the else body (past the OP_ELSE), or
-                         * to the endif when there is no else */
-                        if (if_true(S, ins, w)) w->pc++;
-                        else w->pc = ins->target +
-                                 (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
-                        continue;
+                    /* OP_IF falls through as an ACTION: evaluating a condition
+                     * takes time in the game (its cost shows in every
+                     * if-in-loop level's recorded speed) */
                     case OP_ELSE: w->pc = ins->target; continue;
                     case OP_ENDIF: w->pc++; continue;
                     case OP_ASSIGN: exec_assign(S, w, ins); w->pc++; continue;
@@ -2236,9 +2297,8 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
         }
         if (S->failed) { *out_rounds = rounds; return false; }
         if (!any_active) break;
-        /* every active worker is waiting on a condition and nothing can change
-         * the board: the simulation is frozen for good */
-        if (nactors == 0 && nidle > 0) break;
+        /* all waiting and nothing in flight: frozen for good */
+        if (nactors == 0 && nidle > 0 && nbusy == 0) break;
 
         /* speak-order rule: only one worker may tell per beat -- the one who
          * spoke least recently (leftmost on a tie); the rest retry next beat */
@@ -2296,6 +2356,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 int occ = blocking_worker_at(S, it[i].tx, it[i].ty, i);
                 if (occ < 0) {
                     w->x = it[i].tx; w->y = it[i].ty;
+                    w->pend_x = w->pend_y = -1;
                     resolved[i] = true; progress = true;
                 } else if (!resolved[occ] && IS_MOVER(occ)
                            && it[occ].tx == w->x && it[occ].ty == w->y) {
@@ -2304,11 +2365,32 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     int ox = o->x, oy = o->y;
                     o->x = it[occ].tx; o->y = it[occ].ty;
                     w->x = ox; w->y = oy;
+                    w->pend_x = w->pend_y = -1;
+                    o->pend_x = o->pend_y = -1;
                     resolved[i] = resolved[occ] = true; progress = true;
+                } else {
+                    /* blocked -- but if the blocker left a standing intent to
+                     * step into OUR tile, the trade happens now */
+                    Worker *o = &S->w[occ];
+                    if (o->pend_x == w->x && o->pend_y == w->y) {
+                        int ox = o->x, oy = o->y;
+                        o->x = w->x; o->y = w->y;
+                        w->x = ox; w->y = oy;
+                        o->pend_x = o->pend_y = -1;
+                        w->pend_x = w->pend_y = -1;
+                        resolved[i] = true; progress = true;
+                    }
                 }
             }
             if (!progress) break;
         }
+        /* blocked steppers leave their intent standing for a later trade */
+        for (int i = 0; i < S->nw; i++)
+            if (S->w[i].alive && !S->w[i].done && !resolved[i] && IS_MOVER(i)
+                && !it[i].walk_only) {
+                S->w[i].pend_x = it[i].tx;
+                S->w[i].pend_y = it[i].ty;
+            }
         /* rotation cycles: A->B's tile, B->C's, C->A's -- everyone rotates */
         for (int i = 0; i < S->nw; i++) {
             if (resolved[i] || !S->w[i].alive || S->w[i].done || !IS_MOVER(i)) continue;
@@ -2357,6 +2439,18 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             if (ins->op == OP_STEP) continue;
             if ((ins->op == OP_TAKEFROM) != (pass == 1)) continue;
             switch (ins->op) {
+                case OP_IF: {
+                    if (ins->nconds == 0) {
+                        fprintf(stderr, "error: unsupported condition: %s\n", ins->raw);
+                        exit(3);
+                    }
+                    /* false: jump into the else body (past the OP_ELSE), or
+                     * to the endif when there is no else */
+                    if (if_true(S, ins, w)) w->pc++;
+                    else w->pc = ins->target +
+                             (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
+                    break;
+                }
                 case OP_PICKUP: {
                     if (!w->holding) {
                         if (ins->mem_target >= 0) {
@@ -2499,9 +2593,32 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 default: break;
             }
             if (ins->op != OP_STEP) S->st_items++;
-            if (!w->done || ins->op == OP_END) w->pc++;
+            if (ins->op != OP_IF && (!w->done || ins->op == OP_END)) w->pc++;
         }
         S->st_waits += nidle;
+
+        /* advance the actors' clocks; idlers re-check at the next completion */
+        long batch_end = t, next_event = -1;
+        for (int i = 0; i < S->nw; i++) {
+            Worker *w = &S->w[i];
+            if (!w->alive || w->done) continue;
+            if (it[i].action >= 0) {
+                long d = it[i].walk_only ? MS_STEP
+                                         : cmd_duration(S, w, &P->instr[it[i].action]);
+                w->next_ms = t + (d > 0 ? d : 1);
+                if (w->next_ms > batch_end) batch_end = w->next_ms;
+                if (!it[i].walk_only && P->instr[it[i].action].op != OP_STEP)
+                    w->pend_x = w->pend_y = -1;   /* moved on to other work */
+            }
+            if (w->next_ms > t && (next_event < 0 || w->next_ms < next_event))
+                next_event = w->next_ms;
+        }
+        for (int i = 0; i < S->nw; i++) {
+            Worker *w = &S->w[i];
+            if (!w->alive || w->done) continue;
+            if (it[i].action < 0 && w->next_ms <= t)      /* idled this batch */
+                w->next_ms = (next_event > t) ? next_event : t + 1;
+        }
 
         S->beat++;
         rounds++;
@@ -2509,12 +2626,12 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             trace_board(S, rounds);
             for (int i = 0; i < S->nw; i++) {
                 Worker *w = &S->w[i];
-                fprintf(stderr, "  w%d (%d,%d)%s%s%s pc=%d act=[%s]\n", i, w->x, w->y,
+                fprintf(stderr, "  w%d (%d,%d)%s%s%s pc=%d t=%ld act=[%s]\n", i, w->x, w->y,
                         w->holding?" hold":"", w->done?" done":"", w->alive?"":" dead",
-                        w->pc, it[i].action >= 0 ? P->instr[it[i].action].raw : "-");
+                        w->pc, w->next_ms, it[i].action >= 0 ? P->instr[it[i].action].raw : "-");
             }
         }
-        if (level_won(S)) { *out_rounds = rounds; return true; }
+        if (level_won(S)) { S->win_ms = batch_end; *out_rounds = rounds; return true; }
         if (S->failed)    { *out_rounds = rounds; return false; }
     }
     *out_rounds = rounds;
@@ -2566,7 +2683,8 @@ int main(int argc, char **argv) {
 
     static Sim S;
     int wins = 0, min_r = -1, max_r = -1, first_fail = -1;
-    long sum_r = 0, sum_steps = 0, sum_bumps = 0, sum_items = 0, sum_waits = 0;
+    int min_sp = -1, max_sp = -1;
+    long sum_r = 0, sum_sp = 0, sum_steps = 0, sum_bumps = 0, sum_items = 0, sum_waits = 0;
     for (int t = 0; t < trials; t++) {
         sim_reset(&S, &L, (unsigned)(t + 1));
         int rounds = 0;
@@ -2576,6 +2694,10 @@ int main(int argc, char **argv) {
             if (min_r < 0 || rounds < min_r) min_r = rounds;
             if (rounds > max_r) max_r = rounds;
             sum_r += rounds;
+            int sp = (int)((S.win_ms + 999) / 1000);
+            if (min_sp < 0 || sp < min_sp) min_sp = sp;
+            if (sp > max_sp) max_sp = sp;
+            sum_sp += sp;
             sum_steps += S.st_steps; sum_bumps += S.st_bumps;
             sum_items += S.st_items; sum_waits += S.st_waits;
         } else if (first_fail < 0) first_fail = t + 1;
@@ -2589,7 +2711,9 @@ int main(int argc, char **argv) {
     printf("trials  : %d, wins %d%s\n", trials, wins,
            first_fail > 0 ? " (first fail: trial seed above)" : "");
     if (wins) {
-        printf("rounds  : %d..%d  (raw lockstep rounds; NOT the game's speed metric)\n", min_r, max_r);
+        printf("speed   : %.1f  (game seconds, avg over wins; range %d..%d)\n",
+               (double)sum_sp/wins, min_sp, max_sp);
+        printf("rounds  : %d..%d  (event batches)\n", min_r, max_r);
         printf("stats   : beats=%.1f steps=%.1f bumps=%.1f items=%.1f waits=%.1f (avg over wins)\n",
                (double)sum_r/wins, (double)sum_steps/wins, (double)sum_bumps/wins,
                (double)sum_items/wins, (double)sum_waits/wins);
