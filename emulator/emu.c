@@ -1790,6 +1790,12 @@ static bool level_won(Sim *S) {
                 for (int x = 0; x < L->w; x++)
                     if (S->grid[y][x].has_cube && S->grid[y][x].cube >= 0 && S->grid[y][x].cube < 256)
                         seen[S->grid[y][x].cube] = true;
+            if (g_goal_dbg) {
+                fprintf(stderr, "values missing:");
+                for (int v = L->goal_a; v <= L->goal_b; v++)
+                    if (!seen[v]) fprintf(stderr, " %d", v);
+                fprintf(stderr, "\n");
+            }
             for (int v = L->goal_a; v <= L->goal_b; v++) if (!seen[v]) return false;
             return true;
         }
@@ -2115,7 +2121,7 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
             return MS_ITEM;
         }
         case OP_DROP: return MS_ITEM;
-        case OP_WRITE: return MS_WRITE;
+        case OP_WRITE: return w->holding ? MS_WRITE : MS_ITEM;
         case OP_ASSIGN: return MS_ASSIGN;
         case OP_TELL: return MS_TELL;
         case OP_IF: return MS_IF;
@@ -2632,7 +2638,12 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 }
                 case OP_WRITE: {
                     int v;
-                    if (w->holding && operand_value(S, w, &ins->op1, &v)) w->held = v;
+                    if (w->holding && operand_value(S, w, &ins->op1, &v)) {
+                        /* cube faces are two digits: written values wrap
+                         * into -99..99 (100 Cubes on the Floor's last
+                         * write is 100 and must read 0) */
+                        w->held = v % 100;
+                    }
                     break;
                 }
                 case OP_TELL: {
@@ -2711,6 +2722,22 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
     *out_rounds = rounds;
     if (g_trace) {
         fprintf(stderr, "-- final state (rounds=%d) --\n", rounds);
+        for (int y = 0; y < S->L->h; y++) {
+            bool any = false;
+            for (int x = 0; x < S->L->w; x++) if (S->grid[y][x].has_cube) any = true;
+            if (!any) continue;
+            fprintf(stderr, "  row %2d:", y);
+            for (int x = 0; x < S->L->w; x++)
+                if (S->grid[y][x].has_cube) fprintf(stderr, " %3d", S->grid[y][x].cube);
+                else fprintf(stderr, "   .");
+            fprintf(stderr, "\n");
+        }
+        if (S->nshrev) {
+            fprintf(stderr, "  shred order (src_x):");
+            for (int e = 0; e < S->nshrev; e++)
+                fprintf(stderr, " %d", S->shrev[e].src_x);
+            fprintf(stderr, "\n");
+        }
         trace_board(S, rounds);
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
