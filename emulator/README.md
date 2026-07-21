@@ -128,9 +128,9 @@ Not yet faithful / deliberately refused at runtime rather than guessed:
 - The three counting-machine levels (their sensors/display are not part of the
   extracted grid) refuse to run.
 - Dense multi-worker choreography can resolve differently than the game's
-  crowd behavior (known cases: Injection Sites 2 (size), Checkerboard
-  Organization, Neighborly Sweeper, Data Flowers); heavily scripted
-  position-dependent speed solutions are similarly sensitive.
+  crowd behavior (known cases: Checkerboard Organization, Neighborly
+  Sweeper, Printing Etiquette, Big Data's hand-over-hand chains); heavily
+  scripted position-dependent speed solutions are similarly sensitive.
 
 ## The Speed model
 
@@ -138,12 +138,19 @@ Workers run asynchronously on their own clocks: commands have per-command
 durations and the reported `speed` is the win moment in whole seconds --
 matching the game's TIME metric. The durations (step 333 ms; pick/drop/give/
 take 250 ms; printers 1200 ms; shredders 750 ms; a condition check 333 ms;
-tell 1 s; everything else free) were calibrated against the recorded
-community speeds in this repo's README and reproduce a growing set of them
-exactly (all early years, Content Creators, Reverse Line, Automated
-Pleasantries...). Blocked workers leave a standing step intent, so two
-workers walking into each other still trade places even when their programs
-have drifted out of phase. Treat close calls (within a second or two) as
-needing in-game verification; congested crowd levels still drift more.
+an assignment (`set`/`calc`/`nearest`) 333 ms; `write` 1200 ms; tell 1 s;
+everything else free) were calibrated against the recorded community speeds
+in this repo's README and reproduce a growing set of them exactly (all early
+years, Content Creators, Reverse Line, Automated Pleasantries...). Override
+any of them with `EMU_MS_STEP`-style environment variables for calibration
+experiments.
+
+A step blocked by another worker queues: the walker waits and flows in when
+the tile frees (or trades places when two walkers want each other's tiles),
+and gives up only when the blocker has finished its program and sat down.
+This keeps marching columns intact instead of letting a bumped step fall
+through and desync accumulator sweeps. Treat close calls (within a second
+or two) as needing in-game verification; congested crowd levels still
+drift more.
 
 `--trace` prints the board and per-worker actions each event for debugging.

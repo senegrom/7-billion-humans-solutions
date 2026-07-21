@@ -38,6 +38,8 @@
 #include <string.h>
 #include <sys/stat.h>
 
+static bool g_goal_dbg = false;
+
 /* ------------------------------------------------------------------ model -- */
 
 enum { MAXW = 64, MAXH = 64, MAXWORKERS = 128, MAXPROG = 4096, MAXLABELS = 256,
@@ -880,13 +882,12 @@ typedef struct {
     unsigned rng;
 } Sim;
 
-/* per-command durations in milliseconds (from the game's tuning constants;
- * confirmed against recorded speeds: step 333, item ops 250; printers and
- * shredders carry their machine animation) */
-enum {
-    MS_STEP = 333, MS_ITEM = 250, MS_PRINTER = 1200, MS_SHRED = 750,
-    MS_TELL = 1000, MS_IF = 333
-};
+/* per-command durations in milliseconds, calibrated against recorded
+ * community speeds: step 333, item ops 250; printers and shredders carry
+ * their machine animation; assignments (set/calc/nearest) and writes take
+ * time too. EMU_MS_* env vars override for calibration runs. */
+static int MS_STEP = 333, MS_ITEM = 250, MS_PRINTER = 1200, MS_SHRED = 750,
+           MS_TELL = 1000, MS_IF = 333, MS_ASSIGN = 333, MS_WRITE = 1200;
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
 
@@ -1214,6 +1215,15 @@ static int blocking_worker_at(Sim *S, int x, int y, int self) {
         if (i != self && S->w[i].alive && !S->w[i].done
             && S->w[i].x == x && S->w[i].y == y) return i;
     return -1;
+}
+
+/* seated (done) workers are solid for explicit dir-steps -- only routed
+ * walks slip past them (Neural Pathways deliveries vs Reverse Line stops) */
+static bool done_worker_at(Sim *S, int x, int y) {
+    for (int i = 0; i < S->nw; i++)
+        if (S->w[i].alive && S->w[i].done && S->w[i].x == x && S->w[i].y == y)
+            return true;
+    return false;
 }
 
 static bool walkable(Sim *S, int x, int y) {
@@ -1614,6 +1624,7 @@ static bool level_won(Sim *S) {
             return n == S->nic && nwant == 0;
         }
         case G_ROW_SUMS_RIGHT: {
+            bool allok = true;
             for (int y = 0; y < L->h; y++) {
                 int rx = -1, sum = 0, cnt = 0;
                 for (int k = 0; k < S->nic; k++)
@@ -1625,9 +1636,15 @@ static bool level_won(Sim *S) {
                 for (int k = 0; k < S->nic; k++)
                     if (S->icy[k] == y && S->icx[k] != rx) sum += S->icv[k];
                 Tile *t = &S->grid[y][rx];
-                if (!t->has_cube || t->cube != sum) return false;
+                if (g_goal_dbg)
+                    fprintf(stderr, "row_sums y=%d target(%d,%d) expect=%d has=%d val=%d\n",
+                            y, rx, y, sum, t->has_cube, t->has_cube ? t->cube : -999);
+                if (!t->has_cube || t->cube != sum) {
+                    allok = false;
+                    if (!g_goal_dbg) return false;
+                }
             }
-            return true;
+            return allok;
         }
         case G_PRINTED_PER_WORKER: {
             int n = 0;
@@ -1974,27 +1991,27 @@ static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
     return true;
 }
 
-/* nearest / set / calc assignment (control-flow speed: executes inline) */
+/* nearest / set / calc assignment (control-flow speed: executes inline).
+ * Operands evaluate BEFORE the slot updates: "mem1 = calc mem1 + c" must
+ * read the old mem1 (accumulator loops in Dangerous Spreadsheeting). */
 static void exec_assign(Sim *S, Worker *w, Instr *ins) {
-    MemVal *m = &w->mem[ins->slot];
-    m->k = MV_NOTHING;
-    m->ntype = -1;
+    MemVal nv = { MV_NOTHING, 0, 0, 0, -1 };
     if (ins->akind == 0) {                      /* nearest <type> */
         int x, y;
         if (find_nearest(S, w, ins->near_type, &x, &y)) {
-            m->k = MV_TILE; m->x = x; m->y = y; m->ntype = (int)ins->near_type;
+            nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
         }
     } else if (ins->akind == 1) {               /* set <operand> */
         Operand *o = &ins->op1;
-        if (o->kind == 1) { m->k = MV_TILE; m->x = w->x + DX[o->dir]; m->y = w->y + DY[o->dir]; }
-        else if (o->kind == 2) *m = w->mem[o->mem];
-        else if (o->kind == 3) { if (w->holding) { m->k = MV_NUM; m->num = w->held; } }
-        else { m->k = MV_NUM; m->num = o->num; }
+        if (o->kind == 1) { nv.k = MV_TILE; nv.x = w->x + DX[o->dir]; nv.y = w->y + DY[o->dir]; }
+        else if (o->kind == 2) nv = w->mem[o->mem];
+        else if (o->kind == 3) { if (w->holding) { nv.k = MV_NUM; nv.num = w->held; } }
+        else { nv.k = MV_NUM; nv.num = o->num; }
     } else if (ins->akind == 3) {               /* set <dir,dir,...>: random pick */
         Dir d = ins->dirs[ins->ndirs == 1 ? 0 : (int)(rnd(S) % (unsigned)ins->ndirs)];
-        m->k = MV_TILE; m->x = w->x + DX[d]; m->y = w->y + DY[d];
+        nv.k = MV_TILE; nv.x = w->x + DX[d]; nv.y = w->y + DY[d];
     } else if (ins->akind == 4) {               /* set nothing: clear the slot */
-        ;                                       /* m already reset to nothing */
+        ;                                       /* nv already nothing */
     } else {                                    /* calc <a> <op> <b> */
         /* a missing operand counts as 0 ("1 + wall" labels the line's first
          * cube 1 in Identify Yourselves); only division by zero fails */
@@ -2002,12 +2019,13 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         operand_value(S, w, &ins->op1, &a);
         operand_value(S, w, &ins->op2, &b);
         switch (ins->calcop) {
-            case '+': m->k = MV_NUM; m->num = a + b; break;
-            case '-': m->k = MV_NUM; m->num = a - b; break;
-            case '*': m->k = MV_NUM; m->num = a * b; break;
-            case '/': if (b != 0) { m->k = MV_NUM; m->num = a / b; } break;
+            case '+': nv.k = MV_NUM; nv.num = a + b; break;
+            case '-': nv.k = MV_NUM; nv.num = a - b; break;
+            case '*': nv.k = MV_NUM; nv.num = a * b; break;
+            case '/': if (b != 0) { nv.k = MV_NUM; nv.num = a / b; } break;
         }
     }
+    w->mem[ins->slot] = nv;
 }
 
 /* shared action helpers (used by both dir- and mem-targeted forms) */
@@ -2090,7 +2108,9 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
                 }
             return MS_ITEM;
         }
-        case OP_DROP: case OP_WRITE: return MS_ITEM;
+        case OP_DROP: return MS_ITEM;
+        case OP_WRITE: return MS_WRITE;
+        case OP_ASSIGN: return MS_ASSIGN;
         case OP_TELL: return MS_TELL;
         case OP_IF: return MS_IF;
         default: return 0;
@@ -2170,7 +2190,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                      * if-in-loop level's recorded speed) */
                     case OP_ELSE: w->pc = ins->target; continue;
                     case OP_ENDIF: w->pc++; continue;
-                    case OP_ASSIGN: exec_assign(S, w, ins); w->pc++; continue;
+                    case OP_ASSIGN:
+                        /* assignments take time (an action beat) unless
+                         * calibrated free -- then they run inline */
+                        if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; continue; }
+                        break;
                     case OP_FOREACH: {
                         int *fi = &w->fe_idx[ins->fe_slot];
                         unsigned char *ord = w->fe_ord[ins->fe_slot];
@@ -2215,7 +2239,16 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 if (S->L->rules & R_NOWALK) { S->failed = true; }
                 nactors++;
                 it[i].action = w->pc;
-                if (ins->mem_target >= 0) {
+                if (w->pend_x >= 0) {
+                    /* resuming a parked (queued) step: stay committed to the
+                     * same target -- but give up when the blocker has seated
+                     * for good (they will never move; the program must get
+                     * to re-check its conditions: Reverse Line stops behind
+                     * the finished line instead of climbing onto it) */
+                    if (done_worker_at(S, w->pend_x, w->pend_y))
+                        w->pend_x = w->pend_y = -1;  /* bump: pc advances */
+                    else { it[i].tx = w->pend_x; it[i].ty = w->pend_y; }
+                } else if (ins->mem_target >= 0) {
                     int tx, ty;
                     if (mem_tile(w, ins->mem_target, &tx, &ty)) {
                         int d = route_step(S, w, tx, ty, false);
@@ -2379,6 +2412,12 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         o->pend_x = o->pend_y = -1;
                         w->pend_x = w->pend_y = -1;
                         resolved[i] = true; progress = true;
+                        /* the trade completes o's parked step command */
+                        if (it[occ].action < 0 && o->pc < P->n
+                            && P->instr[o->pc].op == OP_STEP) {
+                            o->pc++;
+                            fall_check(S, o);
+                        }
                     }
                 }
             }
@@ -2415,6 +2454,17 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             }
         }
         }
+        /* an explicit step blocked by another worker WAITS (uncharged, pc
+         * held) and re-attempts at the next world event: walkers queue, and
+         * the retry lands in the same batch as the blocker's next move so
+         * chains and swaps resolve. Bumping through instead would let
+         * accumulator sweeps double-count their tile (Dangerous
+         * Spreadsheeting). */
+        for (int i = 0; i < S->nw; i++)
+            if (IS_MOVER(i) && !it[i].walk_only
+                && P->instr[it[i].action].op == OP_STEP
+                && S->w[i].x == prex[i] && S->w[i].y == prey[i])
+                it[i].action = -1;               /* hold pc, wait for an event */
         for (int i = 0; i < S->nw; i++)
             if (IS_MOVER(i)) {
                 if (S->w[i].x != prex[i] || S->w[i].y != prey[i]) S->st_steps++;
@@ -2424,6 +2474,13 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
         for (int i = 0; i < S->nw; i++)
             if (S->w[i].alive && !S->w[i].done && it[i].action >= 0 && !it[i].walk_only
                 && P->instr[it[i].action].op == OP_STEP) {
+                /* a step blocked by another worker RETRIES (walkers queue --
+                 * bumping through would let accumulator sweeps double-count
+                 * their own tile: Dangerous Spreadsheeting row sums).
+                 * Walls / no passable direction bump through as before. */
+                bool attempted = it[i].tx >= 0;
+                bool moved = (S->w[i].x != prex[i] || S->w[i].y != prey[i]);
+                if (attempted && !moved) continue;       /* hold pc, retry */
                 S->w[i].pc++;
                 fall_check(S, &S->w[i]);
             }
@@ -2451,6 +2508,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                              (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
                     break;
                 }
+                case OP_ASSIGN: exec_assign(S, w, ins); break;
                 case OP_PICKUP: {
                     if (!w->holding) {
                         if (ins->mem_target >= 0) {
@@ -2635,7 +2693,22 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
         if (S->failed)    { *out_rounds = rounds; return false; }
     }
     *out_rounds = rounds;
-    return level_won(S);
+    if (g_trace) {
+        fprintf(stderr, "-- final state (rounds=%d) --\n", rounds);
+        trace_board(S, rounds);
+        for (int i = 0; i < S->nw; i++) {
+            Worker *w = &S->w[i];
+            fprintf(stderr, "  w%d (%d,%d)%s%s%s pc=%d pend=(%d,%d) t=%ld [%s]\n",
+                    i, w->x, w->y,
+                    w->holding?" hold":"", w->done?" done":"", w->alive?"":" dead",
+                    w->pc, w->pend_x, w->pend_y, w->next_ms,
+                    w->pc < P->n ? P->instr[w->pc].raw : "end");
+        }
+    }
+    g_goal_dbg = g_trace;
+    bool won = level_won(S);
+    g_goal_dbg = false;
+    return won;
 }
 
 int main(int argc, char **argv) {
@@ -2643,6 +2716,15 @@ int main(int argc, char **argv) {
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
+    { const char *e;
+      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = atoi(e);
+      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = atoi(e);
+      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = atoi(e);
+      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = atoi(e);
+      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = atoi(e);
+      if ((e = getenv("EMU_MS_IF")))      MS_IF = atoi(e);
+      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = atoi(e);
+      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e); }
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [--trace] <level.lvl> <solution.txt> [trials]\n", argv[0]);
         return 1;
