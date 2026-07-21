@@ -88,6 +88,10 @@ typedef struct {
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
     int  last_tell;               /* beat of most recent tell (-1 = never) */
     int  last_x, last_y, blocked_beats;   /* traffic-jam detection */
+    int  fresh;     /* a just-acquired cube can't be taken from us until our
+                       first decision about it completes (2 = acquiring,
+                       1 = deciding, 0 = settled): Big Data's chains steal
+                       only cubes their holder chose to keep */
 } Worker;
 
 typedef enum {
@@ -2054,6 +2058,7 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->held = (int)(rnd(S) % (unsigned)(S->L->randmax + 1));
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = wi;
+        w->fresh = 2;
         w->printed++;
         S->pickups++;
         return true;
@@ -2068,6 +2073,7 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->held = t->cube;
         w->held_src_x = nx; w->held_src_y = ny;
         w->held_owner = t->owner;
+        w->fresh = 2;
         t->has_cube = false; t->owner = -1;
         S->pickups++;
         return true;
@@ -2415,6 +2421,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         /* the trade completes o's parked step command */
                         if (it[occ].action < 0 && o->pc < P->n
                             && P->instr[o->pc].op == OP_STEP) {
+                            if (o->fresh > 0) o->fresh--;
                             o->pc++;
                             fall_check(S, o);
                         }
@@ -2481,6 +2488,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 bool attempted = it[i].tx >= 0;
                 bool moved = (S->w[i].x != prex[i] || S->w[i].y != prey[i]);
                 if (attempted && !moved) continue;       /* hold pc, retry */
+                if (S->w[i].fresh > 0) S->w[i].fresh--;
                 S->w[i].pc++;
                 fall_check(S, &S->w[i]);
             }
@@ -2495,6 +2503,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             Instr *ins = &P->instr[it[i].action];
             if (ins->op == OP_STEP) continue;
             if ((ins->op == OP_TAKEFROM) != (pass == 1)) continue;
+            if (w->fresh > 0) w->fresh--;   /* one command boundary passed */
             switch (ins->op) {
                 case OP_IF: {
                     if (ins->nconds == 0) {
@@ -2570,8 +2579,13 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                                 S->w[j].holding = true; S->w[j].held = w->held;
                                 S->w[j].held_src_x = w->held_src_x; S->w[j].held_src_y = w->held_src_y;
                                 S->w[j].held_owner = w->held_owner;
+                                S->w[j].fresh = 2;
                                 w->holding = false;
                             }
+                            /* giving to empty floor is a NO-OP (Little
+                             * Exterminator 2 fires giveto at floor tiles
+                             * between shredder visits and must keep the
+                             * cube) */
                         }
                     }
                     break;
@@ -2586,10 +2600,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                             pickup_at(S, w, i, tx, ty);
                         } else {
                             int j = worker_at(S, tx, ty, i);
-                            if (j >= 0 && S->w[j].holding) {
+                            if (j >= 0 && S->w[j].holding && S->w[j].fresh == 0) {
                                 w->holding = true; w->held = S->w[j].held;
                                 w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
                                 w->held_owner = S->w[j].held_owner;
+                                w->fresh = 2;
                                 S->w[j].holding = false;
                             }
                         }
@@ -2604,10 +2619,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                             break;
                         }
                         int j = worker_at(S, nx, ny, i);
-                        if (j >= 0 && S->w[j].holding) {
+                        if (j >= 0 && S->w[j].holding && S->w[j].fresh == 0) {
                             w->holding = true; w->held = S->w[j].held;
                             w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
                             w->held_owner = S->w[j].held_owner;
+                            w->fresh = 2;
                             S->w[j].holding = false;
                             break;
                         }
