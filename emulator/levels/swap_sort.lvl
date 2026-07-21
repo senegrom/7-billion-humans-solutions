@@ -1,0 +1,12 @@
+# Walk-swap + myitem regression (synthetic, v2 format). Two workers holding
+# out-of-order values must swap positions (both step toward each other) so the
+# row reads sorted. Exercises: ent lines, pickup s, myitem vs tile comparison,
+# the mutual-swap movement rule, and the sorted-row win check.
+name Swap Sort
+dim 4 3
+ent wall 0 0
+ent worker 1 1
+ent worker 2 1
+ent cube 1 2 9
+ent cube 2 2 3
+goal sorted_row_holdable

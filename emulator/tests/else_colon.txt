@@ -1,0 +1,9 @@
+if w == datacube:
+	a:
+	step w
+	jump a
+else:
+	b:
+	step e
+	jump b
+endif

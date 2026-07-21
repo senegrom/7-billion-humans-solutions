@@ -1,0 +1,6 @@
+a:
+takefrom s
+if myitem < 50:
+	giveto w
+endif
+jump a

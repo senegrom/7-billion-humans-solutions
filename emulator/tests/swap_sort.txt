@@ -1,0 +1,9 @@
+pickup s
+a:
+if myitem > e:
+	step e
+endif
+if myitem < w:
+	step w
+endif
+jump a

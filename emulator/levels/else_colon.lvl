@@ -1,0 +1,10 @@
+# else-with-colon regression (synthetic). The worker senses a cube WEST, so the
+# TRUE branch must run (step w onto the hole = exit). A parser that treats
+# "else:" as a label falls through into the else body and steps east instead.
+name Else Colon
+dim 5 1
+ent hole 0 0
+ent cube 1 0 7
+ent worker 2 0
+ent wall 4 0
+goal all_exited

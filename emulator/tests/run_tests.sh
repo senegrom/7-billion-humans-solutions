@@ -28,11 +28,19 @@ expect_fail() {
 
 expect_win  levels/year03_transport.lvl tests/year03.txt   5
 expect_win  levels/year14_shredding.lvl tests/year14.txt   4
-expect_win  levels/decision_demo.lvl    tests/decision.txt 6
+expect_win  levels/decision_demo.lvl    tests/decision.txt 5
+expect_win  levels/else_colon.lvl       tests/else_colon.txt 5
+expect_win  levels/swap_sort.lvl        tests/swap_sort.txt  6
+expect_win  levels/printer_take.lvl     tests/printer_take.txt 4
 
 # Negative control: drop the delivery step -> cube never reaches the pad.
 printf 'step s\npickup c\nstep s\n' > tests/_broken.txt
 expect_fail levels/year03_transport.lvl tests/_broken.txt
+rm -f tests/_broken.txt
+
+# Negative control: swap in the wrong direction -> row never sorts.
+printf 'pickup s\na:\nif myitem < e:\n\tstep e\nendif\njump a\n' > tests/_broken.txt
+expect_fail levels/swap_sort.lvl tests/_broken.txt
 rm -f tests/_broken.txt
 
 echo "----"
