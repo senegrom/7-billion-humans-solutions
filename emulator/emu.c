@@ -891,7 +891,10 @@ typedef struct {
  * their machine animation; assignments (set/calc/nearest) and writes take
  * time too. EMU_MS_* env vars override for calibration runs. */
 static int MS_STEP = 333, MS_ITEM = 250, MS_PRINTER = 1200, MS_SHRED = 750,
-           MS_TELL = 1000, MS_IF = 333, MS_ASSIGN = 333, MS_WRITE = 1200;
+           MS_TELL = 1000, MS_IF = 333, MS_ASSIGN = 333, MS_WRITE = 1200,
+           MS_ERROR = 250;   /* an errored take/pickup (full hands): the red
+                                bubble displays ~1.5s but the program moves
+                                on quickly -- recorded speeds demand ~250ms */
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
 
@@ -2095,6 +2098,9 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
     switch (ins->op) {
         case OP_STEP: return MS_STEP;
         case OP_PICKUP: case OP_TAKEFROM: {
+            /* NOTE: acting with full hands shows the game's error bubble
+             * (display ~1.5s) but recorded speeds show the program moves on
+             * at the normal action cost -- so no special charge here */
             if (ins->mem_target >= 0) {
                 int tx, ty;
                 if (mem_tile(w, ins->mem_target, &tx, &ty)
@@ -2108,6 +2114,8 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
             return MS_ITEM;
         }
         case OP_GIVETO: {
+            /* giving while empty-handed is a quick no-op, not an error
+             * (Cubical Communication's choreography fires bare givetos) */
             if (ins->mem_target >= 0) {
                 int tx, ty;
                 if (mem_tile(w, ins->mem_target, &tx, &ty)
@@ -2767,7 +2775,8 @@ int main(int argc, char **argv) {
       if ((e = getenv("EMU_MS_TELL")))    MS_TELL = atoi(e);
       if ((e = getenv("EMU_MS_IF")))      MS_IF = atoi(e);
       if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = atoi(e);
-      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e); }
+      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e);
+      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = atoi(e); }
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [--trace] <level.lvl> <solution.txt> [trials]\n", argv[0]);
         return 1;
