@@ -66,11 +66,14 @@ ent cube <x> <y> <value|rand|randu>   # rand = uniform, randu = distinct draws
 goal <predicate [args]>
 ```
 
-Win predicates implemented so far: `cubes_on_goals`, `shredded <n>`,
-`all_exited`, `tutorial_pickup_drop`, `cubes_offset <dx> <dy>`, `room_cleared`,
-`aligned_hole_exit`, `all_cubes_held`, `unzip`, `shred_all [alive_all]`,
-`all_workers_holding`, `sorted_row_holdable`, `rows_gaps_filled`,
-`line_reversed`, `all_holding_min <n>`. Unknown goals refuse to run.
+Win predicates implemented: the full campaign set except the three
+counting-machine levels (`binary_counter`/`decimal_counter`/`decimal_doubler`,
+whose display hardware is not in the level grid) — from `tutorial_pickup_drop`
+and `shred_all [alive_all]` through `sorted_row_holdable`, `email_sort`,
+`mult_table`, `fashion_unique`, `mode_counts`, `flower_sums`,
+`neighbor_counts`, `glory_dive`, `distances_from_door`, `defrag [ordered]`,
+`goodbye_last_tells` and more (see `goal_from` in emu.c). Unknown goals refuse
+to run rather than guess.
 
 Randomized levels (or programs with multi-direction steps) run over many seeded
 trials; `result` is `WIN` (all trials), `PROBABILISTIC` (some -- a luck-based
@@ -78,34 +81,51 @@ solution the game would accept on a lucky run), or `FAIL`.
 
 ## What is faithful, and what isn't
 
-Faithful (validated by running the community repo's known-good solutions for
-18 of 20 early-campaign cases against real level geometry):
+Faithful (validated by running the community repo's known-good solutions
+against real level geometry — the large majority of Years 2–43 pass):
 
-- Parser: labels, `comment`, `-- headers --`, comma-separated direction lists,
-  multi-line `if` conditions chained with `and`/`or` (evaluated left to right),
-  comparisons `== != < > <= >=` over tile types, numbers, `myitem`, and other
-  tiles' values, `else`/`else:`, `jump`, `end`.
-- Mechanics: `step` (multi-direction = random pick), `pickUp` (own tile,
-  adjacent tiles, printers), `drop`, `giveTo` (shredder + worker hand-off),
-  `takeFrom` (printer + worker), the walk-swap rule (two workers stepping into
-  each other exchange tiles), waiting on unmet conditions, holes destroying
-  what falls in, wall/occupancy blocking.
+- Parser: labels, `comment`, `-- headers --` and trailing `DEFINE COMMENT`
+  doodle blocks, comma-separated direction lists, multi-line `if` conditions
+  chained with `and`/`or` (evaluated left to right), comparisons
+  `== != < > <= >=` over tile types (`wall`/`datacube`/`hole`/`nothing`/
+  `something`/`shredder`/`printer`/`worker`), numbers, `myitem`, other tiles'
+  values and memory slots, `else`/`else:`, `jump`, `end`.
+- Commands: `step`, `pickup`, `drop`, `giveto` (multi-direction), `takefrom`,
+  `write <n|memN>`, `tell <target> <word>` / `listenfor <word>`,
+  `memN = nearest <type>`, `memN = set <x>`, `memN = calc <a> <op> <b>`
+  (integer arithmetic, division by zero yields nothing), and
+  `memN = foreachdir <dirs>:` ... `endfor` loops.
+- Memory-slot targets: `step/pickup/giveto/takefrom memN` walk to the
+  remembered thing first (BFS pathfinding, jams break up by shuffling), then
+  act; a stale `nearest` reference re-resolves to the next nearest of its kind
+  on arrival — and `nearest datacube` also finds a cube in a carrier's hands,
+  so crowds chase the thing rather than besiege a square. `nearest` looks
+  around you, never under your own feet. Actions that would no-op (take while
+  holding, give while empty) skip without walking.
+- Mechanics: multi-direction steps pick randomly among passable choices, the
+  walk-swap rule, movement chains and rotation cycles resolve simultaneously,
+  waiting on unmet conditions, holes destroying what falls in, tell/listen
+  synchronization (a beat's give-aways resolve before its take-froms).
 - Sensing: a tile is a *set* of contents -- a worker standing on a floor cube
   matches both `worker` and `datacube`; a cube held up in the air is not a
   floor cube; numeric reads see the floor cube first, else the held item of
-  the worker standing there.
-- SIZE: every command except labels, comments, `else`, and `endif` (the latter
-  two are part of the `if` block in the game's editor).
+  the worker standing there. `myitem == datacube/something/nothing` tests
+  holding. `mem == mem` on two remembered tiles compares identity.
+- Special rules: no-walking, unique shredder use, exploding label cubes, one
+  shredder at a time, speak-in-turn.
+- SIZE: every command except labels, comments, `else`, `endif`, and `endfor`.
 
 Not yet faithful / deliberately refused at runtime rather than guessed:
 
-- `calc`, `write`, `set`, `nearest`, `tell`, `listen`, `forEachDir` — parsed
-  but abort execution (no silent mis-simulation).
-- **The Speed metric.** The game's Speed is not "lines executed" (Year 2 = 1,
-  Year 46 = 0); it needs calibration against the real game before we can rank
-  speed solutions. We print raw rounds only as a coarse signal.
-- Exact multi-worker collision timing in dense choreography (one known case:
-  the Injection Sites 2 community solution's sidestep dance resolves
-  differently; needs in-game observation).
+- The three counting-machine levels (their sensors/display are not part of the
+  extracted grid) refuse to run.
+- **The Speed metric.** Recorded community speeds vs this emulator's raw
+  lockstep rounds differ by a non-constant factor (0.5x-3x across levels), so
+  per-command durations need measuring against the real game. Rounds are
+  printed only as a coarse signal.
+- Dense multi-worker choreography can resolve differently than the game's
+  crowd behavior (known cases: Injection Sites 2 (size), Neural Pathways,
+  Checkerboard Organization, Data Backup Day); heavily scripted
+  position-dependent speed solutions are similarly sensitive.
 
 `--trace` prints the board and per-worker actions each round for debugging.

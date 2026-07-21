@@ -3,10 +3,23 @@
 # (broken) program must FAIL. Proves the VM discriminates good from bad.
 set -uo pipefail
 cd "$(dirname "$0")/.."
-bash build.sh
+
+# EMU_BIN overrides the binary (useful when AV/sync scanners lock fresh builds
+# inside synced folders); otherwise build and run in place.
+if [ -n "${EMU_BIN:-}" ]; then
+  emu=$EMU_BIN
+else
+  bash build.sh
+  emu=./emu.exe
+  # a fresh build can be briefly locked by scanners -- wait until runnable
+  for _ in 1 2 3 4 5 6 7 8 9 10; do
+    "$emu" >/dev/null 2>&1
+    [ $? -ne 126 ] && break
+    sleep 1
+  done
+fi
 
 pass=0; fail=0
-emu=./emu.exe
 
 # expect_win <level> <solution> <expected_size>
 expect_win() {
