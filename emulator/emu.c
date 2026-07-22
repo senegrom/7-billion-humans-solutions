@@ -855,7 +855,7 @@ static void check_palette(const Level *L, const Program *P) {
 /* --------------------------------------------------------------- runtime -- */
 
 enum { MAXSHREV = 1024, MAXTELLEV = 512 };
-typedef struct { int value, src_x, src_y, shr_x, shr_y, worker; } ShredEv;
+typedef struct { int value, src_x, src_y, shr_x, shr_y, worker, id; } ShredEv;
 typedef struct { int worker, x; char word[WORDLEN]; } TellEv;
 
 typedef struct {
@@ -872,6 +872,7 @@ typedef struct {
     bool    label_tile[MAXH][MAXW];   /* labels_explode rules */
     /* per-trial snapshot of the initial cube placement */
     int     icx[MAXCUBES], icy[MAXCUBES], icv[MAXCUBES];
+    int     ic_id[MAXCUBES];         /* cube identity of each initial cube */
     int     nic;
     ShredEv shrev[MAXSHREV]; int nshrev;
     TellEv  tellev[MAXTELLEV]; int ntellev;
@@ -885,6 +886,9 @@ typedef struct {
     int     ic_group[MAXCUBES];      /* G_FLOWER/SHRED_MAX groups (8-connected) */
     int     ngroups;
     bool    door_exit;           /* the door acts as a walk-in exit */
+    long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
+                                      customer at a time (the printer queue) */
+    int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
     int     feeds_this_beat;
     int     beat;
     long    now_ms, win_ms;      /* event clock; when the win state was reached */
@@ -961,7 +965,8 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         if (((L->rules & R_LABELS_EXPLODE) && c->mode == CB_FIXED)
          || ((L->rules & R_LABELS_EXPLODE_NONZERO) && c->mode == CB_FIXED && c->value != 0))
             S->label_tile[c->y][c->x] = true;
-        S->icx[S->nic] = c->x; S->icy[S->nic] = c->y; S->icv[S->nic] = v; S->nic++;
+        S->icx[S->nic] = c->x; S->icy[S->nic] = c->y; S->icv[S->nic] = v;
+        S->ic_id[S->nic] = S->next_cube_id; S->nic++;
     }
 
     S->door_exit = (L->win == G_WORKERS_EXIT_DOOR);
@@ -1025,23 +1030,48 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
     }
 
     if (L->win == G_DISTANCES_FROM_DOOR && L->door_x >= 0) {
-        /* walking distance (8-dir over floor) from the boss's door */
-        for (int y = 0; y < L->h; y++)
-            for (int x = 0; x < L->w; x++) S->dist_door[y][x] = -1;
+        /* the boss occupies a 2x2 pocket whose base tile is the door marker;
+         * a cube's expected number = walking steps (8-dir over floor, not
+         * through the boss) to the straight-line-nearest of his four tiles */
+        static int cd[4][MAXH][MAXW];
+        int corner[4][2] = {
+            { L->door_x,     L->door_y     }, { L->door_x - 1, L->door_y     },
+            { L->door_x,     L->door_y - 1 }, { L->door_x - 1, L->door_y - 1 },
+        };
         static int q[MAXW*MAXH];
-        int head = 0, tail = 0;
-        S->dist_door[L->door_y][L->door_x] = 0;
-        q[tail++] = L->door_y * MAXW + L->door_x;
-        while (head < tail) {
-            int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
-            for (int d = 0; d < 8; d++) {
-                int nx = cx + DX[d], ny = cy + DY[d];
-                if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
-                if (S->dist_door[ny][nx] >= 0 || L->terr[ny][nx] != T_FLOOR) continue;
-                S->dist_door[ny][nx] = S->dist_door[cy][cx] + 1;
-                q[tail++] = ny * MAXW + nx;
+        for (int c = 0; c < 4; c++) {
+            for (int y = 0; y < L->h; y++)
+                for (int x = 0; x < L->w; x++) cd[c][y][x] = -1;
+            int head = 0, tail = 0;
+            int sx2 = corner[c][0], sy2 = corner[c][1];
+            if (sx2 < 0 || sy2 < 0) continue;
+            cd[c][sy2][sx2] = 0;
+            q[tail++] = sy2 * MAXW + sx2;
+            while (head < tail) {
+                int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
+                for (int d = 0; d < 8; d++) {
+                    int nx = cx + DX[d], ny = cy + DY[d];
+                    if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
+                    if (cd[c][ny][nx] >= 0 || L->terr[ny][nx] != T_FLOOR) continue;
+                    bool boss = false;
+                    for (int b = 0; b < 4; b++)
+                        if (nx == corner[b][0] && ny == corner[b][1]) boss = true;
+                    if (boss) continue;
+                    cd[c][ny][nx] = cd[c][cy][cx] + 1;
+                    q[tail++] = ny * MAXW + nx;
+                }
             }
         }
+        for (int y = 0; y < L->h; y++)
+            for (int x = 0; x < L->w; x++) {
+                int best = 0x7fffffff, pick = -1;
+                for (int c = 0; c < 4; c++) {
+                    int ddx = corner[c][0] - x, ddy = corner[c][1] - y;
+                    int d2 = ddx*ddx + ddy*ddy;
+                    if (d2 < best) { best = d2; pick = c; }
+                }
+                S->dist_door[y][x] = pick >= 0 ? cd[pick][y][x] : -1;
+            }
     }
 
     S->ngroups = 0;
@@ -1271,6 +1301,13 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
     int a, b;
     bool ha = operand_value(S, w, &c->lhs, &a);
     bool hb = operand_value(S, w, &c->rhs, &b);
+    /* an untouched mem slot reads as 0 against a number literal, matching
+     * calc's accumulator coercion (Printing Etiquette counts "mem2 < 5"
+     * before ever setting mem2) */
+    if (!ha && c->lhs.kind == 2 && w->mem[c->lhs.mem].k == MV_NOTHING
+        && hb && c->rhs.kind == 0) { a = 0; ha = true; }
+    if (!hb && c->rhs.kind == 2 && w->mem[c->rhs.mem].k == MV_NOTHING
+        && ha && c->lhs.kind == 0) { b = 0; hb = true; }
     if (!ha || !hb) return c->op == O_NE && (ha != hb);   /* missing value */
     return num_cmp(c->op, a, b);
 }
@@ -1617,10 +1654,22 @@ static bool level_won(Sim *S) {
             for (int i = 0; i < S->nw; i++) if (!S->w[i].exited) return false;
             return true;
         case G_PRINT_SHRED_FOREVER:
-        case G_PRINTSHRED_QUIET:
             for (int i = 0; i < S->nw; i++)
                 if (!S->w[i].alive || S->w[i].printed < L->goal_a || S->w[i].fed < L->goal_a)
                     return false;
+            return true;
+        case G_PRINTSHRED_QUIET:
+            /* the game counts machines, not people: every shredder must have
+             * eaten exactly goal_a cubes (whose they were doesn't matter --
+             * a worker may well feed their cubicle-number token through) */
+            for (int y = 0; y < L->h; y++)
+                for (int x = 0; x < L->w; x++) {
+                    if (L->terr[y][x] != T_SHREDDER) continue;
+                    int n = 0;
+                    for (int e = 0; e < S->nshrev; e++)
+                        if (S->shrev[e].shr_x == x && S->shrev[e].shr_y == y) n++;
+                    if (n != L->goal_a) return false;
+                }
             return true;
         case G_ROYALE_MAX_REMAINS: {
             int max = 0;
@@ -1644,9 +1693,9 @@ static bool level_won(Sim *S) {
             return true;
         case G_CHECKERBOARD: {
             /* the game only demands the pattern tiles be COVERED -- every
-             * room tile of the seed cube's parity needs a cube; what lands
-             * on the other color is nobody's business (decompiled win
-             * check: even tiles must hold a cube or the printer) */
+             * room tile of the seed cube's parity needs a cube (the printer
+             * excuses its own tile); what lands on the other color is
+             * nobody's business */
             int par = (S->icx[0] + S->icy[0]) & 1;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
@@ -1768,20 +1817,21 @@ static bool level_won(Sim *S) {
             return floor_cube_count(S) == S->nic + n;
         }
         case G_PRINTED_LABELED: {
-            for (int i = 0; i < S->nw; i++) {
-                if (!S->w[i].alive || S->w[i].holding) return false;
-                bool seen[6] = { false };
-                int owned = 0;
-                for (int y = 0; y < L->h; y++)
-                    for (int x = 0; x < L->w; x++) {
-                        Tile *t = &S->grid[y][x];
-                        if (!t->has_cube || t->owner != i) continue;
-                        owned++;
-                        if (t->cube < 1 || t->cube > 5 || seen[t->cube]) return false;
-                        seen[t->cube] = true;
-                    }
-                if (owned != 5) return false;
-            }
+            /* the game can't see whose label is whose: it wants 25 cubes on
+             * the floor, nobody holding, five of each value 1..5, and every
+             * worker's print counter at exactly five */
+            for (int i = 0; i < S->nw; i++)
+                if (S->w[i].holding || S->w[i].printed != 5) return false;
+            int hist[6] = { 0 }, n = 0;
+            for (int y = 0; y < L->h; y++)
+                for (int x = 0; x < L->w; x++) {
+                    Tile *t = &S->grid[y][x];
+                    if (!t->has_cube) continue;
+                    n++;
+                    if (t->cube >= 1 && t->cube <= 5) hist[t->cube]++;
+                }
+            if (n != S->nw * 5) return false;
+            for (int v = 1; v <= 5; v++) if (hist[v] != 5) return false;
             return true;
         }
         case G_DECRYPT_LEFT_EXIT: {
@@ -1861,11 +1911,20 @@ static bool level_won(Sim *S) {
                 if (!S->w[i].alive || S->w[i].printed < 1 || S->w[i].fed < 1) return false;
             return true;
         case G_ALTERNATE_SHRED: {
-            if (S->shredded < S->nic) return false;
-            int mid = L->w / 2;
+            /* the original cubes must go through the shredder in converging
+             * outside-in order: leftmost, rightmost, next-left, next-right...
+             * -- it is the SPECIFIC starting cube that matters each turn,
+             * not just which side it came from */
+            if (S->shredded != S->nic || S->nshrev != S->nic) return false;
+            int ord[MAXCUBES];
+            for (int k = 0; k < S->nic; k++) ord[k] = k;
+            for (int i = 0; i < S->nic; i++)
+                for (int j = i + 1; j < S->nic; j++)
+                    if (S->icx[ord[j]] < S->icx[ord[i]]) { int t = ord[i]; ord[i] = ord[j]; ord[j] = t; }
+            int lo = 0, hi = S->nic - 1;
             for (int e = 0; e < S->nshrev; e++) {
-                bool left = S->shrev[e].src_x < mid;
-                if (left != (e % 2 == 0)) return false;
+                int want = (e % 2 == 0) ? ord[lo++] : ord[hi--];
+                if (S->shrev[e].id != S->ic_id[want]) return false;
             }
             return true;
         }
@@ -1968,12 +2027,12 @@ static bool level_won(Sim *S) {
             }
             return true;
         }
-        case G_NEIGHBOR_COUNTS: {
-            int n = 0;
+        case G_NEIGHBOR_COUNTS:
+            /* only cubes on the floor are graded -- one still riding in a
+             * worker's hands is exempt (and invisible as a neighbor) */
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->grid[y][x].has_cube) continue;
-                    n++;
                     int nb = 0;
                     for (int d = 0; d < 8; d++) {
                         int nx = x + DX[d], ny = y + DY[d];
@@ -1981,8 +2040,7 @@ static bool level_won(Sim *S) {
                     }
                     if (S->grid[y][x].cube != nb) return false;
                 }
-            return n == S->nic;
-        }
+            return true;
         case G_MAX_NEIGHBORS: {
             int n = 0;
             for (int y = 0; y < L->h; y++)
@@ -2005,16 +2063,14 @@ static bool level_won(Sim *S) {
                 if (!w->exited || w->exit_x != S->glory_x || w->exit_y != S->glory_y) return false;
             }
             return true;
-        case G_DISTANCES_FROM_DOOR: {
-            int n = 0;
+        case G_DISTANCES_FROM_DOOR:
+            /* floor cubes only; a held cube is exempt from grading */
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->grid[y][x].has_cube) continue;
-                    n++;
                     if (S->grid[y][x].cube != S->dist_door[y][x]) return false;
                 }
-            return n == S->nic;
-        }
+            return true;
         case G_SORTED_GRID: {
             /* initial positions in row-major order must hold ascending values */
             int idx[MAXCUBES];
@@ -2220,6 +2276,11 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
 
 /* shared action helpers (used by both dir- and mem-targeted forms) */
 
+static bool g_trace = false;
+static bool g_nochain = false;              /* experimental movement variant */
+
+static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
+
 static void feed_shredder(Sim *S, Worker *w, int wi, int nx, int ny) {
     if ((S->L->rules & R_UNIQUE_SHRED) && S->shred_used[ny][nx]) {
         w->alive = false;                        /* violently destroyed */
@@ -2230,16 +2291,90 @@ static void feed_shredder(Sim *S, Worker *w, int wi, int nx, int ny) {
     S->feeds_this_beat++;
     if ((S->L->rules & R_ONE_SHREDDER) && S->feeds_this_beat > 1) S->failed = true;
     if (S->nshrev < MAXSHREV)
-        S->shrev[S->nshrev++] = (ShredEv){ w->held, w->held_src_x, w->held_src_y, nx, ny, wi };
+        S->shrev[S->nshrev++] = (ShredEv){ w->held, w->held_src_x, w->held_src_y, nx, ny, wi, w->held_id };
     w->holding = false;
     w->fed++;
     S->shredded++;
+    S->mach_busy[ny][nx] = S->now_ms + MS_SHRED;
+    if (g_trace)
+        fprintf(stderr, "FEED w%d -> shredder(%d,%d) total=%d\n", wi, nx, ny, S->shredded);
+}
+
+/* a directional giveto aimed next to a shredder still feeds it: the machine
+ * is wider than its home tile, and giveto ranks shredders first.  The reach
+ * limit (2.4 tiles, calibrated in-game) keeps far machines out of it. */
+static bool divert_find(Sim *S, Worker *w, int px, int py, int *ox, int *oy) {
+    /* only a probe aimed AT a machine sees the whole bank; giveto at plain
+     * floor stays a strict no-op (Uniquely Disposed's march depends on it) */
+    if (S->grid[py][px].terrain != T_PRINTER) return false;
+    for (int d = 0; d < 8; d++) {
+        int sx = px + DX[d], sy = py + DY[d];
+        if (sx<0||sy<0||sx>=S->L->w||sy>=S->L->h) continue;
+        if (S->grid[sy][sx].terrain != T_SHREDDER) continue;
+        int ddx = sx - w->x, ddy = sy - w->y;
+        if (ddx*ddx + ddy*ddy > 5) continue;      /* 2.4^2 = 5.76 */
+        *ox = sx; *oy = sy;
+        return true;
+    }
+    return false;
+}
+
+static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py) {
+    int sx, sy;
+    if (!divert_find(S, w, px, py, &sx, &sy)) return false;
+    feed_shredder(S, w, wi, sx, sy);
+    return true;
+}
+
+/* which machine (printer for takefrom, shredder for giveto) this command is
+ * about to use from where the worker stands -- the queueing gate needs to
+ * know before the action fires */
+static bool machine_target(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
+    if (ins->op == OP_TAKEFROM) {
+        if (w->holding) return false;
+        if (ins->mem_target >= 0) {
+            int tx, ty;
+            if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) return false;
+            if (abs(w->x-tx) > 1 || abs(w->y-ty) > 1) return false;
+            if (S->grid[ty][tx].terrain != T_PRINTER) return false;
+            *ox = tx; *oy = ty;
+            return true;
+        }
+        for (int k = 0; k < ins->ndirs; k++) {
+            int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+            if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+            if (S->grid[ny][nx].terrain == T_PRINTER) { *ox = nx; *oy = ny; return true; }
+        }
+        return false;
+    }
+    if (ins->op != OP_GIVETO || !w->holding) return false;
+    if (ins->mem_target >= 0) {
+        int tx, ty;
+        if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) return false;
+        if (abs(w->x-tx) > 1 || abs(w->y-ty) > 1) return false;
+        if (S->grid[ty][tx].terrain != T_SHREDDER) return false;
+        *ox = tx; *oy = ty;
+        return true;
+    }
+    for (int k = 0; k < ins->ndirs; k++) {
+        int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+        if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+        if (S->grid[ny][nx].terrain == T_SHREDDER) { *ox = nx; *oy = ny; return true; }
+        if (divert_find(S, w, nx, ny, ox, oy)) return true;
+    }
+    return false;
 }
 
 /* returns true if something was picked up (or the worker exploded) */
 static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
     Tile *t = &S->grid[ny][nx];
     if (t->terrain == T_PRINTER) {               /* fresh print */
+        /* the quiet-office printers hold exactly the ration of paper the goal
+         * asks for -- runs dry after goal_a sheets, freezing the counts the
+         * win check wants (the size solution loops unboundedly otherwise) */
+        if (S->L->win == G_PRINTSHRED_QUIET && S->prints_at[ny][nx] >= S->L->goal_a)
+            return false;
+        S->prints_at[ny][nx]++;
         w->holding = true;
         w->held = (int)(rnd(S) % (unsigned)(S->L->randmax + 1));
         w->held_id = ++S->next_cube_id;
@@ -2248,6 +2383,7 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->fresh = 2;
         w->printed++;
         S->pickups++;
+        S->mach_busy[ny][nx] = S->now_ms + MS_PRINTER;
         return true;
     }
     if (t->has_cube) {
@@ -2269,9 +2405,6 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
     }
     return false;
 }
-
-static bool g_trace = false;
-static bool g_nochain = false;              /* experimental movement variant */
 
 /* how long the worker is busy after starting this command */
 static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
@@ -2502,8 +2635,16 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     /* arrived -- but if the remembered thing is gone from this
                      * tile, chase its kind to the next nearest and keep going */
                     if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || ARRIVED()) {
-                        nactors++;
-                        it[i].action = w->pc;    /* act (or no-op) this beat */
+                        int mx, my;
+                        if (machine_target(S, w, ins, &mx, &my)
+                            && S->mach_busy[my][mx] > t) {
+                            nidle++;             /* machine mid-cycle: queue */
+                        } else {
+                            if (machine_target(S, w, ins, &mx, &my))
+                                S->mach_busy[my][mx] = t + 1;   /* claim */
+                            nactors++;
+                            it[i].action = w->pc;    /* act (or no-op) this beat */
+                        }
                     } else {
                         int d = route_step(S, w, tx, ty, !onto);
                         if (d >= 0) {
@@ -2536,8 +2677,18 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 }
                 #undef ARRIVED
             } else {
-                nactors++;
-                it[i].action = w->pc;
+                int mx, my;
+                if ((ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)
+                    && machine_target(S, w, ins, &mx, &my)
+                    && S->mach_busy[my][mx] > t) {
+                    nidle++;                     /* machine mid-cycle: queue */
+                } else {
+                    if ((ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)
+                        && machine_target(S, w, ins, &mx, &my))
+                        S->mach_busy[my][mx] = t + 1;           /* claim */
+                    nactors++;
+                    it[i].action = w->pc;
+                }
             }
         }
         if (S->failed) { *out_rounds = rounds; return false; }
@@ -2789,6 +2940,10 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
                         if (S->grid[ny][nx].terrain == T_SHREDDER) {
                             feed_shredder(S, w, i, nx, ny);
+                        } else if (ins->mem_target < 0 && divert_shredder(S, w, i, nx, ny)) {
+                            /* handled: a shredder overlapping the probed tile
+                             * took the cube (machines are wider than their
+                             * home tile; giveto prefers shredders) */
                         } else {
                             int j = worker_at(S, nx, ny, i);
                             if (j >= 0 && !S->w[j].holding) {
@@ -2821,7 +2976,6 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                                 w->holding = true; w->held = S->w[j].held;
                                 w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
                                 w->held_owner = S->w[j].held_owner;
-                            w->held_id = S->w[j].held_id;
                                 w->held_id = S->w[j].held_id;
                                 w->fresh = 2;
                                 S->w[j].holding = false;
@@ -2951,6 +3105,24 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
             for (int e = 0; e < S->nshrev; e++)
                 fprintf(stderr, " %d", S->shrev[e].src_x);
             fprintf(stderr, "\n");
+        }
+        if (S->L->win == G_NEIGHBOR_COUNTS) {
+            int wrong = 0;
+            for (int y = 0; y < S->L->h; y++)
+                for (int x = 0; x < S->L->w; x++) {
+                    if (!S->grid[y][x].has_cube) continue;
+                    int nb = 0;
+                    for (int d = 0; d < 8; d++) {
+                        int nx = x + DX[d], ny = y + DY[d];
+                        if (nx>=0&&ny>=0&&nx<S->L->w&&ny<S->L->h&&S->grid[ny][nx].has_cube) nb++;
+                    }
+                    if (S->grid[y][x].cube != nb) {
+                        fprintf(stderr, "  wrong cube (%d,%d): shows %d, true %d\n",
+                                x, y, S->grid[y][x].cube, nb);
+                        wrong++;
+                    }
+                }
+            fprintf(stderr, "  neighbor-count mismatches: %d\n", wrong);
         }
         trace_board(S, rounds);
         for (int i = 0; i < S->nw; i++) {
