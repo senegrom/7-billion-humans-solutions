@@ -2353,6 +2353,12 @@ static bool g_nochain = false;              /* experimental movement variant */
  * are mid-command, so enabling it wins nothing and costs two levels.  Kept
  * documented and switchable (EMU_SHOVE=1) rather than lost. */
 static bool g_shove = false;
+/* A step whose candidates are all blocked still burns the walk duration in
+ * the game (0x45BB3F falls into 0x45A330 + 0x45E650 like a successful step).
+ * True to the exe, but the beat model's uncharged wait is better calibrated
+ * against recorded speeds: charging it wins Neighborly Sweeper and loses
+ * Little Exterminator 2 / Sorting Floor. Switchable via EMU_BALKCOST=1. */
+static bool g_balkcost = false;
 
 static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
 
@@ -3400,11 +3406,14 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
          * chains and swaps resolve. Bumping through instead would let
          * accumulator sweeps double-count their tile (Dangerous
          * Spreadsheeting). */
+        bool balked[MAXWORKERS] = { false };
         for (int i = 0; i < S->nw; i++)
             if (IS_MOVER(i) && !it[i].walk_only
                 && P->instr[it[i].action].op == OP_STEP
-                && S->w[i].x == prex[i] && S->w[i].y == prey[i])
+                && S->w[i].x == prex[i] && S->w[i].y == prey[i]) {
                 it[i].action = -1;               /* hold pc, wait for an event */
+                balked[i] = true;                /* a failed step still costs */
+            }
         for (int i = 0; i < S->nw; i++)
             if (IS_MOVER(i)) {
                 if (S->w[i].x != prex[i] || S->w[i].y != prey[i]) S->st_steps++;
@@ -3645,7 +3654,14 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done) continue;
-            if (it[i].action < 0 && w->next_ms <= t)      /* idled this batch */
+            if (balked[i] && g_balkcost) {
+                /* the game spends the whole walk duration on a step whose
+                 * candidates were all blocked (0x45BB3F falls into 0x45A330 +
+                 * 0x45E650 exactly like a successful one) -- it is a failed
+                 * attempt, not a free wait */
+                w->next_ms = t + (MS_STEP > 0 ? MS_STEP : 1);
+            }
+            else if (it[i].action < 0 && w->next_ms <= t)  /* idled this batch */
                 w->next_ms = (next_event > t) ? next_event : t + 1;
         }
 
@@ -3733,6 +3749,7 @@ int main(int argc, char **argv) {
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     if (getenv("EMU_SHOVE")) g_shove = true;
+    if (getenv("EMU_BALKCOST")) g_balkcost = true;
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
     { const char *e;   /* overrides in ms, rounded to 60fps frames */
       #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
