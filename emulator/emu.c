@@ -3338,21 +3338,19 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     o->pend_x = o->pend_y = -1;
                     w->pend_x = w->pend_y = -1;
                     resolved[i] = true; progress = true;
-                } else if (S->w[occ].done && S->w[occ].next_ms <= t) {
+                } else if (S->w[occ].done && S->w[occ].next_ms <= t
+                           && S->w[occ].pend_x < 0) {
                     /* THE SHOVE: a mover does not wait on a worker that has
-                     * finished its program. A finished worker is idle -- not
-                     * walking, nothing queued, nothing left to run -- and is
-                     * displaced into the tile the mover is leaving. Workers
-                     * still executing are never shoved, which is what keeps a
-                     * queue forming behind them. */
-                    Worker *o = &S->w[occ];
-                    int ox = o->x, oy = o->y;
-                    o->x = w->x; o->y = w->y;
-                    w->x = ox; w->y = oy;
-                    o->pend_x = o->pend_y = -1;
-                    w->pend_x = w->pend_y = -1;
-                    resolved[i] = true; progress = true;
-                    fall_check(S, o);
+                     * finished its program. The finished worker is set walking
+                     * into the tile the mover is leaving -- but the mover does
+                     * NOT advance yet; the two intents meet and resolve as a
+                     * swap on the following beat, which costs the mover the
+                     * step it would otherwise have taken for free. Workers
+                     * still executing are never shoved, which is what lets a
+                     * queue form behind them. */
+                    S->w[occ].pend_x = w->x;
+                    S->w[occ].pend_y = w->y;
+                    progress = true;
                 } else {
                     /* blocked -- but if the blocker left a standing intent to
                      * step into OUR tile, the trade happens now */
