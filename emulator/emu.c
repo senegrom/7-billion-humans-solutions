@@ -1394,22 +1394,14 @@ static int worker_at(Sim *S, int x, int y, int self) {
     return -1;
 }
 
-/* movement blocking only: a worker whose program has ended sits down and no
- * longer blocks the aisle (12 deliveries through one shredder ring require it) */
+/* Movement blocking. A worker whose program has ended is still a worker
+ * standing on that tile, so it blocks like any other -- but being finished is
+ * exactly what makes it eligible to be shoved out of the way (see phase B). */
 static int blocking_worker_at(Sim *S, int x, int y, int self) {
     for (int i = 0; i < S->nw; i++)
-        if (i != self && S->w[i].alive && !S->w[i].done
+        if (i != self && S->w[i].alive
             && S->w[i].x == x && S->w[i].y == y) return i;
     return -1;
-}
-
-/* seated (done) workers are solid for explicit dir-steps -- only routed
- * walks slip past them (Neural Pathways deliveries vs Reverse Line stops) */
-static bool done_worker_at(Sim *S, int x, int y) {
-    for (int i = 0; i < S->nw; i++)
-        if (S->w[i].alive && S->w[i].done && S->w[i].x == x && S->w[i].y == y)
-            return true;
-    return false;
 }
 
 static bool walkable(Sim *S, int x, int y) {
@@ -3149,10 +3141,9 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                      * same target -- but give up when the blocker has seated
                      * for good (they will never move; the program must get
                      * to re-check its conditions: Reverse Line stops behind
-                     * the finished line instead of climbing onto it) */
-                    if (done_worker_at(S, w->pend_x, w->pend_y))
-                        w->pend_x = w->pend_y = -1;  /* bump: pc advances */
-                    else { it[i].tx = w->pend_x; it[i].ty = w->pend_y; }
+                     * the finished line instead of climbing onto it) -- a
+                     * FINISHED blocker is shoved aside instead, in phase B */
+                    it[i].tx = w->pend_x; it[i].ty = w->pend_y;
                 } else if (ins->mem_target >= 0) {
                     /* "step memN" walks ALL THE WAY to the remembered thing
                      * (Terrain Leveler's pass restart walks the whole column
@@ -3347,6 +3338,21 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     o->pend_x = o->pend_y = -1;
                     w->pend_x = w->pend_y = -1;
                     resolved[i] = true; progress = true;
+                } else if (S->w[occ].done && S->w[occ].next_ms <= t) {
+                    /* THE SHOVE: a mover does not wait on a worker that has
+                     * finished its program. A finished worker is idle -- not
+                     * walking, nothing queued, nothing left to run -- and is
+                     * displaced into the tile the mover is leaving. Workers
+                     * still executing are never shoved, which is what keeps a
+                     * queue forming behind them. */
+                    Worker *o = &S->w[occ];
+                    int ox = o->x, oy = o->y;
+                    o->x = w->x; o->y = w->y;
+                    w->x = ox; w->y = oy;
+                    o->pend_x = o->pend_y = -1;
+                    w->pend_x = w->pend_y = -1;
+                    resolved[i] = true; progress = true;
+                    fall_check(S, o);
                 } else {
                     /* blocked -- but if the blocker left a standing intent to
                      * step into OUR tile, the trade happens now */
