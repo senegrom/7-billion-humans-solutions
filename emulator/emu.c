@@ -1643,12 +1643,16 @@ static bool level_won(Sim *S) {
                     if (S->reach[y][x] && !S->grid[y][x].has_cube) return false;
             return true;
         case G_CHECKERBOARD: {
+            /* the game only demands the pattern tiles be COVERED -- every
+             * room tile of the seed cube's parity needs a cube; what lands
+             * on the other color is nobody's business (decompiled win
+             * check: even tiles must hold a cube or the printer) */
             int par = (S->icx[0] + S->icy[0]) & 1;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->reach[y][x]) continue;
-                    bool want = (((x + y) & 1) == par);
-                    if (S->grid[y][x].has_cube != want) return false;
+                    if (((x + y) & 1) != par) continue;
+                    if (!S->grid[y][x].has_cube) return false;
                 }
             return true;
         }
@@ -2761,6 +2765,9 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         S->cube_id[w->y][w->x] = w->held_id;
                         w->holding = false;
                         S->drops++;
+                        if (g_trace)
+                            fprintf(stderr, "DROP w%d @(%d,%d) parity %d\n",
+                                    i, w->x, w->y, (w->x + w->y) & 1);
                     }
                     break;
                 }
