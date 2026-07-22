@@ -2294,9 +2294,18 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
             if (w->holding) { nv.k = MV_CUBEREF; nv.num = w->held_id; }
         }
         else { nv.k = MV_NUM; nv.num = o->num; }
-    } else if (ins->akind == 3) {               /* set <dir,dir,...>: random pick */
-        Dir d = ins->dirs[ins->ndirs == 1 ? 0 : (int)(rnd(S) % (unsigned)ins->ndirs)];
-        nv.k = MV_TILE; nv.x = w->x + DX[d]; nv.y = w->y + DY[d];
+    } else if (ins->akind == 3) {
+        /* set <dir,dir,...>: remember the first listed tile that holds a
+         * THING (wall, machine, cube, or person); bare floor tries the next
+         * (Unique Fashion Party's "set sw,n" sorts keepers by what's there) */
+        for (int k = 0; k < ins->ndirs; k++) {
+            int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+            bool thing = nx < 0 || ny < 0 || nx >= S->L->w || ny >= S->L->h
+                || S->grid[ny][nx].terrain != T_FLOOR
+                || S->grid[ny][nx].has_cube
+                || worker_at(S, nx, ny, (int)(w - S->w)) >= 0;
+            if (thing) { nv.k = MV_TILE; nv.x = nx; nv.y = ny; break; }
+        }
     } else if (ins->akind == 4) {               /* set nothing: clear the slot */
         ;                                       /* nv already nothing */
     } else {                                    /* calc <a> <op> <b> */
