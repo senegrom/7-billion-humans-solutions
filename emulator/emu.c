@@ -873,6 +873,8 @@ typedef struct {
     ShredEv shrev[MAXSHREV]; int nshrev;
     TellEv  tellev[MAXTELLEV]; int ntellev;
     int     glory_x, glory_y;    /* G_GLORY_DIVE target hole */
+    unsigned char region[MAXH][MAXW]; /* connected floor component id (0 none);
+                                         machines/holes join adjacent floor */
     bool    reach[MAXH][MAXW];   /* floor reachable from worker spawns (the room;
                                     unlisted tiles outside the walls read as
                                     floor in sparse levels and must not count) */
@@ -887,13 +889,16 @@ typedef struct {
     unsigned rng;
 } Sim;
 
-/* per-command durations in milliseconds, calibrated against recorded
- * community speeds: step 333, item ops 250; printers and shredders carry
- * their machine animation; assignments (set/calc/nearest) and writes take
- * time too. EMU_MS_* env vars override for calibration runs. */
-static int MS_STEP = 333, MS_ITEM = 250, MS_PRINTER = 1200, MS_SHRED = 750,
-           MS_TELL = 1000, MS_IF = 333, MS_ASSIGN = 333, MS_WRITE = 1200,
-           MS_ERROR = 250;   /* an errored take/pickup (full hands): the red
+/* Per-command durations, calibrated against recorded community speeds.
+ * The game runs on 60 fps frames (a step is 20 frames = 333.33 ms, item
+ * ops 15 frames = 250 ms), so the clock ticks in THIRDS of a millisecond
+ * to stay frame-exact: 1 tick = 1/3 ms, one frame = 50 ticks, one second
+ * = 3000 ticks. Rounded whole-millisecond durations would break batch
+ * simultaneity (workers due on the same frame drifting 1 ms apart changes
+ * crowd interleaving). EMU_MS_* env overrides are given in ms and scaled. */
+static int MS_STEP = 1000, MS_ITEM = 750, MS_PRINTER = 3600, MS_SHRED = 2250,
+           MS_TELL = 3000, MS_IF = 1000, MS_ASSIGN = 1000, MS_WRITE = 3600,
+           MS_ERROR = 750;   /* an errored take/pickup (full hands): the red
                                 bubble displays ~1.5s but the program moves
                                 on quickly -- recorded speeds demand ~250ms */
 
@@ -975,6 +980,43 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
                 q[tail++] = ny * MAXW + nx;
             }
         }
+    }
+
+    /* connected floor components: nearest only binds things in the
+     * worker's own region (Community Training Day's students must not
+     * sense the instructor's caged machines through the pit ring) */
+    {
+        static int q[MAXW*MAXH];
+        unsigned char rid = 0;
+        for (int sy2 = 0; sy2 < L->h; sy2++)
+            for (int sx2 = 0; sx2 < L->w; sx2++) {
+                if (L->terr[sy2][sx2] != T_FLOOR || S->region[sy2][sx2]) continue;
+                rid++;
+                int head = 0, tail = 0;
+                S->region[sy2][sx2] = rid;
+                q[tail++] = sy2 * MAXW + sx2;
+                while (head < tail) {
+                    int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
+                    for (int d = 0; d < 8; d++) {
+                        int nx = cx + DX[d], ny = cy + DY[d];
+                        if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
+                        if (S->region[ny][nx] || L->terr[ny][nx] != T_FLOOR) continue;
+                        S->region[ny][nx] = rid;
+                        q[tail++] = ny * MAXW + nx;
+                    }
+                }
+            }
+        /* machines and holes belong to the region they border */
+        for (int y = 0; y < L->h; y++)
+            for (int x = 0; x < L->w; x++) {
+                if (L->terr[y][x] == T_FLOOR || L->terr[y][x] == T_WALL) continue;
+                for (int d = 0; d < 8 && !S->region[y][x]; d++) {
+                    int nx = x + DX[d], ny = y + DY[d];
+                    if (nx >= 0 && ny >= 0 && nx < L->w && ny < L->h
+                        && L->terr[ny][nx] == T_FLOOR)
+                        S->region[y][x] = S->region[ny][nx];
+                }
+            }
     }
 
     if (L->win == G_DISTANCES_FROM_DOOR && L->door_x >= 0) {
@@ -1330,25 +1372,23 @@ static bool nearest_matches(Sim *S, const Worker *self, CmpKind type, int x, int
 /* nearest thing of a type, by BFS distance; false if none. The caller's own
  * tile counts (Seek and Destroy remembers the cube underfoot that way). */
 static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
+    /* the game measures straight-line (Euclidean) distance between world
+     * positions, seeing THROUGH walls; the first candidate at the minimum
+     * distance wins (strictly-less comparison over its object lists) */
     Level *L = S->L;
-    if (nearest_matches(S, w, type, w->x, w->y)) { *ox = w->x; *oy = w->y; return true; }
-    static int q[MAXW*MAXH];
-    static bool seen[MAXH][MAXW];
-    memset(seen, 0, sizeof seen);
-    int head = 0, tail = 0;
-    seen[w->y][w->x] = true;
-    q[tail++] = w->y * MAXW + w->x;
-    while (head < tail) {
-        int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
-        for (int d = 0; d < 8; d++) {
-            int nx = cx + DX[d], ny = cy + DY[d];
-            if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h || seen[ny][nx]) continue;
-            seen[ny][nx] = true;
-            if (nearest_matches(S, w, type, nx, ny)) { *ox = nx; *oy = ny; return true; }
-            if (S->grid[ny][nx].terrain == T_FLOOR) q[tail++] = ny * MAXW + nx;
+    long best = -1; int bx = 0, by = 0;
+    unsigned char myreg = S->region[w->y][w->x];
+    for (int y = 0; y < L->h; y++)
+        for (int x = 0; x < L->w; x++) {
+            if (S->region[y][x] != myreg) continue;
+            if (!nearest_matches(S, w, type, x, y)) continue;
+            long dx = x - w->x, dy = y - w->y;
+            long d2 = dx * dx + dy * dy;
+            if (best < 0 || d2 < best) { best = d2; bx = x; by = y; }
         }
-    }
-    return false;
+    if (best < 0) return false;
+    *ox = bx; *oy = by;
+    return true;
 }
 
 /* ------------------------------------------------------------ win checks -- */
@@ -2255,17 +2295,20 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; continue; }
                         break;
                     case OP_FOREACH: {
+                        /* the game sweeps its direction flags in a fixed
+                         * clockwise order starting north-west */
+                        static const int FE_RANK[9] = {
+                            1, 5, 3, 7, 2, 0, 4, 6, 8
+                        };  /* indexed by Dir: n,s,e,w,ne,nw,se,sw,here */
                         int *fi = &w->fe_idx[ins->fe_slot];
                         unsigned char *ord = w->fe_ord[ins->fe_slot];
                         if (*fi == 0) {
-                            /* fresh sweep: visit the listed tiles in a random
-                             * order (deterministic order locks wandering
-                             * programs into permanent orbits) */
                             for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
-                            for (int k = ins->ndirs - 1; k > 0; k--) {
-                                int j = (int)(rnd(S) % (unsigned)(k + 1));
-                                unsigned char t = ord[k]; ord[k] = ord[j]; ord[j] = t;
-                            }
+                            for (int k = 1; k < ins->ndirs; k++)
+                                for (int j = k; j > 0
+                                     && FE_RANK[ins->dirs[ord[j]]] < FE_RANK[ins->dirs[ord[j-1]]]; j--) {
+                                    unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
+                                }
                         }
                         if (*fi < ins->ndirs) {
                             Dir d = ins->dirs[ord[(*fi)++]];
@@ -2829,16 +2872,16 @@ int main(int argc, char **argv) {
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
-    { const char *e;
-      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = atoi(e);
-      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = atoi(e);
-      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = atoi(e);
-      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = atoi(e);
-      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = atoi(e);
-      if ((e = getenv("EMU_MS_IF")))      MS_IF = atoi(e);
-      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = atoi(e);
-      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e);
-      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = atoi(e); }
+    { const char *e;   /* overrides in ms, scaled to third-ms ticks */
+      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_IF")))      MS_IF = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e) * 3;
+      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = atoi(e) * 3; }
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [--trace] <level.lvl> <solution.txt> [trials]\n", argv[0]);
         return 1;
@@ -2890,7 +2933,7 @@ int main(int argc, char **argv) {
             if (min_r < 0 || rounds < min_r) min_r = rounds;
             if (rounds > max_r) max_r = rounds;
             sum_r += rounds;
-            int sp = (int)((S.win_ms + 999) / 1000);
+            int sp = (int)((S.win_ms + 2999) / 3000);   /* ticks -> whole seconds */
             if (min_sp < 0 || sp < min_sp) min_sp = sp;
             if (sp > max_sp) max_sp = sp;
             sum_sp += sp;
