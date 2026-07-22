@@ -1756,7 +1756,9 @@ static bool level_won(Sim *S) {
                 if (x < 0 || !S->grid[y][x].has_cube) return false;
             }
             if (floor_cube_count(S) != S->nic) return false;
-            for (int i = 0; i < S->nw; i++) if (!S->w[i].exited) return false;
+            /* everyone must be gone -- pit exit or otherwise perished
+             * (the community solution culls some workers via div-zero) */
+            for (int i = 0; i < S->nw; i++) if (S->w[i].alive) return false;
             return true;
         }
         case G_EMAIL_SORT: {
