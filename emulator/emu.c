@@ -3334,6 +3334,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     o->pend_x = o->pend_y = -1;
                     resolved[i] = resolved[occ] = true; progress = true;
                 } else if (g_shove && it[occ].action < 0
+                           && S->w[occ].pend_x < 0
                            && (S->w[occ].done || S->w[occ].next_ms <= t)) {
                     /* THE SHOVE: a mover does not wait on a bystander. If the
                      * blocker is standing completely idle -- not walking and
@@ -3376,15 +3377,22 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                 S->w[i].pend_x = it[i].tx;
                 S->w[i].pend_y = it[i].ty;
             }
-        /* rotation cycles: A->B's tile, B->C's, C->A's -- everyone rotates */
+        /* rotation cycles: A->B's tile, B->C's, C->A's -- everyone rotates.
+         * A ring of walkers can be jammed with their retries landing in
+         * DIFFERENT beats, so follow standing intents as well as this beat's
+         * movers -- otherwise the ring never finds itself all due at once and
+         * deadlocks (The Sorting Floor's five-worker carousel). */
+        #define HAS_EFF(k) (IS_MOVER(k) || S->w[k].pend_x >= 0)
+        #define EFF_TX(k)  (IS_MOVER(k) ? it[k].tx : S->w[k].pend_x)
+        #define EFF_TY(k)  (IS_MOVER(k) ? it[k].ty : S->w[k].pend_y)
         for (int i = 0; i < S->nw; i++) {
-            if (resolved[i] || !S->w[i].alive || S->w[i].done || !IS_MOVER(i)) continue;
+            if (resolved[i] || !S->w[i].alive || S->w[i].done || !HAS_EFF(i)) continue;
             int chain[MAXWORKERS], cn = 0, cur = i;
             bool cyc = false;
             while (cn < S->nw) {
                 chain[cn++] = cur;
-                int occ = blocking_worker_at(S, it[cur].tx, it[cur].ty, cur);
-                if (occ < 0 || resolved[occ] || !IS_MOVER(occ)) break;
+                int occ = blocking_worker_at(S, EFF_TX(cur), EFF_TY(cur), cur);
+                if (occ < 0 || resolved[occ] || S->w[occ].done || !HAS_EFF(occ)) break;
                 if (occ == i) { cyc = true; break; }
                 bool seen = false;
                 for (int k = 0; k < cn; k++) if (chain[k] == occ) seen = true;
@@ -3393,12 +3401,26 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
             }
             if (cyc && cn > 1) {
                 for (int k = 0; k < cn; k++) {
-                    Worker *w = &S->w[chain[k]];
-                    w->x = it[chain[k]].tx; w->y = it[chain[k]].ty;
-                    resolved[chain[k]] = true;
+                    int m = chain[k];
+                    Worker *o = &S->w[m];
+                    bool mover = IS_MOVER(m);
+                    o->x = EFF_TX(m); o->y = EFF_TY(m);
+                    o->pend_x = o->pend_y = -1;
+                    resolved[m] = true;
+                    /* a ring member that was not due this beat still completes
+                     * the step it was parked on (a due one is advanced by the
+                     * pc pass below, which sees that it moved) */
+                    if (!mover && o->pc < P->n && P->instr[o->pc].op == OP_STEP) {
+                        if (o->fresh > 0) o->fresh--;
+                        o->pc++;
+                        fall_check(S, o);
+                    }
                 }
             }
         }
+        #undef HAS_EFF
+        #undef EFF_TX
+        #undef EFF_TY
         }
         /* an explicit step blocked by another worker WAITS (uncharged, pc
          * held) and re-attempts at the next world event: walkers queue, and
@@ -3747,8 +3769,9 @@ int main(int argc, char **argv) {
     if (argc >= 2 && !strcmp(argv[1], "--trace")) { g_trace = true; argv++; argc--; }
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
-    if (getenv("EMU_SHOVE")) g_shove = true;
-    if (getenv("EMU_BALKCOST")) g_balkcost = true;
+    { const char *ev;
+      if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
+      if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
     { const char *e;   /* overrides in ms, rounded to 60fps frames */
       #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
