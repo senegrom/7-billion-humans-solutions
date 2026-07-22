@@ -553,6 +553,7 @@ static int mem_from(const char *t) {         /* "mem1".."mem4" -> 0..3 */
 static bool operand_from(const char *t, Operand *o) {
     memset(o, 0, sizeof *o);
     int m, d;
+    if (!strcmp(t, "[blank]"))           { o->kind = 0; o->num = 0; return true; }
     if (!strcmp(t, "myitem"))            { o->kind = 3; return true; }
     if ((m = mem_from(t)) >= 0)          { o->kind = 2; o->mem = m; return true; }
     if ((d = dir_from(t)) >= 0)          { o->kind = 1; o->dir = (Dir)d; return true; }
@@ -1739,13 +1740,15 @@ static bool level_won(Sim *S) {
             return true;
         }
         case G_FASHION_UNIQUE: {
+            /* survivors hold one of each value; the redundant were disposed
+             * of one way or another (exit dive or div-zero purge) */
             int seen[128] = { 0 };
             for (int i = 0; i < S->nw; i++) {
                 Worker *w = &S->w[i];
                 if (w->alive) {
                     if (!w->holding || w->held < L->goal_a || w->held > L->goal_b) return false;
                     if (seen[w->held]++) return false;
-                } else if (!w->exited) return false;
+                }
             }
             for (int v = L->goal_a; v <= L->goal_b; v++) if (!seen[v]) return false;
             return true;
@@ -2062,7 +2065,16 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
             case '+': nv.k = MV_NUM; nv.num = a + b; break;
             case '-': nv.k = MV_NUM; nv.num = a - b; break;
             case '*': nv.k = MV_NUM; nv.num = a * b; break;
-            case '/': if (b != 0) { nv.k = MV_NUM; nv.num = a / b; } break;
+            case '/':
+                if (b != 0) { nv.k = MV_NUM; nv.num = a / b; }
+                else {
+                    /* dividing by zero is FATAL: the worker perishes (with
+                     * their cube). Solutions weaponize "calc 0 / 0" to cull
+                     * workers (Unique Fashion Party's duplicate purge). */
+                    w->alive = false;
+                    w->holding = false;
+                }
+                break;
         }
     }
     w->mem[ins->slot] = nv;
