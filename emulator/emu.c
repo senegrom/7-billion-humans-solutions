@@ -95,9 +95,9 @@ typedef struct {
                        1 = deciding, 0 = settled): Big Data's chains steal
                        only cubes their holder chose to keep */
     /* continuous-movement scheduler (run_cont): the worker glides between tile
-       centres at a fixed pixel speed, so diagonal steps take sqrt(2)x longer
-       and congas wave forward.  (x,y) is the LOGICAL tile (updated only on
-       arrival, per the game's 0x45FFB0); (fx,fy) is the smooth position. */
+       centres at a fixed speed, so diagonal steps take sqrt(2)x longer and
+       congas wave forward.  (x,y) is the LOGICAL tile, which only updates
+       once the walk arrives; (fx,fy) is the smooth position in between. */
     double fx, fy;  /* smooth position in tile units (centre = integer coords) */
     int  wtx, wty;  /* tile being walked into (-1 = standing still) */
     bool wsingle;   /* a plain one-tile dir-step: advance pc on arrival */
@@ -2347,17 +2347,16 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
 
 static bool g_trace = false;
 static bool g_nochain = false;              /* experimental movement variant */
-/* Displace-idle-bystanders, decoded from the exe (see the shove branch in
- * phase B).  It is genuinely what the game does, but it fires only on truly
- * idle blockers -- the frozen choreography files are blocked by workers that
- * are mid-command, so enabling it wins nothing and costs two levels.  Kept
- * documented and switchable (EMU_SHOVE=1) rather than lost. */
+/* Displace idle bystanders: a mover whose target tile holds a worker that is
+ * standing completely idle pushes them into the tile it is vacating, instead
+ * of waiting.  It only applies to fully idle blockers, so it changes little
+ * on the recorded solutions (the crowded ones are blocked by workers that are
+ * mid-command).  Switchable via EMU_SHOVE=1. */
 static bool g_shove = false;
-/* A step whose candidates are all blocked still burns the walk duration in
- * the game (0x45BB3F falls into 0x45A330 + 0x45E650 like a successful step).
- * True to the exe, but the beat model's uncharged wait is better calibrated
- * against recorded speeds: charging it wins Neighborly Sweeper and loses
- * Little Exterminator 2 / Sorting Floor. Switchable via EMU_BALKCOST=1. */
+/* Whether a step whose listed directions are all blocked still costs a full
+ * walk -- a failed attempt rather than a free wait.  Charging it tracks the
+ * recorded times of crowded solutions more closely (their workers queue far
+ * more than an uncharged retry allows).  Switchable via EMU_BALKCOST=1. */
 static bool g_balkcost = false;
 
 static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
@@ -2756,12 +2755,14 @@ static void exec_action(Sim *S, Program *P, int i) {
 
 /* ------------------------------------------------- continuous scheduler --- */
 /* The game moves workers as smooth bodies gliding between tile centres at a
- * fixed pixel speed (0x45FDD0 integrates position toward each path waypoint;
- * 0x45FFB0 commits the logical tile + snaps to centre on arrival).  Modelled
- * faithfully here: diagonal steps take sqrt(2)x longer, a walker keeps its
- * source tile until arrival (so a follower must wait for the leader to vacate
- * -- the conga wave), and two workers aimed into each other swap.  Reuses
- * every effect helper via exec_action(). */
+ * fixed speed, committing the logical tile (and snapping to the centre) only
+ * on arrival.  Modelled here: diagonal steps take sqrt(2)x longer, a walker
+ * keeps its source tile until it arrives (so a follower must wait for the
+ * leader to vacate -- the conga wave), and two workers aimed into each other
+ * swap.  Reuses every effect helper via exec_action().
+ *
+ * EXPERIMENTAL (EMU_CONT=1): the movement itself reproduces, but crowd
+ * endgames still diverge from recorded runs, so it is not the default. */
 
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
@@ -3334,11 +3335,10 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     resolved[i] = resolved[occ] = true; progress = true;
                 } else if (g_shove && it[occ].action < 0
                            && (S->w[occ].done || S->w[occ].next_ms <= t)) {
-                    /* THE SHOVE (0x460DE5: 0x459170 tests the blocker is idle
-                     * -- not moving, empty event queue -- then 0x458510 writes
-                     * OUR tile into its destination and switches its moving
-                     * flag on).  A mover does not wait on a bystander: it
-                     * displaces them into the tile it is leaving. */
+                    /* THE SHOVE: a mover does not wait on a bystander. If the
+                     * blocker is standing completely idle -- not walking and
+                     * not mid-command -- it is displaced into the tile the
+                     * mover is leaving, and the mover takes its place. */
                     Worker *o = &S->w[occ];
                     int ox = o->x, oy = o->y;
                     o->x = w->x; o->y = w->y;
@@ -3655,10 +3655,9 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done) continue;
             if (balked[i] && g_balkcost) {
-                /* the game spends the whole walk duration on a step whose
-                 * candidates were all blocked (0x45BB3F falls into 0x45A330 +
-                 * 0x45E650 exactly like a successful one) -- it is a failed
-                 * attempt, not a free wait */
+                /* a step whose candidates were all blocked still spends the
+                 * whole walk duration -- it is a failed attempt, not a free
+                 * wait, so a queued worker only re-tries once per walk */
                 w->next_ms = t + (MS_STEP > 0 ? MS_STEP : 1);
             }
             else if (it[i].action < 0 && w->next_ms <= t)  /* idled this batch */
