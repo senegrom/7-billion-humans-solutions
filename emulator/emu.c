@@ -2347,6 +2347,12 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
 
 static bool g_trace = false;
 static bool g_nochain = false;              /* experimental movement variant */
+/* Displace-idle-bystanders, decoded from the exe (see the shove branch in
+ * phase B).  It is genuinely what the game does, but it fires only on truly
+ * idle blockers -- the frozen choreography files are blocked by workers that
+ * are mid-command, so enabling it wins nothing and costs two levels.  Kept
+ * documented and switchable (EMU_SHOVE=1) rather than lost. */
+static bool g_shove = false;
 
 static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
 
@@ -3320,6 +3326,20 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     w->pend_x = w->pend_y = -1;
                     o->pend_x = o->pend_y = -1;
                     resolved[i] = resolved[occ] = true; progress = true;
+                } else if (g_shove && it[occ].action < 0
+                           && (S->w[occ].done || S->w[occ].next_ms <= t)) {
+                    /* THE SHOVE (0x460DE5: 0x459170 tests the blocker is idle
+                     * -- not moving, empty event queue -- then 0x458510 writes
+                     * OUR tile into its destination and switches its moving
+                     * flag on).  A mover does not wait on a bystander: it
+                     * displaces them into the tile it is leaving. */
+                    Worker *o = &S->w[occ];
+                    int ox = o->x, oy = o->y;
+                    o->x = w->x; o->y = w->y;
+                    w->x = ox; w->y = oy;
+                    o->pend_x = o->pend_y = -1;
+                    w->pend_x = w->pend_y = -1;
+                    resolved[i] = true; progress = true;
                 } else {
                     /* blocked -- but if the blocker left a standing intent to
                      * step into OUR tile, the trade happens now */
@@ -3712,6 +3732,7 @@ int main(int argc, char **argv) {
     if (argc >= 2 && !strcmp(argv[1], "--trace")) { g_trace = true; argv++; argc--; }
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
+    if (getenv("EMU_SHOVE")) g_shove = true;
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
     { const char *e;   /* overrides in ms, rounded to 60fps frames */
       #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
