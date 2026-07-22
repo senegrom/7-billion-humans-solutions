@@ -1378,6 +1378,21 @@ static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
     Level *L = S->L;
     long best = -1; int bx = 0, by = 0;
     unsigned char myreg = S->region[w->y][w->x];
+    if (type == C_PERSON) {
+        /* the game's worker list is spawn-ordered: exact-distance ties
+         * resolve to the earliest-spawned worker */
+        for (int i = 0; i < S->nw; i++) {
+            Worker *o = &S->w[i];
+            if (o == w || !o->alive) continue;
+            if (S->region[o->y][o->x] != myreg) continue;
+            long dx = o->x - w->x, dy = o->y - w->y;
+            long d2 = dx * dx + dy * dy;
+            if (best < 0 || d2 < best) { best = d2; bx = o->x; by = o->y; }
+        }
+        if (best < 0) return false;
+        *ox = bx; *oy = by;
+        return true;
+    }
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++) {
             if (S->region[y][x] != myreg) continue;
