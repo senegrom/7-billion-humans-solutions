@@ -2296,11 +2296,20 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         w->pend_x = w->pend_y = -1;  /* bump: pc advances */
                     else { it[i].tx = w->pend_x; it[i].ty = w->pend_y; }
                 } else if (ins->mem_target >= 0) {
+                    /* "step memN" walks ALL THE WAY to the remembered thing
+                     * (Terrain Leveler's pass restart walks the whole column
+                     * back to its anchor); pc holds until arrival */
                     int tx, ty;
-                    if (mem_tile(w, ins->mem_target, &tx, &ty)) {
+                    if (mem_tile(w, ins->mem_target, &tx, &ty)
+                        && !(w->x == tx && w->y == ty)) {
                         int d = route_step(S, w, tx, ty, false);
-                        if (d >= 0) { it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d]; }
+                        if (d >= 0) {
+                            it[i].walk_only = true;
+                            it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
+                        }
+                        /* no route: fall through as a bump (pc advances) */
                     }
+                    /* nothing remembered / already there: completes as no-op */
                 } else {
                     /* choose among listed dirs: random pick among passable ones */
                     int cand[8], nc = 0;
@@ -2532,6 +2541,20 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 if (S->w[i].fresh > 0) S->w[i].fresh--;
                 S->w[i].pc++;
                 fall_check(S, &S->w[i]);
+            }
+        /* a mem-targeted step completes when the walk reaches the thing */
+        for (int i = 0; i < S->nw; i++)
+            if (S->w[i].alive && !S->w[i].done && it[i].action >= 0 && it[i].walk_only
+                && P->instr[it[i].action].op == OP_STEP) {
+                Instr *ins = &P->instr[it[i].action];
+                int tx, ty;
+                if (ins->mem_target >= 0
+                    && mem_tile(&S->w[i], ins->mem_target, &tx, &ty)
+                    && S->w[i].x == tx && S->w[i].y == ty) {
+                    if (S->w[i].fresh > 0) S->w[i].fresh--;
+                    S->w[i].pc++;
+                    fall_check(S, &S->w[i]);
+                }
             }
 
         /* phase C: non-movement actions on the moved board. Two sub-passes:
