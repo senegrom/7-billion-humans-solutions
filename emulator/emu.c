@@ -60,7 +60,7 @@ typedef struct { int x, y; CubeMode mode; int value; } CubeDef;
 
 /* a memory slot holds nothing, a number, or a remembered tile; tiles found by
  * `nearest <type>` remember the type so a stale reference can re-resolve */
-typedef enum { MV_NOTHING, MV_NUM, MV_TILE } MemKind;
+typedef enum { MV_NOTHING, MV_NUM, MV_TILE, MV_CUBEREF } MemKind;
 typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */ } MemVal;
 
 enum { NMEM = 4, MAXFOREACH = 8, WORDLEN = 32 };
@@ -69,6 +69,7 @@ typedef struct {
     int  x, y;
     bool holding;
     int  held;
+    int  held_id;                 /* identity of the held cube (0 = none) */
     int  held_src_x, held_src_y;  /* floor tile the held cube came from (-1 = printed) */
     int  held_owner;              /* printing worker of the held cube (-1 = level cube) */
     int  pc;
@@ -866,6 +867,8 @@ typedef struct {
     long    pickups, drops;
     bool    failed;              /* a special rule was violated */
     int     shred_used[MAXH][MAXW];
+    int     cube_id[MAXH][MAXW];      /* identity of the floor cube (0 none) */
+    int     next_cube_id;
     bool    label_tile[MAXH][MAXW];   /* labels_explode rules */
     /* per-trial snapshot of the initial cube placement */
     int     icx[MAXCUBES], icy[MAXCUBES], icv[MAXCUBES];
@@ -903,6 +906,7 @@ static int MS_STEP = 20, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
                                 on quickly -- recorded speeds demand ~250ms */
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
+static bool cube_locate(Sim *S, int id, int *tx, int *ty);
 
 static void sim_reset(Sim *S, Level *L, unsigned seed) {
     memset(S, 0, sizeof *S);
@@ -953,6 +957,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         }
         S->grid[c->y][c->x].has_cube = true;
         S->grid[c->y][c->x].cube = v;
+        S->cube_id[c->y][c->x] = ++S->next_cube_id;
         if (((L->rules & R_LABELS_EXPLODE) && c->mode == CB_FIXED)
          || ((L->rules & R_LABELS_EXPLODE_NONZERO) && c->mode == CB_FIXED && c->value != 0))
             S->label_tile[c->y][c->x] = true;
@@ -1197,6 +1202,18 @@ static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
             MemVal *m = &w->mem[o->mem];
             if (m->k == MV_NUM)  { *out = m->num; return true; }
             if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, false, out);
+            if (m->k == MV_CUBEREF) {
+                for (int i = 0; i < S->nw; i++)
+                    if (S->w[i].alive && S->w[i].holding && S->w[i].held_id == m->num) {
+                        *out = S->w[i].held; return true;
+                    }
+                for (int y = 0; y < S->L->h; y++)
+                    for (int x = 0; x < S->L->w; x++)
+                        if (S->cube_id[y][x] == m->num) {
+                            *out = S->grid[y][x].cube; return true;
+                        }
+                return false;
+            }
             return false;
         }
     }
@@ -1212,6 +1229,15 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         else if (c->lhs.kind == 2) {
             MemVal *m = &w->mem[c->lhs.mem];
             if (m->k == MV_TILE)         eq = tile_contains(S, m->x, m->y, w, c->rhs_type);
+            else if (m->k == MV_CUBEREF) {
+                int tx, ty;
+                bool exists = cube_locate(S, m->num, &tx, &ty);
+                if (c->rhs_type == C_DATACUBE || c->rhs_type == C_SOMETHING)
+                    eq = exists;
+                else if (c->rhs_type == C_NOTHING)
+                    eq = !exists;
+                else eq = false;
+            }
             else if (m->k == MV_NOTHING) eq = (c->rhs_type == C_NOTHING);
             else                         eq = false;   /* a number is no tile */
         }
@@ -1231,6 +1257,10 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         MemVal *ma = &w->mem[c->lhs.mem], *mb = &w->mem[c->rhs.mem];
         if (ma->k == MV_TILE && mb->k == MV_TILE) {
             bool eq = (ma->x == mb->x && ma->y == mb->y);
+            return (c->op == O_NE) ? !eq : eq;
+        }
+        if (ma->k == MV_CUBEREF && mb->k == MV_CUBEREF) {
+            bool eq = (ma->num == mb->num);        /* same remembered cube */
             return (c->op == O_NE) ? !eq : eq;
         }
         if (ma->k == MV_NOTHING || mb->k == MV_NOTHING) {
@@ -2078,9 +2108,27 @@ static void fall_check(Sim *S, Worker *w) {
     }
 }
 
-/* resolve a mem slot to a tile; false if it holds no tile */
-static bool mem_tile(Worker *w, int slot, int *tx, int *ty) {
-    if (slot < 0 || w->mem[slot].k != MV_TILE) return false;
+/* find a cube by identity: in someone's hands or on the floor */
+static bool cube_locate(Sim *S, int id, int *tx, int *ty) {
+    if (!id) return false;
+    for (int i = 0; i < S->nw; i++)
+        if (S->w[i].alive && S->w[i].holding && S->w[i].held_id == id) {
+            *tx = S->w[i].x; *ty = S->w[i].y;
+            return true;
+        }
+    for (int y = 0; y < S->L->h; y++)
+        for (int x = 0; x < S->L->w; x++)
+            if (S->cube_id[y][x] == id) { *tx = x; *ty = y; return true; }
+    return false;
+}
+
+/* resolve a mem slot to a tile; false if it holds no tile. A cube ref
+ * follows the CUBE wherever it now is (Defrag Ordered's packing anchor). */
+static bool mem_tile(Sim *S, Worker *w, int slot, int *tx, int *ty) {
+    if (slot < 0) return false;
+    if (w->mem[slot].k == MV_CUBEREF)
+        return cube_locate(S, w->mem[slot].num, tx, ty);
+    if (w->mem[slot].k != MV_TILE) return false;
     *tx = w->mem[slot].x; *ty = w->mem[slot].y;
     return true;
 }
@@ -2089,7 +2137,7 @@ static bool mem_tile(Worker *w, int slot, int *tx, int *ty) {
  * re-resolves to the current nearest of the same type -- the game's workers
  * chase the THING they remembered, not the square it stood on */
 static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
-    if (!mem_tile(w, slot, tx, ty)) return false;
+    if (!mem_tile(S, w, slot, tx, ty)) return false;
     MemVal *m = &w->mem[slot];
     if (m->ntype >= 0 && !nearest_matches(S, w, (CmpKind)m->ntype, *tx, *ty)) {
         int x, y;
@@ -2130,7 +2178,11 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
             }
         }
         else if (o->kind == 2) nv = w->mem[o->mem];
-        else if (o->kind == 3) { if (w->holding) { nv.k = MV_NUM; nv.num = w->held; } }
+        else if (o->kind == 3) {
+            /* remember the THING in my hands -- the ref follows the cube
+             * after it is set down (Defrag Ordered's packing anchor) */
+            if (w->holding) { nv.k = MV_CUBEREF; nv.num = w->held_id; }
+        }
         else { nv.k = MV_NUM; nv.num = o->num; }
     } else if (ins->akind == 3) {               /* set <dir,dir,...>: random pick */
         Dir d = ins->dirs[ins->ndirs == 1 ? 0 : (int)(rnd(S) % (unsigned)ins->ndirs)];
@@ -2186,6 +2238,7 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
     if (t->terrain == T_PRINTER) {               /* fresh print */
         w->holding = true;
         w->held = (int)(rnd(S) % (unsigned)(S->L->randmax + 1));
+        w->held_id = ++S->next_cube_id;
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = wi;
         w->fresh = 2;
@@ -2201,10 +2254,12 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         }
         w->holding = true;
         w->held = t->cube;
+        w->held_id = S->cube_id[ny][nx];
         w->held_src_x = nx; w->held_src_y = ny;
         w->held_owner = t->owner;
         w->fresh = 2;
         t->has_cube = false; t->owner = -1;
+        S->cube_id[ny][nx] = 0;
         S->pickups++;
         return true;
     }
@@ -2224,7 +2279,7 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
              * at the normal action cost -- so no special charge here */
             if (ins->mem_target >= 0) {
                 int tx, ty;
-                if (mem_tile(w, ins->mem_target, &tx, &ty)
+                if (mem_tile(S, w, ins->mem_target, &tx, &ty)
                     && S->grid[ty][tx].terrain == T_PRINTER) return MS_PRINTER;
             } else
                 for (int k = 0; k < ins->ndirs; k++) {
@@ -2239,7 +2294,7 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
              * (Cubical Communication's choreography fires bare givetos) */
             if (ins->mem_target >= 0) {
                 int tx, ty;
-                if (mem_tile(w, ins->mem_target, &tx, &ty)
+                if (mem_tile(S, w, ins->mem_target, &tx, &ty)
                     && S->grid[ty][tx].terrain == T_SHREDDER) return MS_SHRED;
             } else
                 for (int k = 0; k < ins->ndirs; k++) {
@@ -2397,7 +2452,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                      * (Terrain Leveler's pass restart walks the whole column
                      * back to its anchor); pc holds until arrival */
                     int tx, ty;
-                    if (mem_tile(w, ins->mem_target, &tx, &ty)
+                    if (mem_tile(S, w, ins->mem_target, &tx, &ty)
                         && !(w->x == tx && w->y == ty)) {
                         int d = route_step(S, w, tx, ty, false);
                         if (d >= 0) {
@@ -2436,7 +2491,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     || (ins->op == OP_GIVETO && !w->holding)) {
                     nactors++;
                     it[i].action = w->pc;        /* no-op action beat */
-                } else if (!mem_tile(w, ins->mem_target, &tx, &ty)) {
+                } else if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) {
                     nactors++;
                     it[i].action = w->pc;        /* nothing remembered: no-op */
                 } else if (ARRIVED()) {
@@ -2646,7 +2701,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 Instr *ins = &P->instr[it[i].action];
                 int tx, ty;
                 if (ins->mem_target >= 0
-                    && mem_tile(&S->w[i], ins->mem_target, &tx, &ty)
+                    && mem_tile(S, &S->w[i], ins->mem_target, &tx, &ty)
                     && S->w[i].x == tx && S->w[i].y == ty) {
                     if (S->w[i].fresh > 0) S->w[i].fresh--;
                     S->w[i].pc++;
@@ -2683,7 +2738,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     if (!w->holding) {
                         if (ins->mem_target >= 0) {
                             int tx, ty;
-                            if (mem_tile(w, ins->mem_target, &tx, &ty))
+                            if (mem_tile(S, w, ins->mem_target, &tx, &ty))
                                 pickup_at(S, w, i, tx, ty);
                         } else
                         for (int k = 0; k < ins->ndirs; k++) {
@@ -2703,6 +2758,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                      * onto the other color) */
                     if (!t->has_cube && t->terrain == T_FLOOR) {
                         t->has_cube = true; t->cube = w->held; t->owner = w->held_owner;
+                        S->cube_id[w->y][w->x] = w->held_id;
                         w->holding = false;
                         S->drops++;
                     }
@@ -2713,7 +2769,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     int cx[9], cy[9], nc = 0;
                     if (ins->mem_target >= 0) {
                         int nx, ny;
-                        if (!mem_tile(w, ins->mem_target, &nx, &ny)) break;
+                        if (!mem_tile(S, w, ins->mem_target, &nx, &ny)) break;
                         if (abs(w->x-nx) > 1 || abs(w->y-ny) > 1) break;
                         cx[nc] = nx; cy[nc] = ny; nc++;
                     } else
@@ -2732,6 +2788,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                                 S->w[j].holding = true; S->w[j].held = w->held;
                                 S->w[j].held_src_x = w->held_src_x; S->w[j].held_src_y = w->held_src_y;
                                 S->w[j].held_owner = w->held_owner;
+                                S->w[j].held_id = w->held_id;
                                 S->w[j].fresh = 2;
                                 w->holding = false;
                             }
@@ -2747,7 +2804,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                     if (w->holding) break;
                     if (ins->mem_target >= 0) {
                         int tx, ty;
-                        if (!mem_tile(w, ins->mem_target, &tx, &ty)) break;
+                        if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) break;
                         if (abs(w->x-tx) > 1 || abs(w->y-ty) > 1) break;
                         if (S->grid[ty][tx].terrain == T_PRINTER) {
                             pickup_at(S, w, i, tx, ty);
@@ -2757,6 +2814,8 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                                 w->holding = true; w->held = S->w[j].held;
                                 w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
                                 w->held_owner = S->w[j].held_owner;
+                            w->held_id = S->w[j].held_id;
+                                w->held_id = S->w[j].held_id;
                                 w->fresh = 2;
                                 S->w[j].holding = false;
                             }
@@ -2776,6 +2835,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                             w->holding = true; w->held = S->w[j].held;
                             w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
                             w->held_owner = S->w[j].held_owner;
+                            w->held_id = S->w[j].held_id;
                             w->fresh = 2;
                             S->w[j].holding = false;
                             break;
@@ -2813,7 +2873,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                             covered = (o->x == w->x + DX[ins->tt_dir] && o->y == w->y + DY[ins->tt_dir]);
                         else if (ins->tt_kind == 3) {
                             int tx, ty;
-                            covered = mem_tile(w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
+                            covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
                         }
                         if (covered) o->heard = true;
                     }
