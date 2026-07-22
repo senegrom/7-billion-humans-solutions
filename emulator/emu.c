@@ -2350,6 +2350,14 @@ static bool g_shove = false;
  * recorded times of crowded solutions more closely (their workers queue far
  * more than an uncharged retry allows).  Switchable via EMU_BALKCOST=1. */
 static bool g_balkcost = false;
+/* A pure control-flow node (jump/label/endif/else) occupies its worker for a
+ * single frame rather than being free: exactly one instruction is dispatched
+ * per frame, and those handlers return without starting a timed action. True
+ * of the game, but the per-command durations here were fitted against
+ * recorded times WITHOUT it, so they already absorb that frame -- switching
+ * it on double-counts and costs both levels and speed accuracy until every
+ * duration is re-fitted alongside it. EMU_CFCOST=1 to experiment. */
+static bool g_cfcost = false;
 
 static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
 
@@ -3050,6 +3058,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
         bool any_active = false;
         int nactors = 0, nidle = 0, nbusy = 0;
         Intent it[MAXWORKERS];
+        bool cf_frame[MAXWORKERS] = { false };  /* spent a frame on control flow */
         S->feeds_this_beat = 0;
 
         /* event clock: this batch happens at the earliest pending completion.
@@ -3070,20 +3079,31 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
             it[i].action = -1; it[i].tx = -1; it[i].walk_only = false;
             if (!w->alive || w->done) continue;
             if (w->next_ms > t) { nbusy++; any_active = true; continue; }
-            int guard = 0, budget = P->n * 2 + 16;
+            int guard = 0, budget = P->n * 2 + 16, cfsteps = 0;
             bool idle = false;
             for (;;) {
                 if (++guard > budget) { idle = true; break; }   /* waiting on a condition */
                 if (w->pc >= P->n) { w->done = true; break; }
                 Instr *ins = &P->instr[w->pc];
+                /* A pure control-flow node still occupies the worker for one
+                 * frame: the executor advances to exactly one instruction per
+                 * frame, and jump/label/endif simply return without starting a
+                 * timed action. A tight loop therefore drifts by a frame per
+                 * iteration against a worker looping less often. */
+                if (g_cfcost && cfsteps > 0
+                    && (ins->op == OP_NOP || ins->op == OP_LABEL || ins->op == OP_JUMP
+                        || ins->op == OP_ELSE || ins->op == OP_ENDIF)) {
+                    cf_frame[i] = true;
+                    break;
+                }
                 switch (ins->op) {
-                    case OP_NOP: case OP_LABEL: w->pc++; continue;
-                    case OP_JUMP: w->pc = ins->target; continue;
+                    case OP_NOP: case OP_LABEL: w->pc++; cfsteps++; continue;
+                    case OP_JUMP: w->pc = ins->target; cfsteps++; continue;
                     /* OP_IF falls through as an ACTION: evaluating a condition
                      * takes time in the game (its cost shows in every
                      * if-in-loop level's recorded speed) */
-                    case OP_ELSE: w->pc = ins->target; continue;
-                    case OP_ENDIF: w->pc++; continue;
+                    case OP_ELSE: w->pc = ins->target; cfsteps++; continue;
+                    case OP_ENDIF: w->pc++; cfsteps++; continue;
                     case OP_ASSIGN:
                         /* assignments take time (an action beat) unless
                          * calibrated free -- then they run inline */
@@ -3129,6 +3149,8 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
             }
             if (!w->alive || w->done) continue;
             any_active = true;
+            /* a control-flow frame is progress, not a stall */
+            if (cf_frame[i]) { nbusy++; continue; }
             if (idle) { nidle++; continue; }
 
             Instr *ins = &P->instr[w->pc];
@@ -3686,6 +3708,8 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                  * wait, so a queued worker only re-tries once per walk */
                 w->next_ms = t + (MS_STEP > 0 ? MS_STEP : 1);
             }
+            else if (cf_frame[i])            /* one frame of control flow */
+                w->next_ms = t + 1;
             else if (it[i].action < 0 && w->next_ms <= t)  /* idled this batch */
                 w->next_ms = (next_event > t) ? next_event : t + 1;
         }
@@ -3775,7 +3799,8 @@ int main(int argc, char **argv) {
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     { const char *ev;
       if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
-      if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0; }
+      if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0;
+      if ((ev = getenv("EMU_CFCOST")))   g_cfcost   = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
     { const char *e;   /* overrides in ms, rounded to 60fps frames */
       #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
