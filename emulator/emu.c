@@ -2041,8 +2041,33 @@ typedef struct {
     bool walk_only;   /* mid macro-walk: move but do not execute/advance */
 } Intent;
 
+/* Do this level's holes swallow whoever steps in? Generic holes are
+ * shallow standable pits (Checkerboard's wanderers survive their
+ * renovation pits); swallowing is per-level behavior on the levels whose
+ * goal involves going (or being thrown) in. */
+static bool holes_swallow(const Level *L) {
+    switch (L->win) {
+        case G_ROOM_CLEARED:        /* everything into the pits */
+        case G_ALIGNED_HOLE_EXIT:   /* the safe hole / instant doom */
+        case G_ALL_EXITED:
+        case G_ALL_CUBES_HELD:      /* Little Exterminator dooms */
+        case G_WORKERS_EXIT_DOOR:
+        case G_ROYALE_MAX_REMAINS:
+        case G_DECRYPT_LEFT_EXIT:
+        case G_GLORY_DIVE:
+        case G_FASHION_UNIQUE:      /* redundant workers dive out */
+        case G_CUBES_LINE_ROW:      /* Collation Station's disposal */
+        case G_GOODBYE:
+            return true;
+        case G_SHRED_ALL:
+            return L->goal_a != 0;  /* the alive_all variant (LE2) */
+        default:
+            return false;
+    }
+}
+
 static void fall_check(Sim *S, Worker *w) {
-    if (S->grid[w->y][w->x].terrain == T_HOLE
+    if ((S->grid[w->y][w->x].terrain == T_HOLE && holes_swallow(S->L))
         || (S->door_exit && w->x == S->L->door_x && w->y == S->L->door_y)) {
         w->alive = false; w->exited = true;
         w->exit_x = w->x; w->exit_y = w->y;
@@ -2671,17 +2696,9 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                 case OP_DROP: {
                     if (!w->holding) break;
                     Tile *t = &S->grid[w->y][w->x];
-                    if (t->has_cube && t->terrain == T_FLOOR) {
-                        /* standing on a cube: place the held one beside you
-                         * (first free neighbor; the Data Backup swap needs it) */
-                        for (int d = 0; d < 8 && t->has_cube; d++) {
-                            int nx = w->x + DX[d], ny = w->y + DY[d];
-                            if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
-                            Tile *n = &S->grid[ny][nx];
-                            if (n->terrain == T_FLOOR && !n->has_cube
-                                && worker_at(S, nx, ny, i) < 0) t = n;
-                        }
-                    }
+                    /* dropping while standing on a cube keeps the held one
+                     * (Checkerboard's diagonal wander must never shed cubes
+                     * onto the other color) */
                     if (!t->has_cube && t->terrain == T_FLOOR) {
                         t->has_cube = true; t->cube = w->held; t->owner = w->held_owner;
                         w->holding = false;
