@@ -906,8 +906,20 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         for (int x = 0; x < L->w; x++)
             S->grid[y][x] = (Tile){ L->terr[y][x], L->goalpad[y][x], false, 0, -1 };
 
+    /* per-game randomizer specials (the game rolls these from its seed):
+     * Terrain Leveler picks its value range per game -- half the games run
+     * 0..6, a sixth run 0..10, the rest use the level's full range; Seek
+     * and Destroy 3 lifts the whole range onto a random floor so the room
+     * minimum varies */
+    int rmax = L->randmax, vfloor = 0;
+    if (L->win == G_CUBES_AVG) {
+        if (seed % 2 == 0)      rmax = 6;
+        else if (seed % 3 == 0) rmax = 10;
+    }
+    if (L->win == G_SHRED_MIN_ROOM) vfloor = (int)(seed % 30u);
+
     /* distinct-value pool for CB_RANDU cubes */
-    int pool[10000]; int pn = L->randmax + 1;
+    int pool[10000]; int pn = rmax + 1;
     if (pn > 10000) pn = 10000;
     for (int i = 0; i < pn; i++) pool[i] = i;
     for (int i = pn - 1; i > 0; i--) { int j = (int)(rnd(S) % (unsigned)(i+1)); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
@@ -928,7 +940,11 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
             for (int j = 0; j < L->ncubes; j++)
                 if (L->cubes[j].x < c->x) v++;
         }
-        if (c->mode == CB_RANDU) { v = pool[pi]; pi = (pi + 1) % pn; }
+        if (c->mode == CB_RANDU) {
+            if (vfloor > 0)                      /* floor-lifted independent draw */
+                v = vfloor + (int)(rnd(S) % (unsigned)(rmax - vfloor + 1));
+            else { v = pool[pi]; pi = (pi + 1) % pn; }
+        }
         S->grid[c->y][c->x].has_cube = true;
         S->grid[c->y][c->x].cube = v;
         if (((L->rules & R_LABELS_EXPLODE) && c->mode == CB_FIXED)
@@ -2016,7 +2032,18 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         }
     } else if (ins->akind == 1) {               /* set <operand> */
         Operand *o = &ins->op1;
-        if (o->kind == 1) { nv.k = MV_TILE; nv.x = w->x + DX[o->dir]; nv.y = w->y + DY[o->dir]; }
+        if (o->kind == 1) {
+            /* set remembers the THING on the tile; bare floor leaves the
+             * slot empty (Terrain Leveler's approach march relies on
+             * "step mem1" no-opping until an anchor cube exists) */
+            int nx = w->x + DX[o->dir], ny = w->y + DY[o->dir];
+            if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
+                && (S->grid[ny][nx].has_cube
+                    || S->grid[ny][nx].terrain != T_FLOOR
+                    || worker_at(S, nx, ny, (int)(w - S->w)) >= 0)) {
+                nv.k = MV_TILE; nv.x = nx; nv.y = ny;
+            }
+        }
         else if (o->kind == 2) nv = w->mem[o->mem];
         else if (o->kind == 3) { if (w->holding) { nv.k = MV_NUM; nv.num = w->held; } }
         else { nv.k = MV_NUM; nv.num = o->num; }
