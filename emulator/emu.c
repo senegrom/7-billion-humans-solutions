@@ -110,6 +110,7 @@ typedef enum {
     G_CUBES_AVG, G_FLOWER_SUMS, G_SHRED_MAX_PER_GROUP, G_NEIGHBOR_COUNTS,
     G_MAX_NEIGHBORS, G_GLORY_DIVE, G_DISTANCES_FROM_DOOR, G_SORTED_GRID,
     G_DEFRAG, G_GOODBYE,
+    G_BINARY_COUNTER, G_DECIMAL_COUNTER, G_DECIMAL_DOUBLER,
     G_UNKNOWN
 } GoalKind;
 
@@ -129,6 +130,10 @@ typedef struct {
     int     sx[MAXWORKERS], sy[MAXWORKERS];
     int     nworkers;
     int     door_x, door_y;  /* the level's door tile (-1 = none) */
+    /* counting-machine furniture (sensors under the starting cubes, big red
+     * button); place order leftmost = most significant */
+    int     sw_x[8], sw_y[8], nsw;
+    int     button_x, button_y;
     GoalKind win;
     int     goal_a, goal_b;
     unsigned rules;
@@ -153,7 +158,7 @@ static const int DX[9] = { 0, 0, 1, -1, 1, -1, 1, -1, 0 };
 static const int DY[9] = { -1, 1, 0, 0, -1, -1, 1, 1, 0 };
 
 typedef enum { C_WALL, C_DATACUBE, C_HOLE, C_NOTHING, C_SHREDDER, C_PRINTER, C_PERSON,
-               C_SOMETHING } CmpKind;
+               C_SOMETHING, C_SWITCH, C_BUTTON } CmpKind;
 typedef enum { O_EQ, O_NE, O_LT, O_GT, O_LE, O_GE } CmpOp;
 
 /* an operand of a condition/calc/set/write: number, tile dir, mem slot, myitem */
@@ -401,6 +406,11 @@ static GoalKind goal_from(const char *g, int *a, int *b) {
     if (!strcmp(kw,"sorted_grid"))         return G_SORTED_GRID;
     if (!strcmp(kw,"defrag"))              { *a = (strstr(g,"ordered")!=NULL); return G_DEFRAG; }
     if (!strcmp(kw,"goodbye_last_tells"))  return G_GOODBYE;
+    /* counting machines: the display/press/history logic below is ready, but
+     * the sensor+button tile layout still needs an in-game look -- until then
+     * these goals stay unparsed (SKIP) rather than failing on guessed
+     * furniture:
+     *   binary_counter / decimal_counter a b / decimal_doubler a b */
     return G_UNKNOWN;
 }
 
@@ -493,6 +503,27 @@ static void load_level(const char *path, Level *L) {
     }
     fclose(f);
     if (L->w == 0 || L->h == 0) die("level missing dim");
+    if (L->win == G_BINARY_COUNTER || L->win == G_DECIMAL_COUNTER
+        || L->win == G_DECIMAL_DOUBLER) {
+        /* the machine's sensors sit directly below the starting digit cubes
+         * (leftmost = most significant); the presser's spot is the button */
+        L->nsw = 0;
+        int rightmost = -1, cube_row = -1;
+        for (int i = 0; i < L->ncubes && L->nsw < 8; i++) {
+            L->sw_x[L->nsw] = L->cubes[i].x;
+            L->sw_y[L->nsw] = L->cubes[i].y + 1;
+            L->nsw++;
+            if (L->cubes[i].x > rightmost) { rightmost = L->cubes[i].x; cube_row = L->cubes[i].y; }
+        }
+        for (int i = 0; i < L->nsw; i++)          /* sort sensors by x */
+            for (int j = i + 1; j < L->nsw; j++)
+                if (L->sw_x[j] < L->sw_x[i]) {
+                    int t = L->sw_x[i]; L->sw_x[i] = L->sw_x[j]; L->sw_x[j] = t;
+                    t = L->sw_y[i]; L->sw_y[i] = L->sw_y[j]; L->sw_y[j] = t;
+                }
+        L->button_x = rightmost + 1;
+        L->button_y = cube_row + 2;
+    }
     for (int i = 0; i < L->ncubes; i++)
         if (L->cubes[i].mode == CB_RANDU) L->has_random = true;   /* -1 = blank, not random */
     for (int y = 0; y < L->h; y++)
@@ -531,6 +562,8 @@ static int type_from(const char *t, CmpKind *out) {
     if (!strcmp(t,"shredder"))  { *out = C_SHREDDER; return 1; }
     if (!strcmp(t,"printer"))   { *out = C_PRINTER; return 1; }
     if (!strcmp(t,"person")||!strcmp(t,"worker")) { *out = C_PERSON; return 1; }
+    if (!strcmp(t,"switch"))    { *out = C_SWITCH; return 1; }
+    if (!strcmp(t,"button"))    { *out = C_BUTTON; return 1; }
     return 0;
 }
 
@@ -706,8 +739,8 @@ static void parse_line(Program *P, char *src) {
             char a[24] = {0}, o[8] = {0}, b[24] = {0};
             if (sscanf(rest, "%23s %7s %23s", a, o, b) == 3
                 && operand_from(a, &ins->op1) && operand_from(b, &ins->op2)
-                && (o[0]=='+'||o[0]=='-'||o[0]=='*'||o[0]=='/') && !o[1])
-                ins->calcop = o[0];
+                && (o[0]=='+'||o[0]=='-'||o[0]=='*'||o[0]=='/'||o[0]=='x') && !o[1])
+                ins->calcop = o[0] == 'x' ? '*' : o[0];   /* the editor writes "x" */
             else ins->op = OP_UNSUPPORTED;
         } else if (!strcmp(kw, "foreachdir")) {
             ins->op = OP_FOREACH;
@@ -889,6 +922,7 @@ typedef struct {
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
+    int     hist[130], hist_n;   /* counting-machine display history */
     int     feeds_this_beat;
     int     beat;
     long    now_ms, win_ms;      /* event clock; when the win state was reached */
@@ -1188,6 +1222,15 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
         }
         case C_SOMETHING:
             return !tile_contains(S, x, y, self, C_NOTHING);
+        case C_SWITCH:
+            /* the whole pad bank reads as "switch" -- the button included
+             * (workers park on their pad because "c != switch" goes false) */
+            if (L->nsw > 0 && x == L->button_x && y == L->button_y) return true;
+            for (int i = 0; i < L->nsw; i++)
+                if (L->sw_x[i] == x && L->sw_y[i] == y) return true;
+            return false;
+        case C_BUTTON:
+            return L->nsw > 0 && x == L->button_x && y == L->button_y;
         default: return false;
     }
 }
@@ -2027,6 +2070,13 @@ static bool level_won(Sim *S) {
             }
             return true;
         }
+        case G_BINARY_COUNTER:
+            if (S->hist_n == 0) return false;
+            return S->hist_n >= (S->hist[0] == 1 ? 15 : 16);
+        case G_DECIMAL_COUNTER:
+            return S->hist_n >= L->goal_b - L->goal_a + 1;
+        case G_DECIMAL_DOUBLER:
+            return S->hist_n > 0 && S->hist[S->hist_n - 1] >= L->goal_b;
         case G_NEIGHBOR_COUNTS:
             /* only cubes on the floor are graded -- one still riding in a
              * worker's hands is exempt (and invisible as a neighbor) */
@@ -2363,6 +2413,39 @@ static bool machine_target(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
         if (divert_find(S, w, nx, ny, ox, oy)) return true;
     }
     return false;
+}
+
+/* While anyone stands on the big red button the green display tracks the
+ * sensors; each distinct number shown is remembered, and a number out of
+ * sequence makes the display forget everything (start the count over). */
+static void counter_press(Sim *S) {
+    const Level *L = S->L;
+    bool pressed = false;
+    for (int i = 0; i < S->nw; i++)
+        if (S->w[i].alive && !S->w[i].exited
+            && S->w[i].x == L->button_x && S->w[i].y == L->button_y) pressed = true;
+    if (!pressed) return;
+    long v = 0;
+    for (int i = 0; i < L->nsw; i++) {
+        Tile *t = &S->grid[L->sw_y[i]][L->sw_x[i]];
+        if (L->win == G_BINARY_COUNTER)
+            v = v * 2 + (t->has_cube ? 1 : 0);
+        else {
+            int d = t->has_cube ? t->cube : 0;
+            if (d < 0) d = 0;
+            if (d > 9) d = 9;
+            v = v * 10 + d;
+        }
+    }
+    if (S->hist_n > 0 && S->hist[S->hist_n - 1] == (int)v) return;  /* same picture */
+    if (S->hist_n < 128) S->hist[S->hist_n++] = (int)v;
+    for (int i = 0; i < S->hist_n; i++) {
+        long want;
+        if (L->win == G_BINARY_COUNTER)      want = (S->hist[0] == 1 ? 1 : 0) + i;
+        else if (L->win == G_DECIMAL_COUNTER) want = (long)L->goal_a + i;
+        else                                  want = (long)L->goal_a << i;
+        if (S->hist[i] != want) { S->hist_n = 0; return; }
+    }
 }
 
 /* returns true if something was picked up (or the worker exploded) */
@@ -3084,6 +3167,7 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                         w->pc, w->next_ms, it[i].action >= 0 ? P->instr[it[i].action].raw : "-");
             }
         }
+        if (S->L->nsw > 0) counter_press(S);
         if (level_won(S)) { S->win_ms = batch_end; *out_rounds = rounds; return true; }
         if (S->failed)    { *out_rounds = rounds; return false; }
     }
