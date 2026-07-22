@@ -890,15 +890,15 @@ typedef struct {
 } Sim;
 
 /* Per-command durations, calibrated against recorded community speeds.
- * The game runs on 60 fps frames (a step is 20 frames = 333.33 ms, item
- * ops 15 frames = 250 ms), so the clock ticks in THIRDS of a millisecond
- * to stay frame-exact: 1 tick = 1/3 ms, one frame = 50 ticks, one second
- * = 3000 ticks. Rounded whole-millisecond durations would break batch
- * simultaneity (workers due on the same frame drifting 1 ms apart changes
- * crowd interleaving). EMU_MS_* env overrides are given in ms and scaled. */
-static int MS_STEP = 1000, MS_ITEM = 750, MS_PRINTER = 3600, MS_SHRED = 2250,
-           MS_TELL = 3000, MS_IF = 1000, MS_ASSIGN = 1000, MS_WRITE = 3600,
-           MS_ERROR = 750;   /* an errored take/pickup (full hands): the red
+ * The clock runs in 60 fps FRAMES -- the game's native unit; every
+ * command duration is an integer frame count (a step is 20 frames =
+ * 333.33 ms, item ops 15 frames = 250 ms, printers/writes 72, shredders
+ * 45, tells 60). Frame units keep same-frame workers exactly
+ * simultaneous and make the idle fallback (t+1) advance a full frame.
+ * EMU_MS_* env overrides are given in ms and rounded to frames. */
+static int MS_STEP = 20, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
+           MS_TELL = 60, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 72,
+           MS_ERROR = 15;    /* an errored take/pickup (full hands): the red
                                 bubble displays ~1.5s but the program moves
                                 on quickly -- recorded speeds demand ~250ms */
 
@@ -2872,16 +2872,19 @@ int main(int argc, char **argv) {
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
-    { const char *e;   /* overrides in ms, scaled to third-ms ticks */
-      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_IF")))      MS_IF = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = atoi(e) * 3;
-      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = atoi(e) * 3; }
+    { const char *e;   /* overrides in ms, rounded to 60fps frames */
+      #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
+      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_IF")))      MS_IF = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = MS2F(atoi(e));
+      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = MS2F(atoi(e));
+      #undef MS2F
+    }
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [--trace] <level.lvl> <solution.txt> [trials]\n", argv[0]);
         return 1;
@@ -2933,7 +2936,7 @@ int main(int argc, char **argv) {
             if (min_r < 0 || rounds < min_r) min_r = rounds;
             if (rounds > max_r) max_r = rounds;
             sum_r += rounds;
-            int sp = (int)((S.win_ms + 2999) / 3000);   /* ticks -> whole seconds */
+            int sp = (int)((S.win_ms + 59) / 60);       /* frames -> whole seconds */
             if (min_sp < 0 || sp < min_sp) min_sp = sp;
             if (sp > max_sp) max_sp = sp;
             sum_sp += sp;
