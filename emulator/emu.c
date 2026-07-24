@@ -2909,6 +2909,11 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         if (!w->wsingle) {
             w->wintx = tx; w->winty = ty;
             w->wtx = w->wty = -1;
+            /* the walk never happened, so the body belongs back on the tile it
+             * never left: a smooth position abandoned part-way through rounds
+             * to the tile ahead, and the worker would go on blocking a tile it
+             * is not standing on for the rest of the run. */
+            w->fx = w->x; w->fy = w->y;
             return true;
         }
         return false;
