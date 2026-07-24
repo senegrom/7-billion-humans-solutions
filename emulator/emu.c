@@ -102,6 +102,7 @@ typedef struct {
     int  wtx, wty;  /* tile being walked into (-1 = standing still) */
     bool wsingle;   /* a plain one-tile dir-step: advance pc on arrival */
     int  busy;      /* frames left on a non-move command (0 = free) */
+    int  wprog, wtot; /* frames elapsed / total for the walk in progress */
 } Worker;
 
 typedef enum {
@@ -2807,6 +2808,17 @@ static void cont_land(Sim *S, Program *P, int i) {
 static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     Worker *w = &S->w[i];
     w->wtx = tx; w->wty = ty; w->wsingle = single;
+    /* A walk lasts a FIXED whole number of frames, decided when it starts and
+     * independent of where the worker is standing.  Deriving arrival from a
+     * floating-point distance instead makes the frame count depend on the
+     * absolute coordinates (accumulated rounding differs at y=8 and y=6), so
+     * two workers taking geometrically identical steps can land a frame apart
+     * and a synchronized crowd silently drifts out of step. */
+    int diag = (tx != w->x && ty != w->y);
+    int base = MS_STEP > 0 ? MS_STEP : 1;
+    w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    if (w->wtot < 1) w->wtot = 1;
+    w->wprog = 0;
 }
 
 /* advance a gliding worker; commit on arrival (with swap/cycle).  returns
@@ -2854,12 +2866,14 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         if (!w->wsingle) { w->wtx = w->wty = -1; return true; }
         return false;
     }
-    /* target free: glide toward its centre, snapping on arrival */
-    double dx = tx - w->fx, dy = ty - w->fy;
-    double dist = sqrt(dx*dx + dy*dy);
-    if (dist <= WALK_V || dist < 1e-9) { cont_land(S, P, i); return true; }
-    w->fx += dx / dist * WALK_V;
-    w->fy += dy / dist * WALK_V;
+    /* target free: spend one frame of the walk, landing when its budget runs
+     * out.  fx/fy are interpolated only so the body occupies the nearer tile
+     * (it flips at the half-way frame, letting a follower enter tight). */
+    w->wprog++;
+    if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
+    double frac = (double)w->wprog / (double)w->wtot;
+    w->fx = w->x + (tx - w->x) * frac;
+    w->fy = w->y + (ty - w->y) * frac;
     return true;
 }
 
