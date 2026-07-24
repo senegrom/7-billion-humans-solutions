@@ -2861,6 +2861,17 @@ static bool cont_glide(Sim *S, Program *P, int i) {
             }
             return true;
         }
+        /* a worker that has finished its program is still solid, but it is a
+         * bystander: rather than wait on it forever, the mover displaces it
+         * into the tile being vacated and takes its place. */
+        if (o->done && o->wtx < 0) {
+            int ax = w->x, ay = w->y;
+            w->x = tx; w->y = ty; w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
+            o->x = ax; o->y = ay; o->fx = o->x; o->fy = o->y;
+            if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
+            fall_check(S, w); fall_check(S, o);
+            return true;
+        }
         /* blocked: hold position and wait for the tile to clear (the wave).
          * a travel walk abandons this tile so its command can re-route. */
         if (!w->wsingle) { w->wtx = w->wty = -1; return true; }
