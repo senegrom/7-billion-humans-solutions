@@ -3084,7 +3084,14 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done || w->exited) continue;
             if (w->wtx >= 0) { if (cont_glide(S, P, i)) progressed = true; in_flight = true; continue; }
-            if (w->busy > 0) { if (--w->busy == 0) {} in_flight = true; continue; }
+            /* Tick the command timer and, if that used up the last frame of
+             * it, go straight on to the next instruction in this same frame.
+             * Idling until the following frame would add a frame to every
+             * command a worker ever runs. */
+            if (w->busy > 0) {
+                --w->busy;
+                if (w->busy > 0) { in_flight = true; continue; }
+            }
             cont_free(S, P, i, now, &progressed, &told);
             if (S->failed) { *out_rounds = now; return false; }
             if (S->w[i].busy > 0 || S->w[i].wtx >= 0) in_flight = true;
