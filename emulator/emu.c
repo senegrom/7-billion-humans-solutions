@@ -103,6 +103,7 @@ typedef struct {
     bool wsingle;   /* a plain one-tile dir-step: advance pc on arrival */
     int  busy;      /* frames left on a non-move command (0 = free) */
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
+    int  wintx, winty; /* tile a blocked travel walk still means to enter */
 } Worker;
 
 typedef enum {
@@ -1177,6 +1178,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         memset(w, 0, sizeof *w);
         w->x = L->sx[i]; w->y = L->sy[i];
         w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
+        w->wintx = w->winty = -1;
         w->alive = true;
         w->exit_x = w->exit_y = -1;
         w->pend_x = w->pend_y = -1;
@@ -2782,6 +2784,18 @@ static int cont_occupant(Sim *S, int x, int y, int self) {
     }
     return -1;
 }
+/* the worker whose LOGICAL tile is (x,y).  A walking worker keeps its logical
+ * tile until it lands, so this -- not the half-way body position -- is what a
+ * standoff is made of: use it when deciding whether a set of blocked workers
+ * forms a closed ring that can rotate. */
+static int cont_holder(Sim *S, int x, int y, int self) {
+    for (int j = 0; j < S->nw; j++) {
+        if (j == self) continue;
+        Worker *o = &S->w[j];
+        if (o->alive && !o->exited && o->x == x && o->y == y) return j;
+    }
+    return -1;
+}
 static bool cont_reserved(Sim *S, int x, int y, int self) {
     for (int j = 0; j < S->nw; j++) {
         if (j == self) continue;
@@ -2800,6 +2814,7 @@ static void cont_land(Sim *S, Program *P, int i) {
     w->x = w->wtx; w->y = w->wty;
     w->fx = w->x; w->fy = w->y;
     w->wtx = w->wty = -1;
+    w->wintx = w->winty = -1;
     if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
     fall_check(S, w);
 }
@@ -2808,6 +2823,7 @@ static void cont_land(Sim *S, Program *P, int i) {
 static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     Worker *w = &S->w[i];
     w->wtx = tx; w->wty = ty; w->wsingle = single;
+    w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
     /* A walk lasts a FIXED whole number of frames, decided when it starts and
      * independent of where the worker is standing.  Deriving arrival from a
      * floating-point distance instead makes the frame count depend on the
@@ -2835,19 +2851,26 @@ static bool cont_glide(Sim *S, Program *P, int i) {
             int ax = w->x, ay = w->y;
             w->x = tx; w->y = ty; w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
             o->x = ax; o->y = ay; o->fx = o->x; o->fy = o->y; o->wtx = o->wty = -1;
+            w->wintx = w->winty = -1; o->wintx = o->winty = -1;
             if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
             if (o->wsingle) { if (o->fresh > 0) o->fresh--; o->pc++; }
             fall_check(S, w); fall_check(S, o);
             return true;
         }
-        /* closed rotation cycle: everyone in the loop advances together */
+        /* closed rotation cycle: everyone in the loop advances together.
+         * Follow LOGICAL tiles here -- a mid-step body has already flipped to
+         * the tile it is entering, so tracing bodies walks off the ring and
+         * a genuine standoff never looks closed. */
+        #define WANTS(k)  (S->w[k].wtx >= 0 || S->w[k].wintx >= 0)
+        #define WANT_X(k) (S->w[k].wtx >= 0 ? S->w[k].wtx : S->w[k].wintx)
+        #define WANT_Y(k) (S->w[k].wtx >= 0 ? S->w[k].wty : S->w[k].winty)
         int chain[MAXWORKERS], cn = 0, cur = i; bool closed = false;
         while (cn < S->nw) {
             chain[cn++] = cur;
-            int nxt = cont_occupant(S, S->w[cur].wtx, S->w[cur].wty, cur);
+            int nxt = cont_holder(S, WANT_X(cur), WANT_Y(cur), cur);
             if (nxt < 0) break;
             if (nxt == i) { closed = true; break; }
-            if (S->w[nxt].done || S->w[nxt].wtx < 0) break;
+            if (S->w[nxt].done || !WANTS(nxt)) break;
             bool seen = false; for (int k = 0; k < cn; k++) if (chain[k] == nxt) seen = true;
             if (seen) break;
             cur = nxt;
@@ -2855,26 +2878,39 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         if (closed && cn > 1) {
             for (int k = 0; k < cn; k++) {
                 Worker *m = &S->w[chain[k]];
-                m->x = m->wtx; m->y = m->wty; m->fx = m->x; m->fy = m->y; m->wtx = m->wty = -1;
+                int mx = WANT_X(chain[k]), my = WANT_Y(chain[k]);
+                m->x = mx; m->y = my; m->fx = m->x; m->fy = m->y;
+                m->wtx = m->wty = -1; m->wintx = m->winty = -1;
                 if (m->wsingle) { if (m->fresh > 0) m->fresh--; m->pc++; }
                 fall_check(S, m);
             }
             return true;
         }
+        #undef WANTS
+        #undef WANT_X
+        #undef WANT_Y
         /* a worker that has finished its program is still solid, but it is a
          * bystander: rather than wait on it forever, the mover displaces it
          * into the tile being vacated and takes its place. */
-        if (o->done && o->wtx < 0) {
+        if (o->done && o->wtx < 0 && o->wintx < 0) {
             int ax = w->x, ay = w->y;
             w->x = tx; w->y = ty; w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
             o->x = ax; o->y = ay; o->fx = o->x; o->fy = o->y;
+            w->wintx = w->winty = -1;
             if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
             fall_check(S, w); fall_check(S, o);
             return true;
         }
         /* blocked: hold position and wait for the tile to clear (the wave).
-         * a travel walk abandons this tile so its command can re-route. */
-        if (!w->wsingle) { w->wtx = w->wty = -1; return true; }
+         * a travel walk abandons this tile so its command can re-route -- but
+         * it still MEANS to go there, so remember the intent: a ring of
+         * blocked travellers only ever looks closed if the members that are
+         * between routes still count as links in it. */
+        if (!w->wsingle) {
+            w->wintx = tx; w->winty = ty;
+            w->wtx = w->wty = -1;
+            return true;
+        }
         return false;
     }
     /* target free: spend one frame of the walk, landing when its budget runs
@@ -3030,6 +3066,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
     if (level_won(S)) { *out_rounds = 0; return true; }
     for (int i = 0; i < S->nw; i++) {
         S->w[i].busy = 0; S->w[i].wtx = S->w[i].wty = -1;
+        S->w[i].wintx = S->w[i].winty = -1;
         S->w[i].fx = S->w[i].x; S->w[i].fy = S->w[i].y;
     }
     int now = 0, stall = 0;
