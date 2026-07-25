@@ -2786,9 +2786,17 @@ static void exec_action(Sim *S, Program *P, int i) {
  * closer to their recorded times (Little Exterminator 2 speed lands exactly,
  * Fill the Floor moves from 173 to 218 against a recorded 588) and the speed
  * error is unchanged overall, but My First Shredding Memory (speed) then jams
- * at the shredder with 7 cubes done and never finishes.  The queue discipline
- * for a crowd converging on one machine has to be worked out before this can
- * be the default. */
+ * at the shredder with 7 cubes done and never finishes.
+ *
+ * And it is probably modelling something that does not exist.  Feeding a
+ * shredder and taking from a printer both go ahead the moment the worker
+ * reaches the machine: the only things consulted are level rules (which worker
+ * last used this shredder, how many cubes it has eaten), never a timer, and
+ * nothing makes one worker wait because another is mid-cycle.  What a worker
+ * waits for is its OWN animation, which is already what its command duration
+ * represents.  So machines are not the reason a crowd finishes too quickly
+ * here -- workers simply get around too freely -- and this switch is kept as a
+ * record of that experiment rather than as a thing to turn on. */
 static bool g_machfix = false;
 
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
