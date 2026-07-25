@@ -104,6 +104,8 @@ typedef struct {
     int  busy;      /* frames left on a non-move command (0 = free) */
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
     int  wintx, winty; /* tile a blocked travel walk still means to enter */
+    bool wowned;       /* the tile being walked into has already been taken */
+    double fsx, fsy;   /* where the body was when that tile was taken */
 } Worker;
 
 typedef enum {
@@ -2769,18 +2771,16 @@ static void exec_action(Sim *S, Program *P, int i) {
 
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
-/* the tile a worker's BODY currently sits in = its rounded smooth position.
- * This flips to the destination at the mid-point of a step, so a follower can
- * enter a tile as soon as the leader's body clears half of it -- the tight
- * conga wave, not a per-worker full-step wait. */
-static int body_x(const Worker *o) { return (int)floor(o->fx + 0.5); }
-static int body_y(const Worker *o) { return (int)floor(o->fy + 0.5); }
-
+/* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
+ * it is stepping into at the START of the step, letting go of the one behind it
+ * then, not on arrival.  Its body slides across afterwards and is only ever
+ * animation.  So a follower may enter the tile behind as soon as the leader has
+ * set off, which is what makes a queue flow as a wave. */
 static int cont_occupant(Sim *S, int x, int y, int self) {
     for (int j = 0; j < S->nw; j++) {
         if (j == self) continue;
         Worker *o = &S->w[j];
-        if (o->alive && !o->exited && body_x(o) == x && body_y(o) == y) return j;
+        if (o->alive && !o->exited && o->x == x && o->y == y) return j;
     }
     return -1;
 }
@@ -2801,7 +2801,7 @@ static bool cont_reserved(Sim *S, int x, int y, int self) {
         if (j == self) continue;
         Worker *o = &S->w[j];
         if (!o->alive || o->exited) continue;
-        if (body_x(o) == x && body_y(o) == y) return true;
+        if (o->x == x && o->y == y) return true;
         if (o->wtx == x && o->wty == y) return true;
     }
     return false;
@@ -2811,10 +2811,11 @@ static bool cont_reserved(Sim *S, int x, int y, int self) {
  * step (single-tile dir-steps advance pc; mem/travel walks re-evaluate). */
 static void cont_land(Sim *S, Program *P, int i) {
     Worker *w = &S->w[i];
-    w->x = w->wtx; w->y = w->wty;
+    if (!w->wowned) { w->x = w->wtx; w->y = w->wty; }   /* else already taken */
     w->fx = w->x; w->fy = w->y;
     w->wtx = w->wty = -1;
     w->wintx = w->winty = -1;
+    w->wowned = false;
     if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
     fall_check(S, w);
 }
@@ -2824,6 +2825,7 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     Worker *w = &S->w[i];
     w->wtx = tx; w->wty = ty; w->wsingle = single;
     w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
+    w->wowned = false;             /* the tile is not ours until it is free */
     /* A walk lasts a FIXED whole number of frames, decided when it starts and
      * independent of where the worker is standing.  Deriving arrival from a
      * floating-point distance instead makes the frame count depend on the
@@ -2842,6 +2844,16 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
 static bool cont_glide(Sim *S, Program *P, int i) {
     Worker *w = &S->w[i];
     int tx = w->wtx, ty = w->wty;
+    if (w->wowned) {
+        /* the tile is already ours: nothing left to contest, the body is just
+         * covering the ground between the two tiles. */
+        w->wprog++;
+        if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
+        double f = (double)w->wprog / (double)w->wtot;
+        w->fx = w->fsx + (tx - w->fsx) * f;
+        w->fy = w->fsy + (ty - w->fsy) * f;
+        return true;
+    }
     int occ = cont_occupant(S, tx, ty, i);
     /* target still held by another worker -> either a swap or a wait */
     if (occ >= 0) {
@@ -2918,14 +2930,16 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         }
         return false;
     }
-    /* target free: spend one frame of the walk, landing when its budget runs
-     * out.  fx/fy are interpolated only so the body occupies the nearer tile
-     * (it flips at the half-way frame, letting a follower enter tight). */
+    /* nobody holds the tile: take it now and let go of the one behind us.  The
+     * body stays where it is and slides across over the rest of the walk. */
+    w->fsx = w->fx; w->fsy = w->fy;
+    w->x = tx; w->y = ty;
+    w->wowned = true;
     w->wprog++;
     if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
     double frac = (double)w->wprog / (double)w->wtot;
-    w->fx = w->x + (tx - w->x) * frac;
-    w->fy = w->y + (ty - w->y) * frac;
+    w->fx = w->fsx + (tx - w->fsx) * frac;
+    w->fy = w->fsy + (ty - w->fsy) * frac;
     return true;
 }
 
@@ -3072,6 +3086,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
     for (int i = 0; i < S->nw; i++) {
         S->w[i].busy = 0; S->w[i].wtx = S->w[i].wty = -1;
         S->w[i].wintx = S->w[i].winty = -1;
+        S->w[i].wowned = false;
         S->w[i].fx = S->w[i].x; S->w[i].fy = S->w[i].y;
     }
     int now = 0, stall = 0;
