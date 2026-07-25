@@ -2799,6 +2799,13 @@ static void exec_action(Sim *S, Program *P, int i) {
  * record of that experiment rather than as a thing to turn on. */
 static bool g_machfix = false;
 
+/* A failed item action stops the worker for the error bubble before the
+ * program moves on: picking up or taking with full hands, giving with empty
+ * hands, dropping with empty hands or onto a tile that already has a cube.
+ * (Taking from a worker whose hands are empty is the exception -- that is a
+ * silent instant retry, not an error.) */
+#define MS_ERRB 90              /* the error bubble, 1.5 s in frames */
+
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
@@ -3069,7 +3076,9 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         bool nop = ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
                 || (ins->op == OP_GIVETO && !w->holding);
         if (nop || !mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
+            w->pend_exec = 1;
+            w->busy = nop ? MS_ERRB : MS_ITEM;
+            *progressed = true; return;
         }
         #define ARR() (onto ? (w->x == tx && w->y == ty) \
                             : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
@@ -3109,6 +3118,23 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
      * not when it starts.  That is what lets one worker react to the tile its
      * neighbour has just left: the tile comes free while the condition is still
      * being evaluated, rather than one whole command too late. */
+    {
+        bool err = false;
+        if ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
+            err = true;
+        else if (ins->op == OP_GIVETO && !w->holding)
+            err = true;
+        else if (ins->op == OP_DROP) {
+            if (!w->holding) err = true;
+            else if (S->grid[w->y][w->x].terrain == T_FLOOR
+                     && S->grid[w->y][w->x].has_cube) err = true;
+        }
+        if (err) {
+            w->pend_exec = 1;            /* the action still no-ops at the end */
+            w->busy = MS_ERRB;
+            *progressed = true; return;
+        }
+    }
     long cost = cmd_duration(S, w, ins);
     w->pend_exec = 1;
     w->busy = (int)(cost > 0 ? cost : 1);
