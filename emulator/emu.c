@@ -933,6 +933,7 @@ typedef struct {
     int     ic_group[MAXCUBES];      /* G_FLOWER/SHRED_MAX groups (8-connected) */
     int     ngroups;
     bool    door_exit;           /* the door acts as a walk-in exit */
+    long    mach_hold;            /* latest busy-until across all machines */
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
@@ -2382,6 +2383,7 @@ static void feed_shredder(Sim *S, Worker *w, int wi, int nx, int ny) {
     w->fed++;
     S->shredded++;
     S->mach_busy[ny][nx] = S->now_ms + MS_SHRED;
+    if (S->mach_busy[ny][nx] > S->mach_hold) S->mach_hold = S->mach_busy[ny][nx];
     if (g_trace)
         fprintf(stderr, "FEED w%d -> shredder(%d,%d) total=%d\n", wi, nx, ny, S->shredded);
 }
@@ -2503,6 +2505,7 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->printed++;
         S->pickups++;
         S->mach_busy[ny][nx] = S->now_ms + MS_PRINTER;
+        if (S->mach_busy[ny][nx] > S->mach_hold) S->mach_hold = S->mach_busy[ny][nx];
         return true;
     }
     if (t->has_cube) {
@@ -2769,6 +2772,24 @@ static void exec_action(Sim *S, Program *P, int i) {
  *
  * EXPERIMENTAL (EMU_CONT=1): the movement itself reproduces, but crowd
  * endgames still diverge from recorded runs, so it is not the default. */
+
+/* Hold a machine for as long as it is actually in use (EMU_MACH=1).
+ *
+ * As it stands the continuous model lets a whole crowd share one printer or
+ * shredder: the busy-until stamp is written against a clock the continuous
+ * scheduler never advances, so every machine reads as free after its first
+ * cycle.  Switching this on fixes that, holds the claim for the length of the
+ * command rather than a single frame, and stops a worker queueing at a machine
+ * from being mistaken for a stalled world.
+ *
+ * It is off because it is not yet a net gain: machine-bound levels do get
+ * closer to their recorded times (Little Exterminator 2 speed lands exactly,
+ * Fill the Floor moves from 173 to 218 against a recorded 588) and the speed
+ * error is unchanged overall, but My First Shredding Memory (speed) then jams
+ * at the shredder with 7 cubes done and never finishes.  The queue discipline
+ * for a crowd converging on one machine has to be worked out before this can
+ * be the default. */
+static bool g_machfix = false;
 
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
@@ -3040,7 +3061,8 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 int mx, my;
                 if (machine_target(S, w, ins, &mx, &my)) {
                     if (S->mach_busy[my][mx] > now) return;   /* machine busy: wait */
-                    S->mach_busy[my][mx] = now + 1;
+                    S->mach_busy[my][mx] = g_machfix ? now + MS_ITEM : now + 1;
+                    if (S->mach_busy[my][mx] > S->mach_hold) S->mach_hold = S->mach_busy[my][mx];
                 }
                 w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
             }
@@ -3060,7 +3082,8 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         int mx, my;
         if (machine_target(S, w, ins, &mx, &my)) {
             if (S->mach_busy[my][mx] > now) return;
-            S->mach_busy[my][mx] = now + 1;
+            S->mach_busy[my][mx] = g_machfix ? now + MS_ITEM : now + 1;
+            if (S->mach_busy[my][mx] > S->mach_hold) S->mach_hold = S->mach_busy[my][mx];
         }
     }
     /* A command occupies the worker for its duration and its effect lands at
@@ -3102,6 +3125,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         bool progressed = false, in_flight = false;
         int told = -1;
         S->beat = now;
+        if (g_machfix) S->now_ms = now;
         S->feeds_this_beat = 0;
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
@@ -3130,6 +3154,8 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         if (S->L->nsw > 0) counter_press(S);
         if (level_won(S)) { S->win_ms = now; *out_rounds = now; return true; }
         if (S->failed)    { *out_rounds = now; return false; }
+        /* someone queueing at a machine mid-cycle is not a stalled world */
+        if (g_machfix && S->mach_hold > now) in_flight = true;
         if (!in_flight && !progressed) { if (++stall >= 2) break; } else stall = 0;
     }
     *out_rounds = now;
@@ -3903,6 +3929,7 @@ int main(int argc, char **argv) {
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     { const char *ev;
       if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
+      if ((ev = getenv("EMU_MACH")))     g_machfix  = atoi(ev) != 0;
       if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0;
       if ((ev = getenv("EMU_CFCOST")))   g_cfcost   = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
