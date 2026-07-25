@@ -105,6 +105,7 @@ typedef struct {
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
     int  wintx, winty; /* tile a blocked travel walk still means to enter */
     bool wowned;       /* the tile being walked into has already been taken */
+    int  pend_exec;    /* command timed out; its effect has not landed yet */
     double fsx, fsy;   /* where the body was when that tile was taken */
 } Worker;
 
@@ -3030,7 +3031,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         bool nop = ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
                 || (ins->op == OP_GIVETO && !w->holding);
         if (nop || !mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            exec_action(S, P, i); w->busy = MS_ITEM; *progressed = true; return;
+            w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
         }
         #define ARR() (onto ? (w->x == tx && w->y == ty) \
                             : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
@@ -3041,7 +3042,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                     if (S->mach_busy[my][mx] > now) return;   /* machine busy: wait */
                     S->mach_busy[my][mx] = now + 1;
                 }
-                exec_action(S, P, i); w->busy = MS_ITEM; *progressed = true; return;
+                w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
             }
         }
         #undef ARR
@@ -3062,8 +3063,14 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             S->mach_busy[my][mx] = now + 1;
         }
     }
+    /* A command occupies the worker for its duration and its effect lands at
+     * the END of it -- an item changes hands as the animation finishes, and a
+     * condition reads the world when the worker has finished thinking about it,
+     * not when it starts.  That is what lets one worker react to the tile its
+     * neighbour has just left: the tile comes free while the condition is still
+     * being evaluated, rather than one whole command too late. */
     long cost = cmd_duration(S, w, ins);
-    exec_action(S, P, i);
+    w->pend_exec = 1;
     w->busy = (int)(cost > 0 ? cost : 1);
     *progressed = true;
 }
@@ -3087,6 +3094,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         S->w[i].busy = 0; S->w[i].wtx = S->w[i].wty = -1;
         S->w[i].wintx = S->w[i].winty = -1;
         S->w[i].wowned = false;
+        S->w[i].pend_exec = 0;
         S->w[i].fx = S->w[i].x; S->w[i].fy = S->w[i].y;
     }
     int now = 0, stall = 0;
@@ -3106,6 +3114,13 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
             if (w->busy > 0) {
                 --w->busy;
                 if (w->busy > 0) { in_flight = true; continue; }
+                if (w->pend_exec) {          /* the command's effect lands now */
+                    w->pend_exec = 0;
+                    exec_action(S, P, i);
+                    progressed = true;
+                    if (S->failed) { *out_rounds = now; return false; }
+                    in_flight = true; continue;
+                }
             }
             cont_free(S, P, i, now, &progressed, &told);
             if (S->failed) { *out_rounds = now; return false; }
