@@ -3007,6 +3007,15 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                     w->mem[ins->slot].ntype = -1;
                     w->pc++;
                 } else { *fi = 0; w->pc = ins->target + 1; }
+                if (ins->ndirs > 0) {
+                    /* each foreach step is a real wait of the standard command
+                     * duration divided by the number of directions listed, so
+                     * sweeping all of them costs one whole command -- it is
+                     * not free control flow. */
+                    int b = MS_STEP / ins->ndirs;
+                    w->busy = b > 0 ? b : 1;
+                    *progressed = true; return;
+                }
                 *progressed = true; continue;
             }
             case OP_LISTEN:
