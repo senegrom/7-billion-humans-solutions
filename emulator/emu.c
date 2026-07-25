@@ -2806,6 +2806,31 @@ static bool g_machfix = false;
  * silent instant retry, not an error.) */
 #define MS_ERRB 90              /* the error bubble, 1.5 s in frames */
 
+/* The frame cadence (EMU_FRAME=4 to enable; default off).
+ *
+ * The instruction stepper runs one program node per frame, and the pieces of
+ * that cadence only reproduce recorded times when they are ALL applied:
+ *   1. a control node (jump, label, else, endif, endfor) costs one frame;
+ *   2. when a timed command's wait runs out its effect lands, and the next
+ *      node is dispatched on the FOLLOWING frame (a scheduling frame);
+ *   3. the calibrated waits already include that overhead, so the wait
+ *      itself is two frames shorter than the calibrated total;
+ *   4. movement resolves before the stepper, so a worker that lands runs its
+ *      next instruction in the same frame;
+ *   5. the walk budget includes its dispatch frame (one fewer glide frame) --
+ *      a step starts the move and the walk itself is the whole occupancy.
+ * Applied alone or in partial subsets these measure WORSE than none of them;
+ * together they land Fill the Floor at 584 against a recorded 588 and give
+ * the best median speed error yet (23%), at the cost of three formerly-exact
+ * short levels drifting by one second. Off until the per-command detail
+ * work recovers those. Intermediate values 1-3 apply the earlier subsets
+ * and exist only for measurement. */
+static int g_frame = 0;
+static long frame_wait(long f) {
+    if (g_frame >= 2) { f -= 2; if (f < 1) f = 1; }
+    return f;
+}
+
 static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
@@ -2872,6 +2897,7 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     int diag = (tx != w->x && ty != w->y);
     int base = MS_STEP > 0 ? MS_STEP : 1;
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    if (g_frame >= 4) w->wtot -= 1;   /* the dispatch frame is part of the walk */
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
 }
@@ -2988,6 +3014,18 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         if (++guard > budget) return;
         if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
         Instr *ins = &P->instr[w->pc];
+        if (g_frame) {
+            bool ctl = true;
+            switch (ins->op) {
+                case OP_NOP: case OP_LABEL: w->pc++; break;
+                case OP_JUMP:  w->pc = ins->target; break;
+                case OP_ELSE:  w->pc = ins->target; break;
+                case OP_ENDIF: w->pc++; break;
+                case OP_ENDFOR: w->pc = ins->target; break;
+                default: ctl = false; break;
+            }
+            if (ctl) { w->busy = 1; *progressed = true; return; }
+        }
         switch (ins->op) {
             case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; continue;
             case OP_JUMP:  w->pc = ins->target; *progressed = true; continue;
@@ -3020,7 +3058,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                      * sweeping all of them costs one whole command -- it is
                      * not free control flow. */
                     int b = MS_STEP / ins->ndirs;
-                    w->busy = b > 0 ? b : 1;
+                    w->busy = (int)frame_wait(b > 0 ? b : 1);
                     *progressed = true; return;
                 }
                 *progressed = true; continue;
@@ -3077,7 +3115,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 || (ins->op == OP_GIVETO && !w->holding);
         if (nop || !mem_tile(S, w, ins->mem_target, &tx, &ty)) {
             w->pend_exec = 1;
-            w->busy = nop ? MS_ERRB : MS_ITEM;
+            w->busy = frame_wait(nop ? MS_ERRB : MS_ITEM);
             *progressed = true; return;
         }
         #define ARR() (onto ? (w->x == tx && w->y == ty) \
@@ -3090,7 +3128,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                     S->mach_busy[my][mx] = g_machfix ? now + MS_ITEM : now + 1;
                     if (S->mach_busy[my][mx] > S->mach_hold) S->mach_hold = S->mach_busy[my][mx];
                 }
-                w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
+                w->pend_exec = 1; w->busy = frame_wait(MS_ITEM); *progressed = true; return;
             }
         }
         #undef ARR
@@ -3131,13 +3169,13 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         }
         if (err) {
             w->pend_exec = 1;            /* the action still no-ops at the end */
-            w->busy = MS_ERRB;
+            w->busy = frame_wait(MS_ERRB);
             *progressed = true; return;
         }
     }
     long cost = cmd_duration(S, w, ins);
     w->pend_exec = 1;
-    w->busy = (int)(cost > 0 ? cost : 1);
+    w->busy = (int)frame_wait(cost > 0 ? cost : 1);
     *progressed = true;
 }
 
@@ -3173,7 +3211,15 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done || w->exited) continue;
-            if (w->wtx >= 0) { if (cont_glide(S, P, i)) progressed = true; in_flight = true; continue; }
+            if (w->wtx >= 0) {
+                if (cont_glide(S, P, i)) progressed = true;
+                in_flight = true;
+                if (!(g_frame >= 3 && w->wtx < 0 && w->busy == 0
+                      && w->alive && !w->done && !w->exited))
+                    continue;
+                /* landed: movement resolves before the stepper, so the next
+                 * instruction runs this same frame */
+            }
             /* Tick the command timer and, if that used up the last frame of
              * it, go straight on to the next instruction in this same frame.
              * Idling until the following frame would add a frame to every
@@ -3188,6 +3234,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
                     if (S->failed) { *out_rounds = now; return false; }
                     in_flight = true; continue;
                 }
+                if (g_frame) { in_flight = true; continue; }  /* scheduling frame */
             }
             cont_free(S, P, i, now, &progressed, &told);
             if (S->failed) { *out_rounds = now; return false; }
@@ -3973,6 +4020,7 @@ int main(int argc, char **argv) {
     { const char *ev;
       if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
       if ((ev = getenv("EMU_MACH")))     g_machfix  = atoi(ev) != 0;
+      if ((ev = getenv("EMU_FRAME")))    g_frame    = atoi(ev);
       if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0;
       if ((ev = getenv("EMU_CFCOST")))   g_cfcost   = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
