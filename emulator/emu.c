@@ -3981,7 +3981,9 @@ static void fq_push(Worker *w, int id, float t) {
 /* frames of gating before an item action's effect, and the animation tail
  * that plays out afterwards (30 frames of animation in all) */
 static int FQ_ITEM_PRE = 15, FQ_ITEM_TAIL = 15;
-static int FQ_IF_WAIT = 15;           /* half the standard command */
+static int FQ_IF_WAIT = 11;           /* the condition is read half-way in */
+static int FQ_IF_HOLD = 11;           /* ...but the think lasts the full beat */
+static int MS_CALC = 116;             /* the calc arithmetic animation */
 static int FQ_FOREACH_BASE = 30;      /* one standard command per full sweep */
 
 /* run the queue; returns false while something in it is still holding */
@@ -3991,16 +3993,14 @@ static bool fq_pump(Sim *S, Program *P, int i) {
         struct { unsigned char id; float t; } *ev =
             (void *)&w->evq[w->evcur];
         switch (ev->id) {
-            case FQ_WAIT:
-                if (w->animms > 0) return false;
+            case FQ_WAIT:               /* pure timer, blind to animations */
                 ev->t -= FQ_DT;
                 if (ev->t > 0) return false;
                 w->evcur++; continue;
-            case FQ_ANIM:
-                if (w->animms > 0) return false;
+            case FQ_ANIM:               /* starts at once, replacing any prior */
                 w->animms = ev->t;
                 w->evcur++; continue;
-            case FQ_WAITANIM:
+            case FQ_WAITANIM:           /* the one thing that waits for one */
                 if (w->animms > 0) return false;
                 w->evcur++; continue;
             case FQ_EFFECT:
@@ -4061,6 +4061,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         case OP_STEP: {
             int osave = w->pc;
             cont_free(S, P, i, now, progressed, told);
+            /* the step command covers its first stretch of ground on the
+             * frame it is issued -- the body is already under way */
+            if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
             if (w->wtx >= 0 || w->busy > 0) w->fready = false;
             (void)osave;
             *progressed = true; return;
@@ -4103,7 +4106,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             #undef FARR
             if (!act) {
                 int d = route_step(S, w, tx, ty, !onto);
-                if (d >= 0) { cont_walk(S, i, w->x + DX[d], w->y + DY[d], false); w->fready = false; }
+                if (d >= 0) {
+                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false);
+                    if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
+                    w->fready = false;
+                }
                 *progressed = true; return;   /* no route: wait a frame */
             }
         }
@@ -4114,12 +4121,32 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     }
     switch (ins->op) {
         case OP_IF:
+            /* the think bubble: the condition is SAMPLED at the half-way
+             * point but the worker stays occupied for the whole standard
+             * command -- a branch decided on a world that may change again
+             * before the branch is acted on */
             fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
             fq_push(w, FQ_EFFECT, 0);
+            fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
             break;
         case OP_ASSIGN:
-            fq_push(w, FQ_WAIT, (float)(MS_ASSIGN > 0 ? MS_ASSIGN : 1));
-            fq_push(w, FQ_EFFECT, 0);
+            if (ins->akind == 0) {
+                /* nearest is as free as a label: the memory points at the
+                 * thing the same frame and the program moves right on */
+                exec_assign(S, w, ins);
+                w->pc++;
+                *progressed = true; return;
+            }
+            if (ins->akind == 2) {
+                /* calc runs the long finger-arithmetic; the slot takes the
+                 * result only once the sums are done */
+                fq_push(w, FQ_WAIT, (float)MS_CALC);
+                fq_push(w, FQ_EFFECT, 0);
+            } else {
+                /* set shows a bubble but holds nothing: the slot updates on
+                 * the spot and the next command follows immediately */
+                fq_push(w, FQ_EFFECT, 0);
+            }
             break;
         case OP_TELL:
             fq_push(w, FQ_WAIT, (float)(MS_TELL > 0 ? MS_TELL : 1));
@@ -4127,12 +4154,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             break;
         case OP_WRITE:
             if (w->holding) {
-                /* the writing animation gates the whole command and the value
-                 * lands at the end, followed by the commit bookkeeping */
+                /* the writing animation runs to its end, the value lands, and
+                 * the commit bookkeeping holds one more standard beat */
                 fq_push(w, FQ_ANIM, 53);
                 fq_push(w, FQ_WAITANIM, 0);
-                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 53 ? MS_WRITE - 53 : 1));
                 fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 53 ? MS_WRITE - 53 : 1));
             } else {
                 fq_push(w, FQ_EFFECT, 0);    /* writing on nothing is free */
             }
@@ -4146,15 +4173,20 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_WAIT, (float)cost);
                 fq_push(w, FQ_EFFECT, 0);
                 fq_push(w, FQ_RESUME, 0);
-            } else if (ins->op == OP_DROP) {
-                /* the cube is down the moment the hand opens; the rest of the
-                 * animation is only the hand coming back */
+            } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
+                /* a hand-off is a throw and a catch: the cube is in the air
+                 * for the throw, changes owner, and the catch is held out */
+                fq_push(w, FQ_WAIT, 14);
+                fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_ANIM, 20);
+                fq_push(w, FQ_WAITANIM, 0);
+            } else {
+                /* the hand does its work the moment the action starts -- the
+                 * cube changes hands (or hits the floor) right away -- and
+                 * the rest of the animation holds the worker to the end */
                 fq_push(w, FQ_EFFECT, 0);
                 fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL));
-            } else {
-                fq_push(w, FQ_WAIT, (float)FQ_ITEM_PRE);
-                fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_ANIM, (float)FQ_ITEM_TAIL);
+                fq_push(w, FQ_WAITANIM, 0);
             }
             break;
         }
@@ -4210,7 +4242,8 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 progressed = true;
                 if (S->failed) { *out_rounds = now; return false; }
                 in_flight = true;
-                continue;           /* the poll frame: dispatch next frame */
+                w->fready = true;   /* the poll frame: dispatch next frame */
+                continue;
             }
             if (S->failed) { *out_rounds = now; return false; }
             if (w->fsusp) { in_flight = true; continue; }

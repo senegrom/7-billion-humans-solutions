@@ -138,14 +138,18 @@ Not yet faithful:
 
 Workers run asynchronously on their own clocks: commands have per-command
 durations and the reported `speed` is the win moment in whole seconds --
-matching the game's TIME metric. The durations (step 333 ms; pick/drop/give/
-take 250 ms; printers 1200 ms; shredders 750 ms; a condition check 333 ms;
-an assignment (`set`/`calc`/`nearest`) 333 ms; `write` 1200 ms; tell 1 s;
-everything else free) were calibrated against the recorded community speeds
-in this repo's README and reproduce a growing set of them exactly (all early
-years, Content Creators, Reverse Line, Automated Pleasantries...). Override
-any of them with `EMU_MS_STEP`-style environment variables for calibration
-experiments.
+matching the game's TIME metric. The shapes: step 333 ms, and a step is
+already under way on the frame it is issued; pickup/drop do the hand-work at
+once and hold for the rest of their half-second animation; hand-offs are a
+throw and a catch; a condition check lasts 333 ms with the condition read at
+its midpoint; `set` updates on the spot; `calc` runs nearly two seconds of
+finger-arithmetic before the slot takes the result; `nearest` is as free as
+a label; `write` 1200 ms; printers 1200 ms; shredders 750 ms; tell 1 s; a
+failed item action costs the 1.5 s error bubble. Calibrated against the
+recorded community speeds in this repo's README, reproducing a growing set
+of them exactly (all early years, Content Creators, Reverse Line, Automated
+Pleasantries...). Override the base durations with `EMU_MS_STEP`-style
+environment variables for calibration experiments.
 
 A step blocked by another worker queues: the walker waits and flows in when
 the tile frees (or trades places when two walkers want each other's tiles),
