@@ -4102,6 +4102,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_WAIT, (float)cost);
                 fq_push(w, FQ_EFFECT, 0);
                 fq_push(w, FQ_RESUME, 0);
+            } else if (ins->op == OP_DROP) {
+                /* the cube is down the moment the hand opens; the rest of the
+                 * animation is only the hand coming back */
+                fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL));
             } else {
                 fq_push(w, FQ_WAIT, (float)FQ_ITEM_PRE);
                 fq_push(w, FQ_EFFECT, 0);
