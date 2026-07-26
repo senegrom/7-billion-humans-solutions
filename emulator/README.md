@@ -136,20 +136,25 @@ Not yet faithful:
 
 ## The Speed model
 
-Workers run asynchronously on their own clocks: commands have per-command
-durations and the reported `speed` is the win moment in whole seconds --
-matching the game's TIME metric. The shapes: step 333 ms, and a step is
-already under way on the frame it is issued; pickup/drop do the hand-work at
-once and hold for the rest of their half-second animation; hand-offs are a
-throw and a catch; a condition check lasts 333 ms with the condition read at
-its midpoint; `set` updates on the spot; `calc` runs nearly two seconds of
-finger-arithmetic before the slot takes the result; `nearest` is as free as
-a label; `write` 1200 ms; printers 1200 ms; shredders 750 ms; tell 1 s; a
-failed item action costs the 1.5 s error bubble. Calibrated against the
-recorded community speeds in this repo's README, reproducing a growing set
-of them exactly (all early years, Content Creators, Reverse Line, Automated
-Pleasantries...). Override the base durations with `EMU_MS_STEP`-style
-environment variables for calibration experiments.
+Workers run asynchronously on 16 ms ticks and the reported `speed` is the
+win moment in whole seconds -- matching the game's TIME metric. The shapes:
+step 333 ms, and a step is already under way on the tick it is issued;
+pickup/drop do the hand-work at once and hold for the rest of their
+half-second animation; hand-offs are a throw and a catch; a condition check
+lasts 333 ms with the condition read at its midpoint; `set` updates on the
+spot; `calc` runs nearly two seconds of finger-arithmetic before the slot
+takes the result; `nearest` is as free as a label; `write` runs its
+animation then a commit beat. A machine holds one customer at a time (the
+next in line parks uncharged): taking from a printer is a lean-in / print /
+catch / lean-back of ~0.85 s with the sheet landing mid-way, reaching
+bodily into one ~2.2 s, and a shredder feed a ~0.6 s toss of which only
+the first ~0.35 s keeps the machine claimed. tell is one full second with
+listeners notified at its end; a failed item action costs the 1.5 s error
+bubble. Calibrated against the recorded community speeds in this repo's
+README, reproducing a growing set of them exactly (all early years, Content
+Creators, Reverse Line, Automated Pleasantries...). Override the base
+durations with `EMU_MS_STEP`-style environment variables for calibration
+experiments.
 
 A step blocked by another worker queues: the walker waits and flows in when
 the tile frees (or trades places when two walkers want each other's tiles),
