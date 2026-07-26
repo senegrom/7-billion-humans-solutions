@@ -64,7 +64,7 @@ typedef struct { int x, y; CubeMode mode; int value; } CubeDef;
 typedef enum { MV_NOTHING, MV_NUM, MV_TILE, MV_CUBEREF } MemKind;
 typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */ } MemVal;
 
-enum { NMEM = 4, MAXFOREACH = 8, WORDLEN = 32 };
+enum { NMEM = 4, MAXFOREACH = 24, WORDLEN = 32 };
 
 typedef struct {
     int  x, y;
