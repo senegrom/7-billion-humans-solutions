@@ -66,14 +66,15 @@ ent cube <x> <y> <value|rand|randu>   # rand = uniform, randu = distinct draws
 goal <predicate [args]>
 ```
 
-Win predicates implemented: the full campaign set except the three
-counting-machine levels (`binary_counter`/`decimal_counter`/`decimal_doubler`,
-whose display hardware is not in the level grid) — from `tutorial_pickup_drop`
-and `shred_all [alive_all]` through `sorted_row_holdable`, `email_sort`,
-`mult_table`, `fashion_unique`, `mode_counts`, `flower_sums`,
-`neighbor_counts`, `glory_dive`, `distances_from_door`, `defrag [ordered]`,
-`goodbye_last_tells` and more (see `goal_from` in emu.c). Unknown goals refuse
-to run rather than guess.
+Win predicates implemented: the full campaign set — from
+`tutorial_pickup_drop` and `shred_all [alive_all]` through
+`sorted_row_holdable`, `email_sort`, `mult_table`, `fashion_unique`,
+`mode_counts`, `flower_sums`, `neighbor_counts`, `glory_dive`,
+`distances_from_door`, `defrag [ordered]`, `goodbye_last_tells` and the three
+counting-machine levels (`binary_counter`/`decimal_counter`/`decimal_doubler`;
+their sensors sit one row below the starting digit cubes with the big red
+button below-right of the rightmost one) — see `goal_from` in emu.c. Unknown
+goals refuse to run rather than guess.
 
 Randomized levels (or programs with multi-direction steps) run over many seeded
 trials; `result` is `WIN` (all trials), `PROBABILISTIC` (some -- a luck-based
@@ -123,10 +124,11 @@ against real level geometry — the large majority of Years 2–43 pass):
   shredder at a time, speak-in-turn.
 - SIZE: every command except labels, comments, `else`, `endif`, and `endfor`.
 
-Not yet faithful / deliberately refused at runtime rather than guessed:
+Not yet faithful:
 
-- The three counting-machine levels (their sensors/display are not part of the
-  extracted grid) refuse to run.
+- The counting-machine levels run (sensors, button, display history and their
+  win rules are all in) but their clockwork solutions need frame-perfect
+  worker timing the scheduler doesn't fully reproduce yet.
 - Dense multi-worker choreography can resolve differently than the game's
   crowd behavior (known cases: Checkerboard Organization, Neighborly
   Sweeper, Printing Etiquette, Big Data's hand-over-hand chains); heavily

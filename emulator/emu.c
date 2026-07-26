@@ -426,11 +426,9 @@ static GoalKind goal_from(const char *g, int *a, int *b) {
     if (!strcmp(kw,"sorted_grid"))         return G_SORTED_GRID;
     if (!strcmp(kw,"defrag"))              { *a = (strstr(g,"ordered")!=NULL); return G_DEFRAG; }
     if (!strcmp(kw,"goodbye_last_tells"))  return G_GOODBYE;
-    /* counting machines: the display/press/history logic below is ready, but
-     * the sensor+button tile layout still needs an in-game look -- until then
-     * these goals stay unparsed (SKIP) rather than failing on guessed
-     * furniture:
-     *   binary_counter / decimal_counter a b / decimal_doubler a b */
+    if (!strcmp(kw,"binary_counter"))      return G_BINARY_COUNTER;
+    if (!strcmp(kw,"decimal_counter"))     return G_DECIMAL_COUNTER;
+    if (!strcmp(kw,"decimal_doubler"))     return G_DECIMAL_DOUBLER;
     return G_UNKNOWN;
 }
 
@@ -525,8 +523,10 @@ static void load_level(const char *path, Level *L) {
     if (L->w == 0 || L->h == 0) die("level missing dim");
     if (L->win == G_BINARY_COUNTER || L->win == G_DECIMAL_COUNTER
         || L->win == G_DECIMAL_DOUBLER) {
-        /* the machine's sensors sit directly below the starting digit cubes
-         * (leftmost = most significant); the presser's spot is the button */
+        /* the machine's layout is fixed relative to the starting digit cubes:
+         * each green sensor sits one row below its cube (leftmost = most
+         * significant digit), and the big red button one tile below-right of
+         * the rightmost sensor */
         L->nsw = 0;
         int rightmost = -1, cube_row = -1;
         for (int i = 0; i < L->ncubes && L->nsw < 8; i++) {
@@ -2482,6 +2482,20 @@ static void counter_press(Sim *S) {
         if (!w->alive || w->exited) continue;
         if (body_tx(w) == L->button_x && body_ty(w) == L->button_y) pressed = true;
     }
+    {
+        const char *dbg = getenv("EMU_CTRDBG");
+        if (dbg && atoi(dbg) >= 2) {
+            static int fr = 0;
+            fprintf(stderr, "f%05d %c ", fr++, pressed ? 'P' : '.');
+            for (int i = 0; i < S->nw; i++)
+                fprintf(stderr, "w%d(%d,%d%s%s) ", i, body_tx(&S->w[i]), body_ty(&S->w[i]),
+                        S->w[i].holding ? "*" : "", S->w[i].wtx >= 0 ? ">" : "");
+            fprintf(stderr, "pads:");
+            for (int i = 0; i < L->nsw; i++)
+                fprintf(stderr, "%d", S->grid[L->sw_y[i]][L->sw_x[i]].has_cube ? 1 : 0);
+            fprintf(stderr, "\n");
+        }
+    }
     if (!pressed) return;
     long v = 0;
     for (int i = 0; i < L->nsw; i++) {
@@ -2497,12 +2511,18 @@ static void counter_press(Sim *S) {
     }
     if (S->hist_n > 0 && S->hist[S->hist_n - 1] == (int)v) return;  /* same picture */
     if (S->hist_n < 128) S->hist[S->hist_n++] = (int)v;
+    if (getenv("EMU_CTRDBG"))
+        fprintf(stderr, "[ctr] +%ld (hist %d)\n", v, S->hist_n);
     for (int i = 0; i < S->hist_n; i++) {
         long want;
         if (L->win == G_BINARY_COUNTER)      want = (S->hist[0] == 1 ? 1 : 0) + i;
         else if (L->win == G_DECIMAL_COUNTER) want = (long)L->goal_a + i;
         else                                  want = (long)L->goal_a << i;
-        if (S->hist[i] != want) { S->hist_n = 0; return; }
+        if (S->hist[i] != want) {
+            if (getenv("EMU_CTRDBG"))
+                fprintf(stderr, "[ctr] wipe: hist[%d]=%d want %ld\n", i, S->hist[i], want);
+            S->hist_n = 0; return;
+        }
     }
 }
 
