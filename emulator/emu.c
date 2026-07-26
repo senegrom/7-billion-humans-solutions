@@ -4090,8 +4090,16 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             fq_push(w, FQ_EFFECT, 0);
             break;
         case OP_WRITE:
-            fq_push(w, FQ_WAIT, (float)(w->holding ? MS_WRITE : MS_ITEM));
-            fq_push(w, FQ_EFFECT, 0);
+            if (w->holding) {
+                /* the writing animation gates the whole command and the value
+                 * lands at the end, followed by the commit bookkeeping */
+                fq_push(w, FQ_ANIM, 53);
+                fq_push(w, FQ_WAITANIM, 0);
+                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 53 ? MS_WRITE - 53 : 1));
+                fq_push(w, FQ_EFFECT, 0);
+            } else {
+                fq_push(w, FQ_EFFECT, 0);    /* writing on nothing is free */
+            }
             break;
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
             long cost = cmd_duration(S, w, ins);
