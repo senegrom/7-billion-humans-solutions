@@ -1218,9 +1218,21 @@ static bool g_nothing_ignores_workers = false;   /* experimental sense variant *
  * movers), but eyes track the body: a walking worker is seen on the tile
  * its body is nearest, so it crosses over to the destination only at the
  * midpoint of the step.  Senses, the counting-machine button and the win
- * checks all read this; only movement reads the claimed tile. */
+ * checks all read this; only movement reads the claimed tile.
+ *
+ * Everyone in a frame sees the SAME picture: positions are snapshotted
+ * once at the top of the frame, so a worker early in the update order is
+ * not seen a frame fresher than one later in it. */
+static int  g_snap_n = -1;                       /* <0 = snapshot off */
+static int  g_snap_x[MAXWORKERS], g_snap_y[MAXWORKERS];
 static int body_tx(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fx) : w->x; }
 static int body_ty(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fy) : w->y; }
+static int seen_tx(const Sim *S, int i) {
+    return (g_snap_n > i) ? g_snap_x[i] : body_tx(&S->w[i]);
+}
+static int seen_ty(const Sim *S, int i) {
+    return (g_snap_n > i) ? g_snap_y[i] : body_ty(&S->w[i]);
+}
 
 /* Does the tile CONTAIN the queried thing? A tile is a set of contents: it can
  * hold a worker AND a floor cube at once (a worker standing on a cube matches
@@ -1241,7 +1253,7 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
         case C_PERSON:
             for (int i = 0; i < S->nw; i++)
                 if (&S->w[i] != self && S->w[i].alive
-                    && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y)
+                    && seen_tx(S, i) == x && seen_ty(S, i) == y)
                     return true;
             return false;
         case C_NOTHING: {
@@ -1249,7 +1261,7 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
             if (!g_nothing_ignores_workers)
                 for (int i = 0; i < S->nw; i++)
                     if (&S->w[i] != self && S->w[i].alive
-                        && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y)
+                        && seen_tx(S, i) == x && seen_ty(S, i) == y)
                         return false;
             return true;
         }
@@ -1279,7 +1291,7 @@ static bool value_at2(Sim *S, int x, int y, const Worker *self, bool see_held, i
     if (!see_held) return false;
     for (int i = 0; i < S->nw; i++)
         if (&S->w[i] != self && S->w[i].alive
-            && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y) {
+            && seen_tx(S, i) == x && seen_ty(S, i) == y) {
             if (S->w[i].holding) { *out = S->w[i].held; return true; }
             return false;
         }
@@ -2480,7 +2492,8 @@ static void counter_press(Sim *S) {
     for (int i = 0; i < S->nw; i++) {
         Worker *w = &S->w[i];
         if (!w->alive || w->exited) continue;
-        if (body_tx(w) == L->button_x && body_ty(w) == L->button_y) pressed = true;
+        if (seen_tx(S, i) == L->button_x && seen_ty(S, i) == L->button_y)
+            pressed = true;
     }
     {
         const char *dbg = getenv("EMU_CTRDBG");
@@ -4220,6 +4233,14 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
         int told = -1;
         S->beat = now;
         S->feeds_this_beat = 0;
+        /* the frame's shared picture: everything sensed this frame -- by
+         * workers and by the counting machine alike -- is where the bodies
+         * stood as the frame began */
+        for (int i = 0; i < S->nw; i++) {
+            g_snap_x[i] = body_tx(&S->w[i]);
+            g_snap_y[i] = body_ty(&S->w[i]);
+        }
+        g_snap_n = S->nw;
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done || w->exited) continue;
@@ -4287,7 +4308,11 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
                if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
                    FQ_ITEM_PRE = a; FQ_ITEM_TAIL = b; FQ_IF_WAIT = c;
                    FQ_FOREACH_BASE = d; } } }
-    if (mode >= 2) return run_frame(S, P, out_rounds);
+    if (mode >= 2) {
+        bool won = run_frame(S, P, out_rounds);
+        g_snap_n = -1;                 /* frame snapshots are its alone */
+        return won;
+    }
     return mode ? run_cont(S, P, out_rounds) : run_beat(S, P, out_rounds);
 }
 
