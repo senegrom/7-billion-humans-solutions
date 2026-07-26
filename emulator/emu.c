@@ -1213,6 +1213,15 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
 
 static bool g_nothing_ignores_workers = false;   /* experimental sense variant */
 
+/* Where SENSES see a worker.  Movement bookkeeping gives a walker its
+ * destination tile the moment it sets off (that is what blocks other
+ * movers), but eyes track the body: a walking worker is seen on the tile
+ * its body is nearest, so it crosses over to the destination only at the
+ * midpoint of the step.  Senses, the counting-machine button and the win
+ * checks all read this; only movement reads the claimed tile. */
+static int body_tx(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fx) : w->x; }
+static int body_ty(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fy) : w->y; }
+
 /* Does the tile CONTAIN the queried thing? A tile is a set of contents: it can
  * hold a worker AND a floor cube at once (a worker standing on a cube matches
  * both "== worker" and "== datacube"). `self` is excluded so that querying your
@@ -1231,14 +1240,16 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
         case C_DATACUBE: return t == T_FLOOR && S->grid[y][x].has_cube;
         case C_PERSON:
             for (int i = 0; i < S->nw; i++)
-                if (&S->w[i] != self && S->w[i].alive && S->w[i].x == x && S->w[i].y == y)
+                if (&S->w[i] != self && S->w[i].alive
+                    && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y)
                     return true;
             return false;
         case C_NOTHING: {
             if (t != T_FLOOR || S->grid[y][x].has_cube) return false;
             if (!g_nothing_ignores_workers)
                 for (int i = 0; i < S->nw; i++)
-                    if (&S->w[i] != self && S->w[i].alive && S->w[i].x == x && S->w[i].y == y)
+                    if (&S->w[i] != self && S->w[i].alive
+                        && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y)
                         return false;
             return true;
         }
@@ -1267,7 +1278,8 @@ static bool value_at2(Sim *S, int x, int y, const Worker *self, bool see_held, i
     if (S->grid[y][x].has_cube) { *out = S->grid[y][x].cube; return true; }
     if (!see_held) return false;
     for (int i = 0; i < S->nw; i++)
-        if (&S->w[i] != self && S->w[i].alive && S->w[i].x == x && S->w[i].y == y) {
+        if (&S->w[i] != self && S->w[i].alive
+            && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y) {
             if (S->w[i].holding) { *out = S->w[i].held; return true; }
             return false;
         }
@@ -1291,7 +1303,8 @@ static bool num_cmp(CmpOp op, int a, int b) {
 static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
     switch (o->kind) {
         case 0: *out = o->num; return true;
-        case 1: return value_at2(S, w->x + DX[o->dir], w->y + DY[o->dir], w, true, out);
+        case 1: return value_at2(S, body_tx(w) + DX[o->dir], body_ty(w) + DY[o->dir],
+                                 w, true, out);
         case 3: if (w->holding) { *out = w->held; return true; } return false;
         case 2: {
             MemVal *m = &w->mem[o->mem];
@@ -1320,7 +1333,8 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         /* type comparison: does the referenced tile contain the thing? */
         bool eq;
         if (c->lhs.kind == 1)
-            eq = tile_contains(S, w->x + DX[c->lhs.dir], w->y + DY[c->lhs.dir], w, c->rhs_type);
+            eq = tile_contains(S, body_tx(w) + DX[c->lhs.dir],
+                               body_ty(w) + DY[c->lhs.dir], w, c->rhs_type);
         else if (c->lhs.kind == 2) {
             MemVal *m = &w->mem[c->lhs.mem];
             if (m->k == MV_TILE)         eq = tile_contains(S, m->x, m->y, w, c->rhs_type);
@@ -2463,9 +2477,11 @@ static bool machine_target(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
 static void counter_press(Sim *S) {
     const Level *L = S->L;
     bool pressed = false;
-    for (int i = 0; i < S->nw; i++)
-        if (S->w[i].alive && !S->w[i].exited
-            && S->w[i].x == L->button_x && S->w[i].y == L->button_y) pressed = true;
+    for (int i = 0; i < S->nw; i++) {
+        Worker *w = &S->w[i];
+        if (!w->alive || w->exited) continue;
+        if (body_tx(w) == L->button_x && body_ty(w) == L->button_y) pressed = true;
+    }
     if (!pressed) return;
     long v = 0;
     for (int i = 0; i < L->nsw; i++) {
