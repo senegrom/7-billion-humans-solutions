@@ -105,6 +105,12 @@ typedef struct {
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
     int  wintx, winty; /* tile a blocked travel walk still means to enter */
     bool wowned;       /* the tile being walked into has already been taken */
+    /* the per-worker command timeline for the event-queue scheduler */
+    struct { unsigned char id; float t; } evq[24];
+    int  evn, evcur;
+    float animms;      /* remaining time of the animation being played */
+    bool fsusp;        /* suspended: the stepper may not dispatch */
+    bool fready;       /* a node is ready to dispatch this frame */
     int  pend_exec;    /* command timed out; its effect has not landed yet */
     double fsx, fsy;   /* where the body was when that tile was taken */
 } Worker;
@@ -4002,6 +4008,260 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
     return won;
 }
 
+
+/* ---- the event-queue scheduler -------------------------------------------
+ * A command queues a little timeline and the queue carries the time:
+ * waits and new animations line up behind a running animation, while the
+ * command's effect and the suspend/resume bookkeeping are instant.  An
+ * animation only holds its own queue -- its tail plays out under whatever
+ * the worker does next, so a pickup before a walk costs less wall time
+ * than a pickup before another animation. */
+enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME };
+
+static const float FQ_DT = 1.0f;      /* queue times are in frames */
+
+static void fq_push(Worker *w, int id, float t) {
+    if (w->evn < (int)(sizeof w->evq / sizeof w->evq[0])) {
+        w->evq[w->evn].id = (unsigned char)id;
+        w->evq[w->evn].t = t;
+        w->evn++;
+    }
+}
+
+/* frames of gating before an item action's effect, and the animation tail
+ * that plays out afterwards (30 frames of animation in all) */
+static int FQ_ITEM_PRE = 15, FQ_ITEM_TAIL = 15;
+static int FQ_IF_WAIT = 15;           /* half the standard command */
+static int FQ_FOREACH_BASE = 30;      /* one standard command per full sweep */
+
+/* run the queue; returns false while something in it is still holding */
+static bool fq_pump(Sim *S, Program *P, int i) {
+    Worker *w = &S->w[i];
+    while (w->evcur < w->evn) {
+        struct { unsigned char id; float t; } *ev =
+            (void *)&w->evq[w->evcur];
+        switch (ev->id) {
+            case FQ_WAIT:
+                if (w->animms > 0) return false;
+                ev->t -= FQ_DT;
+                if (ev->t > 0) return false;
+                w->evcur++; continue;
+            case FQ_ANIM:
+                if (w->animms > 0) return false;
+                w->animms = ev->t;
+                w->evcur++; continue;
+            case FQ_WAITANIM:
+                if (w->animms > 0) return false;
+                w->evcur++; continue;
+            case FQ_EFFECT:
+                exec_action(S, P, i);
+                w->evcur++; continue;
+            case FQ_SUSPEND: w->fsusp = true;  w->evcur++; continue;
+            case FQ_RESUME:  w->fsusp = false; w->evcur++; continue;
+            default: w->evcur++; continue;
+        }
+    }
+    w->evn = w->evcur = 0;
+    return true;
+}
+
+/* dispatch the instruction at pc: control nodes take their frame, a step
+ * starts the walk, everything else queues its timeline */
+static void fq_dispatch(Sim *S, Program *P, int i, int now,
+                        bool *progressed, int *told) {
+    Worker *w = &S->w[i];
+    if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
+    Instr *ins = &P->instr[w->pc];
+    switch (ins->op) {
+        case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; return;
+        case OP_JUMP:  w->pc = ins->target; *progressed = true; return;
+        case OP_ELSE:  w->pc = ins->target; *progressed = true; return;
+        case OP_ENDIF: w->pc++; *progressed = true; return;
+        case OP_ENDFOR: w->pc = ins->target; *progressed = true; return;
+        case OP_FOREACH: {
+            static const int FE_RANK[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
+            int *fi = &w->fe_idx[ins->fe_slot];
+            unsigned char *ord = w->fe_ord[ins->fe_slot];
+            if (*fi == 0) {
+                for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
+                for (int k = 1; k < ins->ndirs; k++)
+                    for (int j = k; j > 0
+                         && FE_RANK[ins->dirs[ord[j]]] < FE_RANK[ins->dirs[ord[j-1]]]; j--) {
+                        unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
+                    }
+            }
+            if (*fi < ins->ndirs) {
+                Dir d = ins->dirs[ord[(*fi)++]];
+                w->mem[ins->slot].k = MV_TILE;
+                w->mem[ins->slot].x = w->x + DX[d];
+                w->mem[ins->slot].y = w->y + DY[d];
+                w->mem[ins->slot].ntype = -1;
+                w->pc++;
+            } else { *fi = 0; w->pc = ins->target + 1; }
+            if (ins->ndirs > 0) {
+                int b = FQ_FOREACH_BASE / ins->ndirs;
+                fq_push(w, FQ_WAIT, (float)(b > 0 ? b : 1));
+                w->fready = false;
+            }
+            *progressed = true; return;
+        }
+        case OP_LISTEN:
+            if (w->heard) { w->heard = false; w->pc++; }
+            *progressed = true; return;        /* waiting costs the frame */
+        case OP_STEP: {
+            int osave = w->pc;
+            cont_free(S, P, i, now, progressed, told);
+            if (w->wtx >= 0 || w->busy > 0) w->fready = false;
+            (void)osave;
+            *progressed = true; return;
+        }
+        default: break;
+    }
+    /* a failed item action stops the worker for the error bubble */
+    {
+        bool err = false;
+        if ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
+            err = true;
+        else if (ins->op == OP_GIVETO && !w->holding)
+            err = true;
+        else if (ins->op == OP_DROP) {
+            if (!w->holding) err = true;
+            else if (S->grid[w->y][w->x].terrain == T_FLOOR
+                     && S->grid[w->y][w->x].has_cube) err = true;
+        }
+        if (err) {
+            fq_push(w, FQ_SUSPEND, 0);
+            fq_push(w, FQ_WAIT, (float)MS_ERRB);
+            fq_push(w, FQ_EFFECT, 0);          /* no-ops, advances the program */
+            fq_push(w, FQ_RESUME, 0);
+            w->fready = false;
+            *progressed = true; return;
+        }
+    }
+    /* an item action aimed at a remembered thing walks there first and only
+     * acts when it has arrived */
+    if (ins->mem_target >= 0
+        && (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM)) {
+        bool onto = (ins->op == OP_PICKUP);
+        int tx, ty;
+        if (mem_tile(S, w, ins->mem_target, &tx, &ty)) {
+            bool arr = onto ? (w->x == tx && w->y == ty)
+                            : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1);
+            if (!arr) {
+                int d = route_step(S, w, tx, ty, !onto);
+                if (d >= 0) { cont_walk(S, i, w->x + DX[d], w->y + DY[d], false); w->fready = false; }
+                *progressed = true; return;   /* no route: wait a frame */
+            }
+        }
+    }
+    if (ins->op == OP_TELL && (S->L->rules & R_SPEAK_ORDER)) {
+        if (*told >= 0) { *progressed = true; return; }   /* retry next frame */
+        *told = i;
+    }
+    switch (ins->op) {
+        case OP_IF:
+            fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
+            fq_push(w, FQ_EFFECT, 0);
+            break;
+        case OP_ASSIGN:
+            fq_push(w, FQ_WAIT, (float)(MS_ASSIGN > 0 ? MS_ASSIGN : 1));
+            fq_push(w, FQ_EFFECT, 0);
+            break;
+        case OP_TELL:
+            fq_push(w, FQ_WAIT, (float)(MS_TELL > 0 ? MS_TELL : 1));
+            fq_push(w, FQ_EFFECT, 0);
+            break;
+        case OP_WRITE:
+            fq_push(w, FQ_WAIT, (float)(w->holding ? MS_WRITE : MS_ITEM));
+            fq_push(w, FQ_EFFECT, 0);
+            break;
+        case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
+            long cost = cmd_duration(S, w, ins);
+            if (cost > MS_ITEM) {
+                /* a machine: the reach/feed holds the worker for the whole
+                 * cycle and nothing of it overlaps */
+                fq_push(w, FQ_SUSPEND, 0);
+                fq_push(w, FQ_WAIT, (float)cost);
+                fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_RESUME, 0);
+            } else {
+                fq_push(w, FQ_WAIT, (float)FQ_ITEM_PRE);
+                fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_ANIM, (float)FQ_ITEM_TAIL);
+            }
+            break;
+        }
+        default:
+            fq_push(w, FQ_EFFECT, 0);
+            break;
+    }
+    w->fready = false;
+    *progressed = true;
+}
+
+static bool run_frame(Sim *S, Program *P, int *out_rounds) {
+    static int cap = 0;
+    if (!cap) {
+        const char *e = getenv("EMU_CAP");
+        cap = e ? atoi(e) : 400000;
+        if (cap < 1000) cap = 400000;
+    }
+    if (level_won(S)) { *out_rounds = 0; return true; }
+    for (int i = 0; i < S->nw; i++) {
+        Worker *w = &S->w[i];
+        w->busy = 0; w->wtx = w->wty = -1;
+        w->wintx = w->winty = -1; w->wowned = false; w->pend_exec = 0;
+        w->fx = w->x; w->fy = w->y;
+        w->evn = w->evcur = 0; w->animms = 0;
+        w->fsusp = false; w->fready = true;
+    }
+    int now = 0, stall = 0;
+    while (now < cap) {
+        bool progressed = false, in_flight = false;
+        int told = -1;
+        S->beat = now;
+        S->feeds_this_beat = 0;
+        for (int i = 0; i < S->nw; i++) {
+            Worker *w = &S->w[i];
+            if (!w->alive || w->done || w->exited) continue;
+            if (w->animms > 0) { w->animms -= FQ_DT; in_flight = true; }
+            if (w->wtx >= 0) {
+                if (cont_glide(S, P, i)) progressed = true;
+                in_flight = true;
+                if (!(w->wtx < 0 && w->alive && !w->done && !w->exited))
+                    continue;
+                w->fready = true;   /* landed: dispatch this same frame */
+            }
+            if (w->busy > 0) {      /* legacy wait from the step delegate */
+                --w->busy;
+                in_flight = true;
+                if (w->busy > 0) continue;
+                w->fready = true;
+            }
+            if (w->evn > 0) {
+                if (!fq_pump(S, P, i)) { in_flight = true; continue; }
+                progressed = true;
+                if (S->failed) { *out_rounds = now; return false; }
+                in_flight = true;
+                continue;           /* the poll frame: dispatch next frame */
+            }
+            if (S->failed) { *out_rounds = now; return false; }
+            if (w->fsusp) { in_flight = true; continue; }
+            if (!w->fready) { w->fready = true; in_flight = true; continue; }
+            fq_dispatch(S, P, i, now, &progressed, &told);
+            if (S->failed) { *out_rounds = now; return false; }
+            if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
+        }
+        now++;
+        if (S->L->nsw > 0) counter_press(S);
+        if (level_won(S)) { S->win_ms = now; *out_rounds = now; return true; }
+        if (S->failed)    { *out_rounds = now; return false; }
+        if (!in_flight && !progressed) { if (++stall >= 2) break; } else stall = 0;
+    }
+    *out_rounds = now;
+    return false;
+}
+
 /* Default: the event-driven beat model (proven, 78/117).  The continuous
  * scheduler (run_cont) faithfully models smooth glide + diagonal cost + conga
  * waves and is the right STRUCTURE, but its crowd-endgame resolution still
@@ -4009,7 +4269,13 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
  * EMU_CONT=1 as a calibration platform until the crowd physics are pinned. */
 static bool run(Sim *S, Program *P, int *out_rounds) {
     static int mode = -1;
-    if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = (e && atoi(e)) ? 1 : 0; }
+    if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = e ? atoi(e) : 0; }
+    { const char *p = getenv("EMU_FQ");
+      if (p) { int a, b, c, d;
+               if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
+                   FQ_ITEM_PRE = a; FQ_ITEM_TAIL = b; FQ_IF_WAIT = c;
+                   FQ_FOREACH_BASE = d; } } }
+    if (mode >= 2) return run_frame(S, P, out_rounds);
     return mode ? run_cont(S, P, out_rounds) : run_beat(S, P, out_rounds);
 }
 
