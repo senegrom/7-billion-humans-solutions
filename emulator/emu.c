@@ -4053,15 +4053,19 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         }
     }
     /* an item action aimed at a remembered thing walks there first and only
-     * acts when it has arrived */
+     * acts when it has arrived -- and if the remembered thing is gone from
+     * that tile by then, it chases the next nearest of the same kind */
     if (ins->mem_target >= 0
         && (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM)) {
         bool onto = (ins->op == OP_PICKUP);
         int tx, ty;
         if (mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            bool arr = onto ? (w->x == tx && w->y == ty)
-                            : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1);
-            if (!arr) {
+            #define FARR() (onto ? (w->x == tx && w->y == ty)                                  : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
+            bool act = false;
+            if (FARR())
+                act = !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
+            #undef FARR
+            if (!act) {
                 int d = route_step(S, w, tx, ty, !onto);
                 if (d >= 0) { cont_walk(S, i, w->x + DX[d], w->y + DY[d], false); w->fready = false; }
                 *progressed = true; return;   /* no route: wait a frame */
@@ -4173,6 +4177,19 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
         if (!in_flight && !progressed) { if (++stall >= 2) break; } else stall = 0;
     }
     *out_rounds = now;
+    if (g_trace) {
+        fprintf(stderr, "-- FQ final (now=%d) --\n", now);
+        trace_board(S, now);
+        for (int i = 0; i < S->nw; i++) {
+            Worker *w = &S->w[i];
+            fprintf(stderr, "  w%d (%d,%d)->(%d,%d)%s%s pc=%d ev=%d/%d anim=%.0f%s%s [%s]\n",
+                    i, w->x, w->y, w->wtx, w->wty,
+                    w->holding ? " hold" : "", w->done ? " done" : "",
+                    w->pc, w->evcur, w->evn, w->animms,
+                    w->fsusp ? " susp" : "", w->fready ? "" : " !rdy",
+                    w->pc < P->n ? P->instr[w->pc].raw : "end");
+        }
+    }
     return false;
 }
 
