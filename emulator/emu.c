@@ -957,8 +957,8 @@ typedef struct {
  * 45, tells 60). Frame units keep same-frame workers exactly
  * simultaneous and make the idle fallback (t+1) advance a full frame.
  * EMU_MS_* env overrides are given in ms and rounded to frames. */
-static int MS_STEP = 20, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
-           MS_TELL = 60, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 72,
+static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
+           MS_TELL = 63, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 77,
            MS_ERROR = 15;    /* an errored take/pickup (full hands): the red
                                 bubble displays ~1.5s but the program moves
                                 on quickly -- recorded speeds demand ~250ms */
@@ -2830,7 +2830,7 @@ static void exec_action(Sim *S, Program *P, int i) {
  * hands, dropping with empty hands or onto a tile that already has a cube.
  * (Taking from a worker whose hands are empty is the exception -- that is a
  * silent instant retry, not an error.) */
-#define MS_ERRB 90              /* the error bubble, 1.5 s in frames */
+#define MS_ERRB 94              /* the error bubble, 1.5 s in ticks */
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
  * it is stepping into at the START of the step, letting go of the one behind it
@@ -4003,13 +4003,13 @@ static void fq_push(Worker *w, int id, float t) {
 
 /* frames of gating before an item action's effect, and the animation tail
  * that plays out afterwards (30 frames of animation in all) */
-static int FQ_ITEM_PRE = 15, FQ_ITEM_TAIL = 15;
-static int FQ_IF_WAIT = 11;           /* the condition is read half-way in */
-static int FQ_IF_HOLD = 11;           /* ...but the think lasts the full beat */
-static int MS_CALC = 116;             /* the calc arithmetic animation */
-static int MS_PRINT_HOLD = 52;        /* a printer serves one taker start-to-end */
-static int MS_SHRED_HOLD = 20;        /* a shredder is claimed only while fed */
-static int FQ_FOREACH_BASE = 20;      /* one standard command per full sweep */
+static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
+static int FQ_IF_WAIT = 12;           /* the condition is read half-way in */
+static int FQ_IF_HOLD = 10;           /* ...but the think lasts the full beat */
+static int MS_CALC = 121;             /* the calc arithmetic animation */
+static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
+static int MS_SHRED_HOLD = 21;        /* a shredder is claimed only while fed */
+static int FQ_FOREACH_BASE = 21;      /* one standard command per full sweep */
 
 /* run the queue; returns false while something in it is still holding */
 static bool fq_pump(Sim *S, Program *P, int i) {
@@ -4186,10 +4186,10 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             if (w->holding) {
                 /* the writing animation runs to its end, the value lands, and
                  * the commit bookkeeping holds one more standard beat */
-                fq_push(w, FQ_ANIM, 53);
+                fq_push(w, FQ_ANIM, 56);
                 fq_push(w, FQ_WAITANIM, 0);
                 fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 53 ? MS_WRITE - 53 : 1));
+                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 56 ? MS_WRITE - 56 : 1));
             } else {
                 fq_push(w, FQ_EFFECT, 0);    /* writing on nothing is free */
             }
@@ -4208,28 +4208,28 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 if (ins->op == OP_GIVETO) {
                     /* feeding a shredder: lean in, toss it into the maw, and
                      * straighten back up while the machine chews on its own */
-                    fq_push(w, FQ_WAIT, 19);
+                    fq_push(w, FQ_WAIT, 20);
                     fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_WAIT, 17);
+                    fq_push(w, FQ_WAIT, 18);
                 } else if (ins->op == OP_PICKUP) {
                     /* reaching bodily into a printer: the sheet is in hand
                      * quickly but the whole arm has to come back out */
                     fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_ANIM, 131);
+                    fq_push(w, FQ_ANIM, 137);
                     fq_push(w, FQ_WAITANIM, 0);
                 } else {
                     /* taking from a printer: lean in, wait out the print
                      * cycle, catch the sheet, lean back */
-                    fq_push(w, FQ_WAIT, 26);
+                    fq_push(w, FQ_WAIT, 27);
                     fq_push(w, FQ_EFFECT, 0);
                     fq_push(w, FQ_WAIT, 26);
                 }
             } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
                 /* a hand-off is a throw and a catch: the cube is in the air
                  * for the throw, changes owner, and the catch is held out */
-                fq_push(w, FQ_WAIT, 14);
+                fq_push(w, FQ_WAIT, 15);
                 fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_ANIM, 20);
+                fq_push(w, FQ_ANIM, 21);
                 fq_push(w, FQ_WAITANIM, 0);
             } else {
                 /* the hand does its work the moment the action starts -- the
@@ -4427,7 +4427,7 @@ int main(int argc, char **argv) {
             if (min_r < 0 || rounds < min_r) min_r = rounds;
             if (rounds > max_r) max_r = rounds;
             sum_r += rounds;
-            int sp = (int)((S.win_ms + 59) / 60);       /* frames -> whole seconds */
+            int sp = (int)((S.win_ms * 16 + 999) / 1000);  /* 16 ms ticks -> whole seconds */
             if (min_sp < 0 || sp < min_sp) min_sp = sp;
             if (sp > max_sp) max_sp = sp;
             sum_sp += sp;
