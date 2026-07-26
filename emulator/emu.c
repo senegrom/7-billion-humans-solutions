@@ -939,7 +939,6 @@ typedef struct {
     int     ic_group[MAXCUBES];      /* G_FLOWER/SHRED_MAX groups (8-connected) */
     int     ngroups;
     bool    door_exit;           /* the door acts as a walk-in exit */
-    long    mach_hold;            /* latest busy-until across all machines */
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
@@ -2389,7 +2388,6 @@ static void feed_shredder(Sim *S, Worker *w, int wi, int nx, int ny) {
     w->fed++;
     S->shredded++;
     S->mach_busy[ny][nx] = S->now_ms + MS_SHRED;
-    if (S->mach_busy[ny][nx] > S->mach_hold) S->mach_hold = S->mach_busy[ny][nx];
     if (g_trace)
         fprintf(stderr, "FEED w%d -> shredder(%d,%d) total=%d\n", wi, nx, ny, S->shredded);
 }
@@ -2511,7 +2509,6 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->printed++;
         S->pickups++;
         S->mach_busy[ny][nx] = S->now_ms + MS_PRINTER;
-        if (S->mach_busy[ny][nx] > S->mach_hold) S->mach_hold = S->mach_busy[ny][nx];
         return true;
     }
     if (t->has_cube) {
@@ -2779,65 +2776,12 @@ static void exec_action(Sim *S, Program *P, int i) {
  * EXPERIMENTAL (EMU_CONT=1): the movement itself reproduces, but crowd
  * endgames still diverge from recorded runs, so it is not the default. */
 
-/* Hold a machine for as long as it is actually in use (EMU_MACH=1).
- *
- * As it stands the continuous model lets a whole crowd share one printer or
- * shredder: the busy-until stamp is written against a clock the continuous
- * scheduler never advances, so every machine reads as free after its first
- * cycle.  Switching this on fixes that, holds the claim for the length of the
- * command rather than a single frame, and stops a worker queueing at a machine
- * from being mistaken for a stalled world.
- *
- * It is off because it is not yet a net gain: machine-bound levels do get
- * closer to their recorded times (Little Exterminator 2 speed lands exactly,
- * Fill the Floor moves from 173 to 218 against a recorded 588) and the speed
- * error is unchanged overall, but My First Shredding Memory (speed) then jams
- * at the shredder with 7 cubes done and never finishes.
- *
- * And it is probably modelling something that does not exist.  Feeding a
- * shredder and taking from a printer both go ahead the moment the worker
- * reaches the machine: the only things consulted are level rules (which worker
- * last used this shredder, how many cubes it has eaten), never a timer, and
- * nothing makes one worker wait because another is mid-cycle.  What a worker
- * waits for is its OWN animation, which is already what its command duration
- * represents.  So machines are not the reason a crowd finishes too quickly
- * here -- workers simply get around too freely -- and this switch is kept as a
- * record of that experiment rather than as a thing to turn on. */
-static bool g_machfix = false;
-
 /* A failed item action stops the worker for the error bubble before the
  * program moves on: picking up or taking with full hands, giving with empty
  * hands, dropping with empty hands or onto a tile that already has a cube.
  * (Taking from a worker whose hands are empty is the exception -- that is a
  * silent instant retry, not an error.) */
 #define MS_ERRB 90              /* the error bubble, 1.5 s in frames */
-
-/* The frame cadence (EMU_FRAME=4 to enable; default off).
- *
- * The instruction stepper runs one program node per frame, and the pieces of
- * that cadence only reproduce recorded times when they are ALL applied:
- *   1. a control node (jump, label, else, endif, endfor) costs one frame;
- *   2. when a timed command's wait runs out its effect lands, and the next
- *      node is dispatched on the FOLLOWING frame (a scheduling frame);
- *   3. the calibrated waits already include that overhead, so the wait
- *      itself is two frames shorter than the calibrated total;
- *   4. movement resolves before the stepper, so a worker that lands runs its
- *      next instruction in the same frame;
- *   5. the walk budget includes its dispatch frame (one fewer glide frame) --
- *      a step starts the move and the walk itself is the whole occupancy.
- * Applied alone or in partial subsets these measure WORSE than none of them;
- * together they land Fill the Floor at 584 against a recorded 588 and give
- * the best median speed error yet (23%), at the cost of three formerly-exact
- * short levels drifting by one second. Off until the per-command detail
- * work recovers those. Intermediate values 1-3 apply the earlier subsets
- * and exist only for measurement. */
-static int g_frame = 0;
-static long frame_wait(long f) {
-    if (g_frame >= 2) { f -= 2; if (f < 1) f = 1; }
-    return f;
-}
-
-static double WALK_V = 0.0;     /* tiles per frame (calibrated below) */
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
  * it is stepping into at the START of the step, letting go of the one behind it
@@ -2903,7 +2847,6 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     int diag = (tx != w->x && ty != w->y);
     int base = MS_STEP > 0 ? MS_STEP : 1;
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
-    if (g_frame >= 4) w->wtot -= 1;   /* the dispatch frame is part of the walk */
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
 }
@@ -3020,18 +2963,6 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         if (++guard > budget) return;
         if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
         Instr *ins = &P->instr[w->pc];
-        if (g_frame) {
-            bool ctl = true;
-            switch (ins->op) {
-                case OP_NOP: case OP_LABEL: w->pc++; break;
-                case OP_JUMP:  w->pc = ins->target; break;
-                case OP_ELSE:  w->pc = ins->target; break;
-                case OP_ENDIF: w->pc++; break;
-                case OP_ENDFOR: w->pc = ins->target; break;
-                default: ctl = false; break;
-            }
-            if (ctl) { w->busy = 1; *progressed = true; return; }
-        }
         switch (ins->op) {
             case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; continue;
             case OP_JUMP:  w->pc = ins->target; *progressed = true; continue;
@@ -3064,7 +2995,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                      * sweeping all of them costs one whole command -- it is
                      * not free control flow. */
                     int b = MS_STEP / ins->ndirs;
-                    w->busy = (int)frame_wait(b > 0 ? b : 1);
+                    w->busy = b > 0 ? b : 1;
                     *progressed = true; return;
                 }
                 *progressed = true; continue;
@@ -3121,7 +3052,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 || (ins->op == OP_GIVETO && !w->holding);
         if (nop || !mem_tile(S, w, ins->mem_target, &tx, &ty)) {
             w->pend_exec = 1;
-            w->busy = frame_wait(nop ? MS_ERRB : MS_ITEM);
+            w->busy = nop ? MS_ERRB : MS_ITEM;
             *progressed = true; return;
         }
         #define ARR() (onto ? (w->x == tx && w->y == ty) \
@@ -3131,10 +3062,9 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 int mx, my;
                 if (machine_target(S, w, ins, &mx, &my)) {
                     if (S->mach_busy[my][mx] > now) return;   /* machine busy: wait */
-                    S->mach_busy[my][mx] = g_machfix ? now + MS_ITEM : now + 1;
-                    if (S->mach_busy[my][mx] > S->mach_hold) S->mach_hold = S->mach_busy[my][mx];
+                    S->mach_busy[my][mx] = now + 1;
                 }
-                w->pend_exec = 1; w->busy = frame_wait(MS_ITEM); *progressed = true; return;
+                w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
             }
         }
         #undef ARR
@@ -3152,8 +3082,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         int mx, my;
         if (machine_target(S, w, ins, &mx, &my)) {
             if (S->mach_busy[my][mx] > now) return;
-            S->mach_busy[my][mx] = g_machfix ? now + MS_ITEM : now + 1;
-            if (S->mach_busy[my][mx] > S->mach_hold) S->mach_hold = S->mach_busy[my][mx];
+            S->mach_busy[my][mx] = now + 1;
         }
     }
     /* A command occupies the worker for its duration and its effect lands at
@@ -3175,25 +3104,18 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         }
         if (err) {
             w->pend_exec = 1;            /* the action still no-ops at the end */
-            w->busy = frame_wait(MS_ERRB);
+            w->busy = MS_ERRB;
             *progressed = true; return;
         }
     }
     long cost = cmd_duration(S, w, ins);
     w->pend_exec = 1;
-    w->busy = (int)frame_wait(cost > 0 ? cost : 1);
+    w->busy = (int)(cost > 0 ? cost : 1);
     *progressed = true;
 }
 
 static bool run_cont(Sim *S, Program *P, int *out_rounds) {
     static int cap = 0;
-    static bool vinit = false;
-    if (!vinit) {
-        const char *v = getenv("EMU_WALKV");
-        WALK_V = v ? atof(v) : (MS_STEP > 0 ? 1.0 / MS_STEP : 0.05);
-        if (WALK_V <= 0) WALK_V = 0.05;
-        vinit = true;
-    }
     if (!cap) {
         const char *e = getenv("EMU_CAP");
         cap = e ? atoi(e) : 400000;
@@ -3212,7 +3134,6 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         bool progressed = false, in_flight = false;
         int told = -1;
         S->beat = now;
-        if (g_machfix) S->now_ms = now;
         S->feeds_this_beat = 0;
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
@@ -3220,11 +3141,7 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
             if (w->wtx >= 0) {
                 if (cont_glide(S, P, i)) progressed = true;
                 in_flight = true;
-                if (!(g_frame >= 3 && w->wtx < 0 && w->busy == 0
-                      && w->alive && !w->done && !w->exited))
-                    continue;
-                /* landed: movement resolves before the stepper, so the next
-                 * instruction runs this same frame */
+                continue;
             }
             /* Tick the command timer and, if that used up the last frame of
              * it, go straight on to the next instruction in this same frame.
@@ -3240,7 +3157,6 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
                     if (S->failed) { *out_rounds = now; return false; }
                     in_flight = true; continue;
                 }
-                if (g_frame) { in_flight = true; continue; }  /* scheduling frame */
             }
             cont_free(S, P, i, now, &progressed, &told);
             if (S->failed) { *out_rounds = now; return false; }
@@ -3250,8 +3166,6 @@ static bool run_cont(Sim *S, Program *P, int *out_rounds) {
         if (S->L->nsw > 0) counter_press(S);
         if (level_won(S)) { S->win_ms = now; *out_rounds = now; return true; }
         if (S->failed)    { *out_rounds = now; return false; }
-        /* someone queueing at a machine mid-cycle is not a stalled world */
-        if (g_machfix && S->mach_hold > now) in_flight = true;
         if (!in_flight && !progressed) { if (++stall >= 2) break; } else stall = 0;
     }
     *out_rounds = now;
@@ -4285,8 +4199,6 @@ int main(int argc, char **argv) {
     if (getenv("EMU_NOCHAIN")) g_nochain = true;
     { const char *ev;
       if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
-      if ((ev = getenv("EMU_MACH")))     g_machfix  = atoi(ev) != 0;
-      if ((ev = getenv("EMU_FRAME")))    g_frame    = atoi(ev);
       if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0;
       if ((ev = getenv("EMU_CFCOST")))   g_cfcost   = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
