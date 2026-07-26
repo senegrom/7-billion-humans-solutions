@@ -3084,7 +3084,17 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             int nx = w->x + DX[d], ny = w->y + DY[d];
             if (!walkable(S, nx, ny)) continue;
             cand[nc++] = d;
-            if (!cont_reserved(S, nx, ny, i)) freec[fnc++] = d;
+            if (g_snap_n >= 0) {
+                /* the picker judges a square by the bodies on it, not by
+                 * claims: a tile someone has merely set off toward is still
+                 * picked (the walk itself then sorts out the right of way) */
+                bool occ = false;
+                for (int j = 0; j < S->nw; j++)
+                    if (j != i && S->w[j].alive
+                        && seen_tx(S, j) == nx && seen_ty(S, j) == ny)
+                        occ = true;
+                if (!occ) freec[fnc++] = d;
+            } else if (!cont_reserved(S, nx, ny, i)) freec[fnc++] = d;
         }
         int *pool = fnc > 0 ? freec : cand, pn = fnc > 0 ? fnc : nc;
         if (pn == 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
@@ -3997,7 +4007,9 @@ static int FQ_ITEM_PRE = 15, FQ_ITEM_TAIL = 15;
 static int FQ_IF_WAIT = 11;           /* the condition is read half-way in */
 static int FQ_IF_HOLD = 11;           /* ...but the think lasts the full beat */
 static int MS_CALC = 116;             /* the calc arithmetic animation */
-static int FQ_FOREACH_BASE = 30;      /* one standard command per full sweep */
+static int MS_PRINT_HOLD = 52;        /* a printer serves one taker start-to-end */
+static int MS_SHRED_HOLD = 20;        /* a shredder is claimed only while fed */
+static int FQ_FOREACH_BASE = 20;      /* one standard command per full sweep */
 
 /* run the queue; returns false while something in it is still holding */
 static bool fq_pump(Sim *S, Program *P, int i) {
@@ -4062,7 +4074,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 w->pc++;
             } else { *fi = 0; w->pc = ins->target + 1; }
             if (ins->ndirs > 0) {
-                int b = FQ_FOREACH_BASE / ins->ndirs;
+                /* a full sweep costs one standard command split over its
+                 * directions -- with your own square weighted double */
+                int n = ins->ndirs;
+                for (int k = 0; k < ins->ndirs; k++)
+                    if (ins->dirs[k] == D_HERE) { n++; break; }
+                int b = FQ_FOREACH_BASE / n;
                 fq_push(w, FQ_WAIT, (float)(b > 0 ? b : 1));
                 w->fready = false;
             }
@@ -4180,12 +4197,33 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
             long cost = cmd_duration(S, w, ins);
             if (cost > MS_ITEM) {
-                /* a machine: the reach/feed holds the worker for the whole
-                 * cycle and nothing of it overlaps */
-                fq_push(w, FQ_SUSPEND, 0);
-                fq_push(w, FQ_WAIT, (float)cost);
-                fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_RESUME, 0);
+                /* a machine holds one customer at a time; the next in line
+                 * parks (uncharged) until the machine frees up */
+                int mx, my;
+                if (machine_target(S, w, ins, &mx, &my)) {
+                    if (S->mach_busy[my][mx] > now) { *progressed = true; return; }
+                    S->mach_busy[my][mx] =
+                        now + (ins->op == OP_GIVETO ? MS_SHRED_HOLD : MS_PRINT_HOLD);
+                }
+                if (ins->op == OP_GIVETO) {
+                    /* feeding a shredder: lean in, toss it into the maw, and
+                     * straighten back up while the machine chews on its own */
+                    fq_push(w, FQ_WAIT, 19);
+                    fq_push(w, FQ_EFFECT, 0);
+                    fq_push(w, FQ_WAIT, 17);
+                } else if (ins->op == OP_PICKUP) {
+                    /* reaching bodily into a printer: the sheet is in hand
+                     * quickly but the whole arm has to come back out */
+                    fq_push(w, FQ_EFFECT, 0);
+                    fq_push(w, FQ_ANIM, 131);
+                    fq_push(w, FQ_WAITANIM, 0);
+                } else {
+                    /* taking from a printer: lean in, wait out the print
+                     * cycle, catch the sheet, lean back */
+                    fq_push(w, FQ_WAIT, 26);
+                    fq_push(w, FQ_EFFECT, 0);
+                    fq_push(w, FQ_WAIT, 26);
+                }
             } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
                 /* a hand-off is a throw and a catch: the cube is in the air
                  * for the throw, changes owner, and the catch is held out */
