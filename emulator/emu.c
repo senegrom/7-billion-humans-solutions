@@ -4206,14 +4206,13 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
     return false;
 }
 
-/* Default: the event-driven beat model (proven, 78/117).  The continuous
- * scheduler (run_cont) faithfully models smooth glide + diagonal cost + conga
- * waves and is the right STRUCTURE, but its crowd-endgame resolution still
- * diverges (workers pile up near shredders/exits), so it stays behind
- * EMU_CONT=1 as a calibration platform until the crowd physics are pinned. */
+/* Default: the event-queue scheduler -- the most faithful of the three and
+ * the current leader, passing every level either older scheduler passes.
+ * EMU_CONT=0 selects the original event-driven beat model and EMU_CONT=1 the
+ * continuous glide scheduler, both kept for comparison. */
 static bool run(Sim *S, Program *P, int *out_rounds) {
     static int mode = -1;
-    if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = e ? atoi(e) : 0; }
+    if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = e ? atoi(e) : 2; }
     { const char *p = getenv("EMU_FQ");
       if (p) { int a, b, c, d;
                if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
