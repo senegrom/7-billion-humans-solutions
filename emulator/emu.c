@@ -86,7 +86,7 @@ typedef struct {
     int  fe_idx[MAXFOREACH];      /* foreachdir loop positions */
     unsigned char fe_ord[MAXFOREACH][8];   /* per-sweep direction order */
     bool listening;               /* parked on a listenfor */
-    bool heard;                   /* release flag set by a matching tell */
+    int  heard;                   /* ticks a word spoken to us still rings */
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
     int  last_tell;               /* beat of most recent tell (-1 = never) */
     int  last_x, last_y, blocked_beats;   /* traffic-jam detection */
@@ -1210,6 +1210,10 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         }
     }
 }
+
+/* A word only rings in the ear for a tenth of a second: a worker not
+ * already listening when it is spoken never hears it at all. */
+#define MS_EARSHOT 7
 
 static bool g_nothing_ignores_workers = false;   /* experimental sense variant */
 
@@ -2801,7 +2805,7 @@ static void exec_action(Sim *S, Program *P, int i) {
                     int tx, ty;
                     covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
                 }
-                if (covered) o->heard = true;
+                if (covered) o->heard = MS_EARSHOT;
             }
             break;
         }
@@ -2831,6 +2835,7 @@ static void exec_action(Sim *S, Program *P, int i) {
  * (Taking from a worker whose hands are empty is the exception -- that is a
  * silent instant retry, not an error.) */
 #define MS_ERRB 94              /* the error bubble, 1.5 s in ticks */
+
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
  * it is stepping into at the START of the step, letting go of the one behind it
@@ -3050,7 +3055,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 *progressed = true; continue;
             }
             case OP_LISTEN:
-                if (w->heard) { w->heard = false; w->pc++; *progressed = true; continue; }
+                if (w->heard > 0) { w->heard = 0; w->pc++; *progressed = true; continue; }
                 return;                       /* idle: wait for a matching tell */
             case OP_ASSIGN:
                 if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; *progressed = true; continue; }
@@ -3336,7 +3341,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     }
                     case OP_ENDFOR: w->pc = ins->target; continue;
                     case OP_LISTEN:
-                        if (w->heard) { w->heard = false; w->pc++; continue; }
+                        if (w->heard > 0) { w->heard = 0; w->pc++; continue; }
                         idle = true;
                         break;
                     case OP_UNSUPPORTED:
@@ -3868,7 +3873,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                             int tx, ty;
                             covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
                         }
-                        if (covered) o->heard = true;
+                        if (covered) o->heard = MS_EARSHOT;
                     }
                     break;
                 }
@@ -4007,6 +4012,10 @@ static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
 static int FQ_IF_WAIT = 12;           /* the condition is read half-way in */
 static int FQ_IF_HOLD = 10;           /* ...but the think lasts the full beat */
 static int MS_CALC = 121;             /* the calc arithmetic animation */
+/* 1 = run free bookkeeping in one tick.  (Bit 2 would also start the next
+ * command on the tick its predecessor's timeline runs dry; the recorded
+ * times say the game takes one more tick to notice, so it stays off.) */
+static int g_chain = 1;
 static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
 static int MS_SHRED_HOLD = 21;        /* a shredder is claimed only while fed */
 static int FQ_FOREACH_BASE = 21;      /* one standard command per full sweep */
@@ -4086,7 +4095,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             *progressed = true; return;
         }
         case OP_LISTEN:
-            if (w->heard) { w->heard = false; w->pc++; }
+            if (w->heard > 0) { w->heard = 0; w->pc++; }
             *progressed = true; return;        /* waiting costs the frame */
         case OP_STEP: {
             int osave = w->pc;
@@ -4283,6 +4292,7 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
             Worker *w = &S->w[i];
             if (!w->alive || w->done || w->exited) continue;
             if (w->animms > 0) { w->animms -= FQ_DT; in_flight = true; }
+            if (w->heard > 0) w->heard--;      /* the word fades from the ear */
             if (w->wtx >= 0) {
                 if (cont_glide(S, P, i)) progressed = true;
                 in_flight = true;
@@ -4301,14 +4311,27 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 progressed = true;
                 if (S->failed) { *out_rounds = now; return false; }
                 in_flight = true;
-                w->fready = true;   /* the poll frame: dispatch next frame */
-                continue;
+                w->fready = true;
+                /* the command's timeline ran dry inside this tick, and the
+                 * stepper comes after it: the next command starts now */
+                if (!(g_chain & 2)) continue;
             }
             if (S->failed) { *out_rounds = now; return false; }
             if (w->fsusp) { in_flight = true; continue; }
             if (!w->fready) { w->fready = true; in_flight = true; continue; }
-            fq_dispatch(S, P, i, now, &progressed, &told);
-            if (S->failed) { *out_rounds = now; return false; }
+            /* Keep stepping the program while it costs nothing: labels,
+             * jumps, endifs and a settled `nearest` are pure bookkeeping,
+             * so a worker runs through them and only stops once a command
+             * actually starts moving, timing or animating something. */
+            for (int guard = 0; guard <= P->n + 8; guard++) {
+                int pc0 = w->pc;
+                fq_dispatch(S, P, i, now, &progressed, &told);
+                if (S->failed) { *out_rounds = now; return false; }
+                if (!(g_chain & 1)) break;
+                if (!w->alive || w->done || w->exited) break;
+                if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) break;
+                if (w->pc == pc0) break;      /* waiting, not advancing */
+            }
             if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
         }
         now++;
@@ -4341,6 +4364,7 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
 static bool run(Sim *S, Program *P, int *out_rounds) {
     static int mode = -1;
     if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = e ? atoi(e) : 2; }
+    { const char *c = getenv("EMU_CHAIN"); if (c) g_chain = atoi(c); }
     { const char *p = getenv("EMU_FQ");
       if (p) { int a, b, c, d;
                if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
