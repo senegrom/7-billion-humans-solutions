@@ -2915,6 +2915,20 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     w->wprog = 0;
 }
 
+/* A machine has a FRONT: a walk aimed at one heads for the single square one
+ * tile off on the near side of it, not for whichever neighbour happens to be
+ * closest.  (The level geometry agrees -- across every level no machine has a
+ * wall on that side, while over half of them are backed by one.)  So a crowd
+ * queueing for a shredder queues on one square, and the order it is served in
+ * falls out of contention for that square rather than out of pathfinding. */
+static bool machine_front(const Sim *S, int *tx, int *ty) {
+    Terrain t = S->grid[*ty][*tx].terrain;
+    if (t != T_SHREDDER && t != T_PRINTER) return false;
+    if (*ty - 1 < 0) return false;
+    (*ty)--;
+    return true;
+}
+
 /* the tile a walker is bound for, counted from the one it stands on.  Holding
  * a tile and standing on it are the same thing here: once the tile ahead has
  * been taken it is where the worker is and it has nowhere left to be, so it
@@ -3132,7 +3146,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             }
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
-            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, walkable(S, tx, ty));
+            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
             *progressed = true; return;
         }
         int cand[8], nc = 0, freec[8], fnc = 0;
@@ -3186,13 +3200,13 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             }
         }
         #undef ARR
-        int d = route_step(S, w, tx, ty, !onto);
+        int rx = tx, ry = ty;
+        bool front = !onto && machine_front(S, &rx, &ry);
+        int d = route_step(S, w, rx, ry, front ? false : !onto);
         if (d < 0) return;                                    /* no route: wait */
-        /* Heading for something standable -- a cube, a worker, a hole -- means
-         * steering at it tile by tile, and that steering can be nudged.  A
-         * machine cannot be stood on: the walk aims at a chosen square beside
-         * it instead, and that square is not up for negotiation. */
-        cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, walkable(S, tx, ty));
+        /* Every walk aimed at a thing re-derives where it is going each tick,
+         * machines included, so all of them can be nudged. */
+        cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
         *progressed = true; return;
     }
 
@@ -4202,10 +4216,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 act = !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
             #undef FARR
             if (!act) {
-                int d = route_step(S, w, tx, ty, !onto);
+                int rx = tx, ry = ty;
+                bool front = !onto && machine_front(S, &rx, &ry);
+                int d = route_step(S, w, rx, ry, front ? false : !onto);
                 if (d >= 0) {
-                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false,
-                              walkable(S, tx, ty));
+                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
                     if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
                     w->fready = false;
                 }
