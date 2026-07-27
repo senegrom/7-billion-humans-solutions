@@ -1491,7 +1491,14 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
             Terrain t = S->grid[ny][nx].terrain;
             bool pass = (t == T_FLOOR) || (t == T_HOLE && target_tile);
             if (!pass) continue;
-            if (block_workers && blocking_worker_at(S, nx, ny, (int)(self - S->w)) >= 0) continue;
+            if (block_workers) {
+                /* Routing pays a toll to cross a square someone else holds --
+                 * but only if they are standing on it. Someone already under
+                 * way will have left by the time we get there, so they cost
+                 * nothing and a queue does not deflect the people joining it. */
+                int b = blocking_worker_at(S, nx, ny, (int)(self - S->w));
+                if (b >= 0 && S->w[b].wtx < 0) continue;
+            }
             from[ny][nx] = d;
             if (ISGOAL(nx, ny)) { goal = ny * MAXW + nx; break; }
             if (t != T_HOLE) q[tail++] = ny * MAXW + nx;
