@@ -1455,53 +1455,96 @@ static bool walkable(Sim *S, int x, int y) {
     return t == T_FLOOR || t == T_HOLE;
 }
 
-/* BFS (8-dir) over floor tiles from (sx,sy). Returns the first-step direction
- * toward the goal, -2 if already at goal, or -1 if unreachable.
- * adjacent_ok: standing on any tile Chebyshev-adjacent to (tx,ty) counts as
- * arrived (for using a remembered thing); otherwise the goal is the tile
- * itself (which may be a hole -- diving is allowed as the final step).
- * block_workers: treat other alive workers' tiles as obstacles. */
+/* Routing, as the game does it: a best-first search over floor tiles scored
+ * f = g + 10 * manhattan-to-goal.  Three details of its arithmetic are what
+ * shape crowds, and all three are deliberate here:
+ *
+ *  - Every interior step costs the same, diagonal or not, so routes come out
+ *    the shape a plain breadth-first search would give.  (The game means to
+ *    charge more for a diagonal and misses, testing the destination's own
+ *    coordinates rather than the direction taken.  Only the outermost row and
+ *    column are ever charged the lower price.)
+ *  - A square someone is STANDING on costs a heavy toll on top -- enough to
+ *    walk three tiles around them, not enough to treat them as a wall.
+ *    Someone already under way costs nothing, so a queue forming at a machine
+ *    does not shove away the people joining it.
+ *  - The heuristic outweighs the step cost, which makes the search greedy and
+ *    means the route returned is not always the shortest one.
+ *
+ * Ties go to whichever square was reached first, so the order neighbours are
+ * offered in settles which of several equal routes is taken -- and that
+ * settles who reaches a contested tile first.
+ *
+ * Returns the first-step direction, -2 if already at the goal, -1 if there is
+ * no way through.  adjacent_ok: standing anywhere Chebyshev-adjacent to
+ * (tx,ty) counts as arrived; otherwise the goal is that tile itself, which may
+ * be a hole -- diving in is allowed as the final step. */
+enum { RT_STEP = 14, RT_EDGE = 10, RT_STAND = 40, RT_HEUR = 10, RT_INF = 0x7FFFFFFF };
+
 static int path_step(Sim *S, const Worker *self, int tx, int ty,
-                     bool adjacent_ok, bool block_workers) {
+                     bool adjacent_ok) {
     Level *L = S->L;
     #define ISGOAL(X,Y) (adjacent_ok ? (abs((X)-tx)<=1 && abs((Y)-ty)<=1) \
                                      : ((X)==tx && (Y)==ty))
     if (ISGOAL(self->x, self->y)) return -2;
-    static int q[MAXW*MAXH], from[MAXH][MAXW];
-    int head = 0, tail = 0;
+    /* the toll board: a square costs extra only while its holder stands still */
+    static bool stood[MAXH][MAXW];
+    memset(stood, 0, sizeof stood);
+    int me = (int)(self - S->w);
+    for (int i = 0; i < S->nw; i++) {
+        if (i == me || !S->w[i].alive || S->w[i].wtx >= 0) continue;
+        int bx = body_tx(&S->w[i]), by = body_ty(&S->w[i]);
+        if (bx >= 0 && by >= 0 && bx < MAXW && by < MAXH) stood[by][bx] = true;
+    }
+    static int g[MAXH][MAXW], f[MAXH][MAXW], from[MAXH][MAXW];
+    static bool closed[MAXH][MAXW], opened[MAXH][MAXW];
     for (int y = 0; y < L->h; y++)
-        for (int x = 0; x < L->w; x++) from[y][x] = -9;
-    from[self->y][self->x] = -2;
-    q[tail++] = self->y * MAXW + self->x;
-    int goal = -1;
-    /* The game searches with a queue whose ties fall to whatever was pushed
-     * first, so the order neighbours are offered in decides which of several
-     * equally short routes a worker takes -- and that decides who reaches a
-     * contested tile first.  It offers them x before y, positive before
-     * negative, cardinals before diagonals. */
+        for (int x = 0; x < L->w; x++) {
+            from[y][x] = -9; closed[y][x] = false; opened[y][x] = false;
+        }
+    /* neighbours are offered x before y, positive before negative, cardinals
+     * before diagonals -- the order that breaks ties between equal routes */
     static const int NEIGH[8] = { D_E, D_W, D_S, D_N, D_SE, D_SW, D_NE, D_NW };
-    while (head < tail && goal < 0) {
-        int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
-        for (int k = 0; k < 8 && goal < 0; k++) {
+    static int openq[MAXW * MAXH * 4];
+    int on = 0, goal = -1;
+    g[self->y][self->x] = 0;
+    f[self->y][self->x] = 0;
+    from[self->y][self->x] = -2;
+    opened[self->y][self->x] = true;
+    openq[on++] = self->y * MAXW + self->x;
+    while (on > 0) {
+        int bi = 0, best = RT_INF;
+        for (int k = 0; k < on; k++) {          /* earliest entry wins a tie */
+            int c = openq[k];
+            if (f[c / MAXW][c % MAXW] < best) { best = f[c / MAXW][c % MAXW]; bi = k; }
+        }
+        int cur = openq[bi];
+        memmove(&openq[bi], &openq[bi + 1], (size_t)(on - bi - 1) * sizeof openq[0]);
+        on--;
+        int cx = cur % MAXW, cy = cur / MAXW;
+        if (closed[cy][cx]) continue;
+        closed[cy][cx] = true; opened[cy][cx] = false;
+        if (ISGOAL(cx, cy)) { goal = cur; break; }
+        for (int k = 0; k < 8; k++) {
             int d = NEIGH[k];
             int nx = cx + DX[d], ny = cy + DY[d];
             if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
-            if (from[ny][nx] != -9) continue;
+            if (closed[ny][nx]) continue;
             bool target_tile = (!adjacent_ok && nx == tx && ny == ty);
             Terrain t = S->grid[ny][nx].terrain;
             bool pass = (t == T_FLOOR) || (t == T_HOLE && target_tile);
             if (!pass) continue;
-            if (block_workers) {
-                /* Routing pays a toll to cross a square someone else holds --
-                 * but only if they are standing on it. Someone already under
-                 * way will have left by the time we get there, so they cost
-                 * nothing and a queue does not deflect the people joining it. */
-                int b = blocking_worker_at(S, nx, ny, (int)(self - S->w));
-                if (b >= 0 && S->w[b].wtx < 0) continue;
+            int ng = g[cy][cx] + ((nx == 0 || ny == 0) ? RT_EDGE : RT_STEP)
+                   + (stood[ny][nx] ? RT_STAND : 0);
+            int nf = ng + RT_HEUR * (abs(nx - tx) + abs(ny - ty));
+            if (opened[ny][nx] && f[ny][nx] <= nf) continue;
+            g[ny][nx] = ng; f[ny][nx] = nf; from[ny][nx] = d;
+            /* one entry per square is enough: a re-reached square keeps the
+             * place it already had, and the scan would find that one first */
+            if (!opened[ny][nx]) {
+                opened[ny][nx] = true;
+                if (on < (int)(sizeof openq / sizeof openq[0])) openq[on++] = ny * MAXW + nx;
             }
-            from[ny][nx] = d;
-            if (ISGOAL(nx, ny)) { goal = ny * MAXW + nx; break; }
-            if (t != T_HOLE) q[tail++] = ny * MAXW + nx;
         }
     }
     #undef ISGOAL
@@ -1516,14 +1559,11 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     }
 }
 
-/* one movement step toward a target, avoiding occupied tiles when possible */
+/* one movement step toward a target.  There is no second opinion: the toll
+ * already prices standing bodies into the route, and walking at one anyway is
+ * a legitimate outcome -- the walk itself then sorts out the right of way. */
 static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_ok) {
-    int d = path_step(S, self, tx, ty, adjacent_ok, false);
-    if (d == -2 || d == -1) return d;
-    int nx = self->x + DX[d], ny = self->y + DY[d];
-    if (blocking_worker_at(S, nx, ny, (int)(self - S->w)) < 0) return d;
-    int d2 = path_step(S, self, tx, ty, adjacent_ok, true);
-    return (d2 >= 0) ? d2 : d;   /* fall back to the blocked route (bump/wait) */
+    return path_step(S, self, tx, ty, adjacent_ok);
 }
 
 /* does this tile hold a `nearest`-findable thing? Unlike IF-sensing, nearest
