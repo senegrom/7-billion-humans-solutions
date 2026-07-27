@@ -1474,9 +1474,16 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     from[self->y][self->x] = -2;
     q[tail++] = self->y * MAXW + self->x;
     int goal = -1;
+    /* The game searches with a queue whose ties fall to whatever was pushed
+     * first, so the order neighbours are offered in decides which of several
+     * equally short routes a worker takes -- and that decides who reaches a
+     * contested tile first.  It offers them x before y, positive before
+     * negative, cardinals before diagonals. */
+    static const int NEIGH[8] = { D_E, D_W, D_S, D_N, D_SE, D_SW, D_NE, D_NW };
     while (head < tail && goal < 0) {
         int cur = q[head++], cx = cur % MAXW, cy = cur / MAXW;
-        for (int d = 0; d < 8 && goal < 0; d++) {
+        for (int k = 0; k < 8 && goal < 0; k++) {
+            int d = NEIGH[k];
             int nx = cx + DX[d], ny = cy + DY[d];
             if (nx < 0 || ny < 0 || nx >= L->w || ny >= L->h) continue;
             if (from[ny][nx] != -9) continue;
