@@ -101,6 +101,8 @@ typedef struct {
     double fx, fy;  /* smooth position in tile units (centre = integer coords) */
     int  wtx, wty;  /* tile being walked into (-1 = standing still) */
     bool wsingle;   /* a plain one-tile dir-step: advance pc on arrival */
+    bool wflex;     /* the walk can be re-aimed: it either named several
+                       directions and picked one, or is chasing an object */
     int  busy;      /* frames left on a non-move command (0 = free) */
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
     int  wintx, winty; /* tile a blocked travel walk still means to enter */
@@ -2895,9 +2897,9 @@ static void cont_land(Sim *S, Program *P, int i) {
 }
 
 /* begin a one-tile glide toward (tx,ty) */
-static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
+static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     Worker *w = &S->w[i];
-    w->wtx = tx; w->wty = ty; w->wsingle = single;
+    w->wtx = tx; w->wty = ty; w->wsingle = single; w->wflex = flex;
     w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
     w->wowned = false;             /* the tile is not ours until it is free */
     /* A walk lasts a FIXED whole number of frames, decided when it starts and
@@ -2911,6 +2913,42 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single) {
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
+}
+
+/* the tile a walker is bound for, counted from the one it stands on.  Holding
+ * a tile and standing on it are the same thing here: once the tile ahead has
+ * been taken it is where the worker is and it has nowhere left to be, so it
+ * reads as arrived however much ground the body still has to cover. */
+static void mover_goal(const Worker *o, int *tx, int *ty) {
+    if (o->wtx >= 0 && !o->wowned)        { *tx = o->wtx;   *ty = o->wty; }
+    else if (o->wtx < 0 && o->wintx >= 0) { *tx = o->wintx; *ty = o->winty; }
+    else                                  { *tx = o->x;     *ty = o->y; }
+}
+
+/* trade places with the worker holding the tile we are entering: we land on
+ * it, they land on the one we are leaving.  Both logical tiles change at
+ * once -- the two bodies cross in mid-tile and neither has anything left to
+ * contest.  We are always where we meant to be, so our step is done.
+ *
+ * Being displaced does not change the other's mind: it keeps the tile it was
+ * aiming for and simply sets off again from where it now stands, which is why
+ * (otx,oty) is passed in rather than dropped.  Only when that tile is the one
+ * we just handed over has its step finished too. */
+static void cont_exchange(Sim *S, int i, int j, int otx, int oty) {
+    Worker *w = &S->w[i], *o = &S->w[j];
+    int ax = w->x, ay = w->y;
+    bool osingle = o->wsingle, oflex = o->wflex;
+    w->x = w->wtx; w->y = w->wty; w->fx = w->x; w->fy = w->y;
+    o->x = ax;     o->y = ay;     o->fx = o->x; o->fy = o->y;
+    w->wtx = w->wty = -1; w->wintx = w->winty = -1; w->wowned = false;
+    o->wtx = o->wty = -1; o->wintx = o->winty = -1; o->wowned = false;
+    if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
+    if (otx == ax && oty == ay) {
+        if (osingle) { if (o->fresh > 0) o->fresh--; o->pc++; }
+    } else {
+        cont_walk(S, j, otx, oty, osingle, oflex);
+    }
+    fall_check(S, w); fall_check(S, o);
 }
 
 /* advance a gliding worker; commit on arrival (with swap/cycle).  returns
@@ -2934,14 +2972,20 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         Worker *o = &S->w[occ];
         if (!o->done && o->wtx == w->x && o->wty == w->y) {
             /* mutual swap: glide both across and land them */
-            int ax = w->x, ay = w->y;
-            w->x = tx; w->y = ty; w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
-            o->x = ax; o->y = ay; o->fx = o->x; o->fy = o->y; o->wtx = o->wty = -1;
-            w->wintx = w->winty = -1; o->wintx = o->winty = -1;
-            if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
-            if (o->wsingle) { if (o->fresh > 0) o->fresh--; o->pc++; }
-            fall_check(S, w); fall_check(S, o);
+            cont_exchange(S, i, occ, w->x, w->y);
             return true;
+        }
+        /* Near head-on.  The blocker is bound for a tile no farther from ours
+         * than from its own, and its walk is a flexible one -- it either named
+         * several directions and took whichever came up, or it is chasing an
+         * object.  Neither is committed to one square, so it gives way: it is
+         * sent into the tile we are leaving and we take its place. */
+        if (!o->done && o->wflex) {
+            int otx, oty;
+            mover_goal(o, &otx, &oty);
+            int d1 = (otx - o->x) * (otx - o->x) + (oty - o->y) * (oty - o->y);
+            int d2 = (otx - w->x) * (otx - w->x) + (oty - w->y) * (oty - w->y);
+            if (d2 <= d1) { cont_exchange(S, i, occ, otx, oty); return true; }
         }
         /* closed rotation cycle: everyone in the loop advances together.
          * Follow LOGICAL tiles here -- a mid-step body has already flipped to
@@ -3088,7 +3132,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             }
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
-            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false);
+            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, walkable(S, tx, ty));
             *progressed = true; return;
         }
         int cand[8], nc = 0, freec[8], fnc = 0;
@@ -3112,7 +3156,9 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         int *pool = fnc > 0 ? freec : cand, pn = fnc > 0 ? fnc : nc;
         if (pn == 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
         int d = (pn == 1) ? pool[0] : pool[rnd(S) % (unsigned)pn];
-        cont_walk(S, i, w->x + DX[d], w->y + DY[d], true);
+        /* a step that names more than one direction is the flexible kind --
+         * which of them it took was a coin toss, so any of them will do */
+        cont_walk(S, i, w->x + DX[d], w->y + DY[d], true, ins->ndirs > 1);
         *progressed = true; return;
     }
 
@@ -3142,7 +3188,11 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         #undef ARR
         int d = route_step(S, w, tx, ty, !onto);
         if (d < 0) return;                                    /* no route: wait */
-        cont_walk(S, i, w->x + DX[d], w->y + DY[d], false);
+        /* Heading for something standable -- a cube, a worker, a hole -- means
+         * steering at it tile by tile, and that steering can be nudged.  A
+         * machine cannot be stood on: the walk aims at a chosen square beside
+         * it instead, and that square is not up for negotiation. */
+        cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, walkable(S, tx, ty));
         *progressed = true; return;
     }
 
@@ -4154,7 +4204,8 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             if (!act) {
                 int d = route_step(S, w, tx, ty, !onto);
                 if (d >= 0) {
-                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false);
+                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false,
+                              walkable(S, tx, ty));
                     if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
                     w->fready = false;
                 }

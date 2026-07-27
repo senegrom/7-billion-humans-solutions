@@ -130,9 +130,9 @@ Not yet faithful:
   win rules are all in) but their clockwork solutions need frame-perfect
   worker timing the scheduler doesn't fully reproduce yet.
 - Dense multi-worker choreography can resolve differently than the game's
-  crowd behavior (known cases: Checkerboard Organization, Neighborly
-  Sweeper, Printing Etiquette, Big Data's hand-over-hand chains); heavily
-  scripted position-dependent speed solutions are similarly sensitive.
+  crowd behavior (known cases: Reverse Line, Neighborly Sweeper, Printing
+  Etiquette, Big Data's hand-over-hand chains); heavily scripted
+  position-dependent speed solutions are similarly sensitive.
 
 ## The Speed model
 
@@ -159,6 +159,12 @@ experiments.
 A step blocked by another worker queues: the walker waits and flows in when
 the tile frees (or trades places when two walkers want each other's tiles),
 and gives up only when the blocker has finished its program and sat down.
+A blocker also gives way when it is bound for somewhere no farther from the
+waiting worker's tile than from its own AND its own walk is one that can be
+re-aimed -- a step that named several directions and took whichever came up,
+or a step chasing an object. It is displaced into the tile being vacated but
+keeps the tile it was aiming for, so it simply sets off again from one square
+over; a walk to a machine names a specific square beside it and never yields.
 This keeps marching columns intact instead of letting a bumped step fall
 through and desync accumulator sweeps. Treat close calls (within a second
 or two) as needing in-game verification; congested crowd levels still
