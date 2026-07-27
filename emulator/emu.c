@@ -1547,13 +1547,21 @@ static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
         *ox = bx; *oy = by;
         return true;
     }
+    /* the game walks its list of things in the order they came into the
+     * world, so two candidates the same distance away resolve to the older
+     * one -- not to whichever happens to sit higher or further left */
+    long bestid = 0;
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++) {
             if (S->region[y][x] != myreg) continue;
             if (!nearest_matches(S, w, type, x, y)) continue;
             long dx = x - w->x, dy = y - w->y;
             long d2 = dx * dx + dy * dy;
-            if (best < 0 || d2 < best) { best = d2; bx = x; by = y; }
+            long id = (type == C_DATACUBE) ? S->cube_id[y][x] : 0;
+            if (best < 0 || d2 < best
+                || (d2 == best && bestid && id && id < bestid)) {
+                best = d2; bx = x; by = y; bestid = id;
+            }
         }
     if (best < 0) return false;
     *ox = bx; *oy = by;
@@ -3314,8 +3322,9 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                         if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; continue; }
                         break;
                     case OP_FOREACH: {
-                        /* the game sweeps its direction flags in a fixed
-                         * clockwise order starting north-west */
+                        /* a sweep walks its neighbours clockwise from the
+                         * north-west corner and finishes on its own square:
+                         * nw n ne e se s sw w c */
                         static const int FE_RANK[9] = {
                             1, 5, 3, 7, 2, 0, 4, 6, 8
                         };  /* indexed by Dir: n,s,e,w,ne,nw,se,sw,here */
@@ -4018,7 +4027,8 @@ static int MS_CALC = 121;             /* the calc arithmetic animation */
 static int g_chain = 1;
 static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
 static int MS_SHRED_HOLD = 21;        /* a shredder is claimed only while fed */
-static int FQ_FOREACH_BASE = 21;      /* one standard command per full sweep */
+static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
+#define MS_TICK 16                    /* milliseconds in a tick */
 
 /* run the queue; returns false while something in it is still holding */
 static bool fq_pump(Sim *S, Program *P, int i) {
@@ -4083,12 +4093,10 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 w->pc++;
             } else { *fi = 0; w->pc = ins->target + 1; }
             if (ins->ndirs > 0) {
-                /* a full sweep costs one standard command split over its
-                 * directions -- with your own square weighted double */
+                /* a full sweep costs one standard command, split evenly
+                 * over the directions it names (rounded up per step) */
                 int n = ins->ndirs;
-                for (int k = 0; k < ins->ndirs; k++)
-                    if (ins->dirs[k] == D_HERE) { n++; break; }
-                int b = FQ_FOREACH_BASE / n;
+                int b = (FQ_FOREACH_BASE + MS_TICK * n - 1) / (MS_TICK * n);
                 fq_push(w, FQ_WAIT, (float)(b > 0 ? b : 1));
                 w->fready = false;
             }
