@@ -1487,12 +1487,18 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     #define ISGOAL(X,Y) (adjacent_ok ? (abs((X)-tx)<=1 && abs((Y)-ty)<=1) \
                                      : ((X)==tx && (Y)==ty))
     if (ISGOAL(self->x, self->y)) return -2;
-    /* the toll board: a square costs extra only while its holder stands still */
+    /* The toll board.  A square costs extra only while its holder has SETTLED
+     * on it -- arrived somewhere and stopped.  Being stuck behind a jam is not
+     * settling: someone waiting their turn is still on their way, so a queue
+     * stays permeable and routing runs straight through it rather than around.
+     * (Only arriving clears the moving flag, and it raises the settled flag in
+     * the same breath.) */
     static bool stood[MAXH][MAXW];
     memset(stood, 0, sizeof stood);
     int me = (int)(self - S->w);
     for (int i = 0; i < S->nw; i++) {
-        if (i == me || !S->w[i].alive || S->w[i].wtx >= 0) continue;
+        if (i == me || !S->w[i].alive) continue;
+        if (S->w[i].wtx >= 0 || S->w[i].wintx >= 0) continue;
         int bx = body_tx(&S->w[i]), by = body_ty(&S->w[i]);
         if (bx >= 0 && by >= 0 && bx < MAXW && by < MAXH) stood[by][bx] = true;
     }
