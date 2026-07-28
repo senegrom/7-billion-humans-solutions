@@ -3254,8 +3254,17 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             w->busy = nop ? MS_ERRB : MS_ITEM;
             *progressed = true; return;
         }
-        #define ARR() (onto ? (w->x == tx && w->y == ty) \
-                            : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
+        /* A shredder is fed from its front square alone -- the walk's true
+         * destination -- so one square serves the whole queue, and the order
+         * a crowd is served in becomes the order it wins that square.  Other
+         * errands act from anywhere beside the target. */
+        int fx0 = tx, fy0 = ty;
+        bool sfront = ins->op == OP_GIVETO
+                   && S->grid[ty][tx].terrain == T_SHREDDER
+                   && machine_front(S, &fx0, &fy0);
+        #define ARR() (onto  ? (w->x == tx && w->y == ty) \
+                     : sfront ? (w->x == fx0 && w->y == fy0) \
+                             : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
         if (ARR()) {
             if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || ARR()) {
                 int mx, my;
@@ -4157,7 +4166,7 @@ static int MS_CALC = 121;             /* the calc arithmetic animation */
  * times say the game takes one more tick to notice, so it stays off.) */
 static int g_chain = 1;
 static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
-static int MS_SHRED_HOLD = 21;        /* a shredder is claimed only while fed */
+static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
 #define MS_TICK 16                    /* milliseconds in a tick */
 
@@ -4277,7 +4286,14 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         bool onto = (ins->op == OP_PICKUP);
         int tx, ty;
         if (mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            #define FARR() (onto ? (w->x == tx && w->y == ty)                                  : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
+            /* shredders are fed from their front square alone (see above) */
+            int fx0 = tx, fy0 = ty;
+            bool sfront = ins->op == OP_GIVETO
+                       && S->grid[ty][tx].terrain == T_SHREDDER
+                       && machine_front(S, &fx0, &fy0);
+            #define FARR() (onto  ? (w->x == tx && w->y == ty) \
+                          : sfront ? (w->x == fx0 && w->y == fy0) \
+                                  : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
             bool act = false;
             if (FARR())
                 act = !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
