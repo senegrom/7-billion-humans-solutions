@@ -4356,11 +4356,14 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                         now + (ins->op == OP_GIVETO ? MS_SHRED_HOLD : MS_PRINT_HOLD);
                 }
                 if (ins->op == OP_GIVETO) {
-                    /* feeding a shredder: lean in, toss it into the maw, and
-                     * straighten back up while the machine chews on its own */
+                    /* Feeding a shredder: lean in, toss it into the maw --
+                     * and be on your way at once, while the machine chews on
+                     * its own.  How soon the feeder clears out after the
+                     * toss decides who reaches the machine next, so that
+                     * last number carries a queue's serving order. */
                     fq_push(w, FQ_WAIT, 20);
                     fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_WAIT, 18);
+                    fq_push(w, FQ_WAIT, 1);
                 } else if (ins->op == OP_PICKUP) {
                     /* reaching bodily into a printer: the sheet is in hand
                      * quickly but the whole arm has to come back out */
