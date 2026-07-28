@@ -2999,30 +2999,40 @@ static void mover_goal(const Worker *o, int *tx, int *ty) {
     else                                  { *tx = o->x;     *ty = o->y; }
 }
 
-/* trade places with the worker holding the tile we are entering: we land on
- * it, they land on the one we are leaving.  Both logical tiles change at
- * once -- the two bodies cross in mid-tile and neither has anything left to
- * contest.  We are always where we meant to be, so our step is done.
+/* Start a glide into a tile that is already ours: the claim flips now, the
+ * body sets off from wherever it is and covers the ground over a real step's
+ * worth of frames.  Everything that trades places moves this way -- nothing
+ * about changing squares is instantaneous. */
+static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
+    Worker *m = &S->w[k];
+    int diag = (tx != m->x && ty != m->y);
+    m->fsx = m->fx; m->fsy = m->fy;
+    m->x = tx; m->y = ty;                   /* the claim flips at set-off */
+    m->wtx = tx; m->wty = ty;
+    m->wowned = true; m->wsingle = single; m->wflex = false;
+    m->wintx = m->winty = -1;
+    int base = MS_STEP > 0 ? MS_STEP : 1;
+    m->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    if (m->wtot < 1) m->wtot = 1;
+    m->wprog = 0;
+    (void)S;
+}
+
+/* trade places with the worker holding the tile we are entering: we glide
+ * onto it, they glide onto the one we are leaving.  Both claims change at
+ * once and the two bodies cross in mid-tile, each taking a real step's time
+ * to arrive -- a swap is two walks, not a teleport.
  *
  * Being displaced does not change the other's mind: it keeps the tile it was
- * aiming for and simply sets off again from where it now stands, which is why
- * (otx,oty) is passed in rather than dropped.  Only when that tile is the one
- * we just handed over has its step finished too. */
+ * aiming for (otx,oty) and re-routes there once it lands, one square over.
+ * Only when that tile is the one we hand over does its own step finish. */
 static void cont_exchange(Sim *S, int i, int j, int otx, int oty) {
     Worker *w = &S->w[i], *o = &S->w[j];
     int ax = w->x, ay = w->y;
-    bool osingle = o->wsingle, oflex = o->wflex;
-    w->x = w->wtx; w->y = w->wty; w->fx = w->x; w->fy = w->y;
-    o->x = ax;     o->y = ay;     o->fx = o->x; o->fy = o->y;
-    w->wtx = w->wty = -1; w->wintx = w->winty = -1; w->wowned = false;
-    o->wtx = o->wty = -1; o->wintx = o->winty = -1; o->wowned = false;
-    if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
-    if (otx == ax && oty == ay) {
-        if (osingle) { if (o->fresh > 0) o->fresh--; o->pc++; }
-    } else {
-        cont_walk(S, j, otx, oty, osingle, oflex);
-    }
-    fall_check(S, w); fall_check(S, o);
+    int wtx = w->wtx, wty = w->wty;
+    bool osingle = o->wsingle;
+    cont_glide_owned(S, i, wtx, wty, w->wsingle);
+    cont_glide_owned(S, j, ax, ay, osingle && otx == ax && oty == ay);
 }
 
 /* advance a gliding worker; commit on arrival (with swap/cycle).  returns
@@ -3080,13 +3090,11 @@ static bool cont_glide(Sim *S, Program *P, int i) {
             cur = nxt;
         }
         if (closed && cn > 1) {
+            /* the whole ring sets off together: every member glides into the
+             * tile it wanted, each taking a real step's worth of frames */
             for (int k = 0; k < cn; k++) {
-                Worker *m = &S->w[chain[k]];
                 int mx = WANT_X(chain[k]), my = WANT_Y(chain[k]);
-                m->x = mx; m->y = my; m->fx = m->x; m->fy = m->y;
-                m->wtx = m->wty = -1; m->wintx = m->winty = -1;
-                if (m->wsingle) { if (m->fresh > 0) m->fresh--; m->pc++; }
-                fall_check(S, m);
+                cont_glide_owned(S, chain[k], mx, my, S->w[chain[k]].wsingle);
             }
             return true;
         }
@@ -3095,14 +3103,10 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         #undef WANT_Y
         /* a worker that has finished its program is still solid, but it is a
          * bystander: rather than wait on it forever, the mover displaces it
-         * into the tile being vacated and takes its place. */
+         * into the tile being vacated and takes its place -- both gliding,
+         * because being pushed out of the way is a walk like any other. */
         if (o->done && o->wtx < 0 && o->wintx < 0) {
-            int ax = w->x, ay = w->y;
-            w->x = tx; w->y = ty; w->fx = w->x; w->fy = w->y; w->wtx = w->wty = -1;
-            o->x = ax; o->y = ay; o->fx = o->x; o->fy = o->y;
-            w->wintx = w->winty = -1;
-            if (w->wsingle) { if (w->fresh > 0) w->fresh--; w->pc++; }
-            fall_check(S, w); fall_check(S, o);
+            cont_exchange(S, i, occ, w->x, w->y);
             return true;
         }
         /* blocked: hold position and wait for the tile to clear (the wave).
@@ -4424,7 +4428,13 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
         g_snap_n = S->nw;
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
-            if (!w->alive || w->done || w->exited) continue;
+            if (!w->alive || w->exited) continue;
+            if (w->done) {
+                /* a finished worker still finishes being pushed aside: its
+                 * displacement glide has to land or it wedges mid-crossing */
+                if (w->wtx >= 0 && cont_glide(S, P, i)) { progressed = true; in_flight = true; }
+                continue;
+            }
             if (w->animms > 0) { w->animms -= FQ_DT; in_flight = true; }
             if (w->heard > 0) w->heard--;      /* the word fades from the ear */
             if (w->wtx >= 0) {
