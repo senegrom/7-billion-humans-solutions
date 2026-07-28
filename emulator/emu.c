@@ -3101,12 +3101,15 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         #undef WANTS
         #undef WANT_X
         #undef WANT_Y
-        /* a worker that has finished its program is still solid, but it is a
-         * bystander: rather than wait on it forever, the mover displaces it
-         * into the tile being vacated and takes its place -- both gliding,
-         * because being pushed out of the way is a walk like any other. */
+        /* A worker that has finished its program is still solid, but it is a
+         * bystander: rather than wait on it forever, the mover has it pushed
+         * out into the tile being vacated.  A shove is an ORDER, not a move:
+         * this tick the seat merely sets off toward our square while we hold
+         * position, and on the next pass the two walks meet head-on and trade
+         * as any mutual swap does.  Being made to wait that beat is part of
+         * the price of going through someone. */
         if (o->done && o->wtx < 0 && o->wintx < 0) {
-            cont_exchange(S, i, occ, w->x, w->y);
+            cont_walk(S, occ, w->x, w->y, false, false);
             return true;
         }
         /* blocked: hold position and wait for the tile to clear (the wave).
