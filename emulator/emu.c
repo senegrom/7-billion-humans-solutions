@@ -2040,6 +2040,7 @@ static bool level_won(Sim *S) {
             return true;
         }
         case G_MULT_TABLE: {
+            bool ok = true;
             for (int k = 0; k < S->nic; k++) {
                 if (!(L->cubes[k].mode == CB_FIXED && S->icv[k] == 0)) continue;
                 int rh = -1, ch = -1;
@@ -2048,11 +2049,23 @@ static bool level_won(Sim *S) {
                     if (S->icy[j] == S->icy[k]) rh = S->icv[j];
                     if (S->icx[j] == S->icx[k]) ch = S->icv[j];
                 }
-                if (rh < 0 || ch < 0) return false;
+                if (rh < 0 || ch < 0) {
+                    if (!g_goal_dbg) return false;
+                    fprintf(stderr, "mult_table: (%d,%d) has no row/col header\n",
+                            S->icx[k], S->icy[k]);
+                    ok = false; continue;
+                }
                 Tile *t = &S->grid[S->icy[k]][S->icx[k]];
-                if (!t->has_cube || t->cube != rh * ch) return false;
+                if (!t->has_cube || t->cube != rh * ch) {
+                    if (!g_goal_dbg) return false;
+                    fprintf(stderr, "mult_table: (%d,%d) wants %d*%d=%d, ",
+                            S->icx[k], S->icy[k], rh, ch, rh * ch);
+                    if (!t->has_cube) fprintf(stderr, "tile is empty\n");
+                    else              fprintf(stderr, "found %d\n", t->cube);
+                    ok = false;
+                }
             }
-            return true;
+            return ok;
         }
         case G_FASHION_UNIQUE: {
             /* survivors hold one of each value; the redundant were disposed
