@@ -4551,6 +4551,12 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                     w->fsusp ? " susp" : "", w->fready ? "" : " !rdy",
                     w->pc < P->n ? P->instr[w->pc].raw : "end");
         }
+        /* say WHY the goal was not met, not just that it wasn't: the goal
+         * checks explain themselves when asked, and a run that ends short is
+         * exactly when that explanation is worth having */
+        g_goal_dbg = true;
+        (void)level_won(S);
+        g_goal_dbg = false;
     }
     return false;
 }
