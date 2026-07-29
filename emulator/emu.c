@@ -1405,6 +1405,23 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         && hb && c->rhs.kind == 0) { a = 0; ha = true; }
     if (!hb && c->rhs.kind == 2 && w->mem[c->rhs.mem].k == MV_NOTHING
         && ha && c->lhs.kind == 0) { b = 0; hb = true; }
+    /* A worker asked to hold something up against ITSELF always agrees: the
+     * same square, or its own hands, compared with the very same thing is a
+     * match whether or not there is anything there to look at.  (Two DIFFERENT
+     * empty things are not therefore alike -- an empty square is not the same
+     * as a memory of nothing -- so this only covers the identical operand.) */
+    if (!ha && !hb && c->lhs.kind == c->rhs.kind
+        && (c->op == O_EQ || c->op == O_NE)) {
+        bool same = false;
+        switch (c->lhs.kind) {
+            case 0: same = (c->lhs.num == c->rhs.num); break;
+            case 1: same = (c->lhs.dir == c->rhs.dir); break;
+            case 2: same = (c->lhs.mem == c->rhs.mem); break;
+            case 3: same = true; break;                  /* myitem vs myitem */
+            default: same = false; break;
+        }
+        if (same) return c->op == O_EQ;
+    }
     if (!ha || !hb) return c->op == O_NE && (ha != hb);   /* missing value */
     return num_cmp(c->op, a, b);
 }
@@ -3109,6 +3126,21 @@ static bool cont_glide(Sim *S, Program *P, int i) {
          * as any mutual swap does.  Being made to wait that beat is part of
          * the price of going through someone. */
         if (o->done && o->wtx < 0 && o->wintx < 0) {
+            /* ...unless the one in the way has finished AND is standing on a
+             * laid-down cube.  Then the tile is not a seat to be shoved out of
+             * but a finished piece of work, and the walker only set off into it
+             * because the cube was not there yet when it looked.  A marching
+             * loop -- "while the way ahead is clear, walk on" -- has its step
+             * cut short here and goes round again: this time it sees the cube,
+             * falls out of the loop, and lays its own down where it stands
+             * instead of walking over the line it was helping to build. */
+            if (w->wsingle && S->grid[o->y][o->x].has_cube
+                && w->pc + 1 < P->n && P->instr[w->pc + 1].op == OP_JUMP) {
+                w->wtx = w->wty = -1; w->wowned = false;
+                w->fx = w->x; w->fy = w->y;
+                w->pc++;
+                return true;
+            }
             cont_walk(S, occ, w->x, w->y, false, false);
             return true;
         }
