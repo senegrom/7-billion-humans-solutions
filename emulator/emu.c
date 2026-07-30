@@ -62,7 +62,10 @@ typedef struct { int x, y; CubeMode mode; int value; } CubeDef;
 /* a memory slot holds nothing, a number, or a remembered tile; tiles found by
  * `nearest <type>` remember the type so a stale reference can re-resolve */
 typedef enum { MV_NOTHING, MV_NUM, MV_TILE, MV_CUBEREF } MemKind;
-typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */ } MemVal;
+/* wref: when the slot was filled by `nearest worker` it names that PERSON, not
+ * the square they were standing on, so it keeps their index and follows them. */
+typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */
+                 int wref; /* worker index, or -1 */ } MemVal;
 
 enum { NMEM = 4, MAXFOREACH = 24, WORDLEN = 32 };
 
@@ -1327,6 +1330,15 @@ static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
         case 2: {
             MemVal *m = &w->mem[o->mem];
             if (m->k == MV_NUM)  { *out = m->num; return true; }
+            /* a slot that remembers a PERSON asks THEM for a number, and what
+             * a person has to show is whatever is in their hands -- wherever
+             * they have wandered off to since.  (A slot that remembers a
+             * SQUARE still reads only what lies on that floor.) */
+            if (m->k == MV_TILE && m->wref >= 0) {
+                Worker *o2 = &S->w[m->wref];
+                if (!o2->alive || !o2->holding) return false;
+                *out = o2->held; return true;
+            }
             if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, false, out);
             if (m->k == MV_CUBEREF) {
                 for (int i = 0; i < S->nw; i++)
@@ -1383,7 +1395,12 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         && (c->op == O_EQ || c->op == O_NE)) {
         MemVal *ma = &w->mem[c->lhs.mem], *mb = &w->mem[c->rhs.mem];
         if (ma->k == MV_TILE && mb->k == MV_TILE) {
-            bool eq = (ma->x == mb->x && ma->y == mb->y);
+            /* two slots that remember PEOPLE are asking whether it is the same
+             * person, and a person who has walked on is still that person --
+             * so where they were first noticed does not enter into it */
+            bool eq = (ma->wref >= 0 || mb->wref >= 0)
+                        ? (ma->wref == mb->wref)
+                        : (ma->x == mb->x && ma->y == mb->y);
             return (c->op == O_NE) ? !eq : eq;
         }
         if (ma->k == MV_CUBEREF && mb->k == MV_CUBEREF) {
@@ -1602,47 +1619,71 @@ static bool nearest_matches(Sim *S, const Worker *self, CmpKind type, int x, int
     return false;
 }
 
-/* nearest thing of a type, by BFS distance; false if none. The caller's own
- * tile counts (Seek and Destroy remembers the cube underfoot that way). */
+/* How far a thing counts as being, for `nearest`.  The measurement is a plain
+ * straight line between the two bodies -- but before the subtraction the game
+ * nudges the far body half a unit down the y axis, and a tile is forty-five
+ * units across.  Half a unit is far too little to reorder two things at
+ * different distances and exactly enough to settle two at the same distance,
+ * so the nudge is not really about distance at all: it is the tie-break.  Of
+ * two things equally far off, the more northerly one is taken.
+ *
+ * Written out over whole tiles (and dropping the quarter that every candidate
+ * carries alike) the ranking value is exact in integers. */
+static long near_key(int ux, int uy) {
+    return 2025L * (ux * ux + uy * uy) + 45L * uy;
+}
+
+/* nearest thing of a type; false if none.  The caller's own tile counts (Seek
+ * and Destroy remembers the cube underfoot that way).
+ *
+ * Nothing here walks anywhere -- it is a measurement, not a journey -- so a
+ * wall standing between the two hides nothing, and a machine is measured from
+ * the square in FRONT of it rather than from the machine itself, the same near
+ * side the walk to it aims for. */
+static int g_near_who;      /* index of the person `nearest` last settled on */
 static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
-    /* the game measures straight-line (Euclidean) distance between world
-     * positions, seeing THROUGH walls; the first candidate at the minimum
-     * distance wins (strictly-less comparison over its object lists) */
     Level *L = S->L;
-    long best = -1; int bx = 0, by = 0;
+    long best = 0; bool have = false; int bx = 0, by = 0;
+    g_near_who = -1;
+    /* Measured from where the BODIES actually are.  This is not the tidied-up
+     * board the conditions read: it is a tape measure held between two people
+     * mid-stride, so someone half way across a square has already half left
+     * the one behind them. */
+    int sx = body_tx(w), sy = body_ty(w);
     unsigned char myreg = S->region[w->y][w->x];
     if (type == C_PERSON) {
-        /* the game's worker list is spawn-ordered: exact-distance ties
-         * resolve to the earliest-spawned worker */
+        /* people are considered in the order they came into the world, so a
+         * pair that is equally close AND equally far north settles on the
+         * earlier one */
         for (int i = 0; i < S->nw; i++) {
             Worker *o = &S->w[i];
             if (o == w || !o->alive) continue;
             if (S->region[o->y][o->x] != myreg) continue;
-            long dx = o->x - w->x, dy = o->y - w->y;
-            long d2 = dx * dx + dy * dy;
-            if (best < 0 || d2 < best) { best = d2; bx = o->x; by = o->y; }
+            int px = body_tx(o), py = body_ty(o);
+            long k = near_key(px - sx, py - sy);
+            if (!have || k < best) {
+                best = k; have = true; bx = px; by = py; g_near_who = i;
+            }
         }
-        if (best < 0) return false;
+        if (!have) return false;
         *ox = bx; *oy = by;
         return true;
     }
-    /* the game walks its list of things in the order they came into the
-     * world, so two candidates the same distance away resolve to the older
-     * one -- not to whichever happens to sit higher or further left */
-    long bestid = 0;
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++) {
-            if (S->region[y][x] != myreg) continue;
+            Terrain t = L->terr[y][x];
+            /* Things standing on the floor of another room do not answer: a
+             * worker sealed into one room does not fetch from the next.  A
+             * WALL is not in any room -- it is what the rooms are made of --
+             * so that test cannot be asked of it, and asking it anyway was
+             * telling every worker there were no walls anywhere at all. */
+            if (t != T_WALL && S->region[y][x] != myreg) continue;
             if (!nearest_matches(S, w, type, x, y)) continue;
-            long dx = x - w->x, dy = y - w->y;
-            long d2 = dx * dx + dy * dy;
-            long id = (type == C_DATACUBE) ? S->cube_id[y][x] : 0;
-            if (best < 0 || d2 < best
-                || (d2 == best && bestid && id && id < bestid)) {
-                best = d2; bx = x; by = y; bestid = id;
-            }
+            int my = (t == T_SHREDDER || t == T_PRINTER) ? y - 1 : y;
+            long k = near_key(x - sx, my - sy);
+            if (!have || k < best) { best = k; have = true; bx = x; by = y; }
         }
-    if (best < 0) return false;
+    if (!have) return false;
     *ox = bx; *oy = by;
     return true;
 }
@@ -2397,10 +2438,14 @@ static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
         int x, y;
         if (find_nearest(S, w, (CmpKind)m->ntype, &x, &y)) {
             m->x = x; m->y = y;
+            /* settling on a different person makes it THAT person the slot
+             * names from now on */
+            if (m->ntype == (int)C_PERSON) m->wref = g_near_who;
             *tx = x; *ty = y;
         } else {
             m->k = MV_NOTHING;
             m->ntype = -1;
+            m->wref = -1;
             return false;
         }
     }
@@ -2411,11 +2456,13 @@ static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
  * Operands evaluate BEFORE the slot updates: "mem1 = calc mem1 + c" must
  * read the old mem1 (accumulator loops in Dangerous Spreadsheeting). */
 static void exec_assign(Sim *S, Worker *w, Instr *ins) {
-    MemVal nv = { MV_NOTHING, 0, 0, 0, -1 };
+    MemVal nv = { MV_NOTHING, 0, 0, 0, -1, -1 };
     if (ins->akind == 0) {                      /* nearest <type> */
         int x, y;
         if (find_nearest(S, w, ins->near_type, &x, &y)) {
             nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
+            /* remembering the nearest PERSON remembers the person */
+            if (ins->near_type == C_PERSON) nv.wref = g_near_who;
         }
     } else if (ins->akind == 1) {               /* set <operand> */
         Operand *o = &ins->op1;
@@ -3219,6 +3266,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                     w->mem[ins->slot].x = w->x + DX[d];
                     w->mem[ins->slot].y = w->y + DY[d];
                     w->mem[ins->slot].ntype = -1;
+                    w->mem[ins->slot].wref = -1;
                     w->pc++;
                 } else { *fi = 0; w->pc = ins->target + 1; }
                 if (ins->ndirs > 0) {
@@ -3529,6 +3577,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                             w->mem[ins->slot].x = w->x + DX[d];
                             w->mem[ins->slot].y = w->y + DY[d];
                             w->mem[ins->slot].ntype = -1;
+                            w->mem[ins->slot].wref = -1;
                             w->pc++;
                         } else { *fi = 0; w->pc = ins->target + 1; }
                         continue;
@@ -4275,6 +4324,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 w->mem[ins->slot].x = w->x + DX[d];
                 w->mem[ins->slot].y = w->y + DY[d];
                 w->mem[ins->slot].ntype = -1;
+                w->mem[ins->slot].wref = -1;
                 w->pc++;
             } else { *fi = 0; w->pc = ins->target + 1; }
             if (ins->ndirs > 0) {
