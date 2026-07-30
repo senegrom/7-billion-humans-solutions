@@ -4252,8 +4252,13 @@ static void fq_push(Worker *w, int id, float t) {
 /* frames of gating before an item action's effect, and the animation tail
  * that plays out afterwards (30 frames of animation in all) */
 static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
-static int FQ_IF_WAIT = 12;           /* the condition is read half-way in */
-static int FQ_IF_HOLD = 10;           /* ...but the think lasts the full beat */
+/* The think bubble lasts a standard command, and the condition is read when it
+ * is exactly half spent -- half of 333ms is 166.5, which is ten and a bit ticks
+ * of sixteen, so the reading lands on the eleventh and the rest of the beat is
+ * the other eleven.  It had been split 12 and 10, reading the world a tick
+ * later than it is really read. */
+static int FQ_IF_WAIT = 11;
+static int FQ_IF_HOLD = 11;
 static int MS_CALC = 121;             /* the calc arithmetic animation */
 /* 1 = run free bookkeeping in one tick.  (Bit 2 would also start the next
  * command on the tick its predecessor's timeline runs dry; the recorded
