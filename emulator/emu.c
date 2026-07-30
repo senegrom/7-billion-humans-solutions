@@ -948,6 +948,7 @@ typedef struct {
                                       customer at a time (the printer queue) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
     int     hist[130], hist_n;   /* counting-machine display history */
+    bool    ctr_down;            /* ...and whether its button was down last frame */
     int     feeds_this_beat;
     int     beat;
     long    now_ms, win_ms;      /* event clock; when the win state was reached */
@@ -2660,7 +2661,16 @@ static void counter_press(Sim *S) {
             fprintf(stderr, "\n");
         }
     }
-    if (!pressed) return;
+    /* The machine reads its pads when the button GOES down, not for as long as
+     * it is held: it remembers whether anyone was standing there a moment ago
+     * and does nothing at all while that stays true.  Standing on the button is
+     * therefore one reading, not one a frame -- which is what stops the display
+     * photographing the pads half way through being rearranged. */
+    {
+        bool was = S->ctr_down;
+        S->ctr_down = pressed;
+        if (!pressed || was) return;
+    }
     long v = 0;
     for (int i = 0; i < L->nsw; i++) {
         Tile *t = &S->grid[L->sw_y[i]][L->sw_x[i]];
@@ -4362,6 +4372,23 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         bool err = false;
         if ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
             err = true;
+        /* Reaching for a cube that is not there fails just as squarely as
+         * reaching with your hands already full: the worker closes on nothing
+         * and stands looking at the bubble.  It had been treated as a quiet
+         * nothing-happened, which let a worker whose loop speculatively
+         * reaches for a square that is usually empty go round far faster than
+         * it should -- and on the counting machines that worker is the one
+         * pressing the button. */
+        else if (ins->op == OP_PICKUP && !w->holding && ins->mem_target < 0) {
+            bool found = false;
+            for (int k = 0; k < ins->ndirs && !found; k++) {
+                int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                if (nx < 0 || ny < 0 || nx >= S->L->w || ny >= S->L->h) continue;
+                if (S->grid[ny][nx].has_cube
+                    || S->grid[ny][nx].terrain == T_PRINTER) found = true;
+            }
+            if (!found) err = true;
+        }
         else if (ins->op == OP_GIVETO && !w->holding)
             err = true;
         else if (ins->op == OP_DROP) {
