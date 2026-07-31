@@ -967,7 +967,7 @@ typedef struct {
  * simultaneous and make the idle fallback (t+1) advance a full frame.
  * EMU_MS_* env overrides are given in ms and rounded to frames. */
 static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
-           MS_TELL = 63, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 77,
+           MS_TELL = 63, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 82,
            MS_ERROR = 15;    /* an errored take/pickup (full hands): the red
                                 bubble displays ~1.5s but the program moves
                                 on quickly -- recorded speeds demand ~250ms */
@@ -4321,6 +4321,10 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Worker *w = &S->w[i];
     if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
     Instr *ins = &P->instr[w->pc];
+    /* EMU_CMDLOG prints when each worker takes up each command -- the way to
+     * see one worker's loop length against another's */
+    if (getenv("EMU_CMDLOG"))
+        fprintf(stderr, "[cmd] t%d w%d pc%d op%d\n", now, i, w->pc, ins->op);
     switch (ins->op) {
         case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; return;
         case OP_JUMP:  w->pc = ins->target; *progressed = true; return;
