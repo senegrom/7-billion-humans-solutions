@@ -116,6 +116,9 @@ typedef struct {
     float animms;      /* remaining time of the animation being played */
     bool fsusp;        /* suspended: the stepper may not dispatch */
     bool fready;       /* a node is ready to dispatch this frame */
+    bool wsettle;      /* the walk under way belongs to a step command: on
+                          landing the body settles into the square first and
+                          the program follows a frame later, not right away */
     int  pend_exec;    /* command timed out; its effect has not landed yet */
     double fsx, fsy;   /* where the body was when that tile was taken */
 } Worker;
@@ -3047,6 +3050,7 @@ static void cont_land(Sim *S, Program *P, int i) {
 static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     Worker *w = &S->w[i];
     w->wtx = tx; w->wty = ty; w->wsingle = single; w->wflex = flex;
+    w->wsettle = false;            /* each walk decides afresh how it lands */
     w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
     w->wowned = false;             /* the tile is not ours until it is free */
     /* A walk lasts a FIXED whole number of frames, decided when it starts and
@@ -4363,6 +4367,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             /* the step command covers its first stretch of ground on the
              * frame it is issued -- the body is already under way */
             if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
+            if (w->wtx >= 0) w->wsettle = true;
             if (w->wtx >= 0 || w->busy > 0) w->fready = false;
             (void)osave;
             *progressed = true; return;
@@ -4594,6 +4599,15 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 in_flight = true;
                 if (!(w->wtx < 0 && w->alive && !w->done && !w->exited))
                     continue;
+                if (w->wsettle) {
+                    /* a step's landing is not the program moving on: the body
+                     * settles into the square first and the next command is
+                     * only taken up a frame later -- which is what lets a
+                     * neighbour see the walker standing there before it acts */
+                    w->wsettle = false;
+                    w->busy = 1;
+                    continue;
+                }
                 w->fready = true;   /* landed: dispatch this same frame */
             }
             if (w->busy > 0) {      /* legacy wait from the step delegate */
