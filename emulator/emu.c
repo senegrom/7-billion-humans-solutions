@@ -4480,12 +4480,16 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                  * result only once the sums are done */
                 fq_push(w, FQ_WAIT, (float)MS_CALC);
                 fq_push(w, FQ_EFFECT, 0);
-            } else {
-                /* set shows a bubble but holds nothing: the slot updates on
-                 * the spot and the next command follows immediately */
-                fq_push(w, FQ_EFFECT, 0);
+                break;
             }
-            break;
+            /* set writes its slot the moment it is spoken and holds the
+             * worker for a single frame -- short enough to vanish inside an
+             * ordinary program, long enough to be a beat, which is what the
+             * scripted speed runs use a row of them for */
+            exec_assign(S, w, ins);
+            w->pc++;
+            w->busy = 1;
+            *progressed = true; return;
         case OP_TELL:
             fq_push(w, FQ_WAIT, (float)(MS_TELL > 0 ? MS_TELL : 1));
             fq_push(w, FQ_EFFECT, 0);
