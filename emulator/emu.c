@@ -3412,6 +3412,8 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             err = true;
         else if (ins->op == OP_GIVETO && !w->holding)
             err = true;
+        else if (ins->op == OP_WRITE && !w->holding)
+            err = true;
         else if (ins->op == OP_DROP) {
             if (!w->holding) err = true;
             else if (S->grid[w->y][w->x].terrain == T_FLOOR
@@ -4391,6 +4393,10 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         }
         else if (ins->op == OP_GIVETO && !w->holding)
             err = true;
+        /* and so does writing with nothing in hand -- there must be a cube
+         * to write on, and finding none stops the worker just as long */
+        else if (ins->op == OP_WRITE && !w->holding)
+            err = true;
         else if (ins->op == OP_DROP) {
             if (!w->holding) err = true;
             else if (S->grid[w->y][w->x].terrain == T_FLOOR
@@ -4476,16 +4482,13 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             fq_push(w, FQ_EFFECT, 0);
             break;
         case OP_WRITE:
-            if (w->holding) {
-                /* the writing animation runs to its end, the value lands, and
-                 * the commit bookkeeping holds one more standard beat */
-                fq_push(w, FQ_ANIM, 56);
-                fq_push(w, FQ_WAITANIM, 0);
-                fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_WAIT, (float)(MS_WRITE > 56 ? MS_WRITE - 56 : 1));
-            } else {
-                fq_push(w, FQ_EFFECT, 0);    /* writing on nothing is free */
-            }
+            /* the writing animation runs to its end, the value lands, and
+             * the commit bookkeeping holds one more standard beat (empty
+             * hands never reach here -- that is an error, handled above) */
+            fq_push(w, FQ_ANIM, 56);
+            fq_push(w, FQ_WAITANIM, 0);
+            fq_push(w, FQ_EFFECT, 0);
+            fq_push(w, FQ_WAIT, (float)(MS_WRITE > 56 ? MS_WRITE - 56 : 1));
             break;
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
             long cost = cmd_duration(S, w, ins);
