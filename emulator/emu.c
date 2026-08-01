@@ -95,6 +95,7 @@ typedef struct {
     unsigned char fe_ord[MAXFOREACH][8];   /* per-sweep direction order */
     bool listening;               /* parked on a listenfor */
     int  heard;                   /* ticks a word spoken to us still rings */
+    char heard_word[WORDLEN];     /* which word it was */
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
     int  last_tell;               /* beat of most recent tell (-1 = never) */
     int  last_x, last_y, blocked_beats;   /* traffic-jam detection */
@@ -1225,8 +1226,11 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
     }
 }
 
-/* A word only rings in the ear for a tenth of a second: a worker not
- * already listening when it is spoken never hears it at all. */
+/* A word spoken to someone reaches them whatever they happen to be doing --
+ * it waits in the ear rather than having to be caught in the act of
+ * listening -- but only for a tenth of a second, after which it is gone.  So
+ * a listener still has to be about ready for it; they just need not be
+ * standing at the listen command in the very instant it is spoken. */
 #define MS_EARSHOT 7
 
 static bool g_nothing_ignores_workers = false;   /* experimental sense variant */
@@ -2993,9 +2997,7 @@ static void exec_action(Sim *S, Program *P, int i) {
             for (int j = 0; j < S->nw; j++) {
                 if (j == i) continue;
                 Worker *o = &S->w[j];
-                if (!o->alive || o->done || o->pc >= P->n) continue;
-                Instr *li = &P->instr[o->pc];
-                if (li->op != OP_LISTEN || strcmp(li->word, ins->word)) continue;
+                if (!o->alive || o->done) continue;
                 bool covered = false;
                 if (ins->tt_kind == 1) covered = true;
                 else if (ins->tt_kind == 2)
@@ -3004,7 +3006,10 @@ static void exec_action(Sim *S, Program *P, int i) {
                     int tx, ty;
                     covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
                 }
-                if (covered) o->heard = MS_EARSHOT;
+                if (covered) {
+                    o->heard = MS_EARSHOT;
+                    snprintf(o->heard_word, sizeof o->heard_word, "%s", ins->word);
+                }
             }
             break;
         }
@@ -3335,7 +3340,8 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                 *progressed = true; continue;
             }
             case OP_LISTEN:
-                if (w->heard > 0) { w->heard = 0; w->pc++; *progressed = true; continue; }
+                if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
+                    { w->heard = 0; w->pc++; *progressed = true; continue; }
                 return;                       /* idle: wait for a matching tell */
             case OP_ASSIGN:
                 if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; *progressed = true; continue; }
@@ -3641,7 +3647,8 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                     }
                     case OP_ENDFOR: w->pc = ins->target; continue;
                     case OP_LISTEN:
-                        if (w->heard > 0) { w->heard = 0; w->pc++; continue; }
+                        if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
+                            { w->heard = 0; w->pc++; continue; }
                         idle = true;
                         break;
                     case OP_UNSUPPORTED:
@@ -4158,13 +4165,11 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                         e->worker = i; e->x = w->x;
                         snprintf(e->word, sizeof e->word, "%s", ins->word);
                     }
-                    /* release matching listeners in range of the target */
+                    /* the word reaches whoever is addressed, whatever they are doing */
                     for (int j = 0; j < S->nw; j++) {
                         if (j == i) continue;
                         Worker *o = &S->w[j];
-                        if (!o->alive || o->done || o->pc >= P->n) continue;
-                        Instr *li = &P->instr[o->pc];
-                        if (li->op != OP_LISTEN || strcmp(li->word, ins->word)) continue;
+                        if (!o->alive || o->done) continue;
                         bool covered = false;
                         if (ins->tt_kind == 1) covered = true;
                         else if (ins->tt_kind == 2)
@@ -4173,7 +4178,10 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                             int tx, ty;
                             covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
                         }
-                        if (covered) o->heard = MS_EARSHOT;
+                        if (covered) {
+                            o->heard = MS_EARSHOT;
+                            snprintf(o->heard_word, sizeof o->heard_word, "%s", ins->word);
+                        }
                     }
                     break;
                 }
@@ -4405,7 +4413,8 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             *progressed = true; return;
         }
         case OP_LISTEN:
-            if (w->heard > 0) { w->heard = 0; w->pc++; }
+            if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
+                { w->heard = 0; w->pc++; }
             *progressed = true; return;        /* waiting costs the frame */
         case OP_STEP: {
             int osave = w->pc;
