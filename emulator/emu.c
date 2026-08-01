@@ -96,6 +96,7 @@ typedef struct {
     bool listening;               /* parked on a listenfor */
     int  heard;                   /* ticks a word spoken to us still rings */
     char heard_word[WORDLEN];     /* which word it was */
+    bool greeted;                 /* a word has reached this worker's ear */
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
     int  last_tell;               /* beat of most recent tell (-1 = never) */
     int  last_x, last_y, blocked_beats;   /* traffic-jam detection */
@@ -2154,9 +2155,15 @@ static bool level_won(Sim *S) {
             return S->tellev[0].x < S->tellev[1].x;
         }
         case G_CHAIN_GREET: {
-            if (S->ntellev < S->nw - 1) return false;
-            for (int e = 1; e < S->nw - 1; e++)
-                if (S->tellev[e].x <= S->tellev[e-1].x) return false;
+            /* everyone but the westmost must have been handed the word.
+             * The greetings may land in any order -- a keen worker whose
+             * word arrives from the wrong side, or ahead of its turn,
+             * still counts as a greeting given and received */
+            int minx = 9999;
+            for (int i = 0; i < S->nw; i++)
+                if (S->w[i].x < minx) minx = S->w[i].x;
+            for (int i = 0; i < S->nw; i++)
+                if (S->w[i].x > minx && !S->w[i].greeted) return false;
             return true;
         }
         case G_TRAINING_DAY:
@@ -3008,6 +3015,7 @@ static void exec_action(Sim *S, Program *P, int i) {
                 }
                 if (covered) {
                     o->heard = MS_EARSHOT;
+                    o->greeted = true;
                     snprintf(o->heard_word, sizeof o->heard_word, "%s", ins->word);
                 }
             }
@@ -4180,6 +4188,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                         }
                         if (covered) {
                             o->heard = MS_EARSHOT;
+                            o->greeted = true;
                             snprintf(o->heard_word, sizeof o->heard_word, "%s", ins->word);
                         }
                     }
