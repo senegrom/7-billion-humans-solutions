@@ -65,7 +65,12 @@ typedef enum { MV_NOTHING, MV_NUM, MV_TILE, MV_CUBEREF } MemKind;
 /* wref: when the slot was filled by `nearest worker` it names that PERSON, not
  * the square they were standing on, so it keeps their index and follows them. */
 typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */
-                 int wref; /* worker index, or -1 */ } MemVal;
+                 int wref; /* worker index, or -1 */
+                 bool fedir; /* filled by a foreachdir sweep: such a slot reads
+                                its square the way a pointed direction does --
+                                a cube held aloft by the worker standing there
+                                still answers -- where a remembered square
+                                reads only what lies on the floor */ } MemVal;
 
 enum { NMEM = 4, MAXFOREACH = 24, WORDLEN = 32 };
 
@@ -1324,7 +1329,11 @@ static bool num_cmp(CmpOp op, int a, int b) {
 /* numeric value of an operand; false when there is no value to read.
  * Pointing a DIRECTION at a neighbor reads their held item too ("compare
  * their items" -- Number Royale tip); a remembered TILE reads only what lies
- * on the floor of that square (Neighborly Sweeper tip). */
+ * on the floor of that square (Neighborly Sweeper tip).  A foreachdir loop
+ * variable is a pointed direction, not a remembered square: its read still
+ * answers while the neighbor holds their cube in the air -- which is what
+ * lets ten sweepers count each other's cubes mid-shuffle without the tally
+ * going stale. */
 static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
     switch (o->kind) {
         case 0: *out = o->num; return true;
@@ -1343,7 +1352,7 @@ static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
                 if (!o2->alive || !o2->holding) return false;
                 *out = o2->held; return true;
             }
-            if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, false, out);
+            if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, m->fedir, out);
             if (m->k == MV_CUBEREF) {
                 for (int i = 0; i < S->nw; i++)
                     if (S->w[i].alive && S->w[i].holding && S->w[i].held_id == m->num) {
@@ -1670,6 +1679,9 @@ static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
             if (S->region[o->y][o->x] != myreg) continue;
             int px = body_tx(o), py = body_ty(o);
             long k = near_key(px - sx, py - sy);
+            if (getenv("EMU_NEARVERBOSE"))
+                fprintf(stderr, "[nearv] t%d w%d sees w%d body(%d,%d) logi(%d,%d) key%ld\n",
+                        S->beat, (int)(w - S->w), i, px, py, o->x, o->y, k);
             if (!have || k < best) {
                 best = k; have = true; bx = px; by = py; g_near_who = i;
             }
@@ -2271,9 +2283,10 @@ static bool level_won(Sim *S) {
             return S->hist_n >= L->goal_b - L->goal_a + 1;
         case G_DECIMAL_DOUBLER:
             return S->hist_n > 0 && S->hist[S->hist_n - 1] >= L->goal_b;
-        case G_NEIGHBOR_COUNTS:
+        case G_NEIGHBOR_COUNTS: {
             /* only cubes on the floor are graded -- one still riding in a
              * worker's hands is exempt (and invisible as a neighbor) */
+            bool ok = true;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->grid[y][x].has_cube) continue;
@@ -2282,9 +2295,15 @@ static bool level_won(Sim *S) {
                         int nx = x + DX[d], ny = y + DY[d];
                         if (nx>=0&&ny>=0&&nx<L->w&&ny<L->h&&S->grid[ny][nx].has_cube) nb++;
                     }
-                    if (S->grid[y][x].cube != nb) return false;
+                    if (S->grid[y][x].cube != nb) {
+                        if (!g_goal_dbg) return false;
+                        fprintf(stderr, "  goal: cube (%d,%d) shows %d, wants %d\n",
+                                x, y, S->grid[y][x].cube, nb);
+                        ok = false;
+                    }
                 }
-            return true;
+            return ok;
+        }
         case G_MAX_NEIGHBORS: {
             int n = 0;
             for (int y = 0; y < L->h; y++)
@@ -2468,10 +2487,25 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
     MemVal nv = { MV_NOTHING, 0, 0, 0, -1, -1 };
     if (ins->akind == 0) {                      /* nearest <type> */
         int x, y;
-        if (find_nearest(S, w, ins->near_type, &x, &y)) {
+        bool got = find_nearest(S, w, ins->near_type, &x, &y);
+        if (got) {
             nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
             /* remembering the nearest PERSON remembers the person */
             if (ins->near_type == C_PERSON) nv.wref = g_near_who;
+        }
+        /* EMU_NEARLOG prints every nearest resolution -- who asked, at what
+         * beat, and what won -- the way to hold two runs side by side */
+        if (getenv("EMU_NEARLOG")) {
+            int wi = (int)(w - S->w);
+            if (!got)
+                fprintf(stderr, "[near] t%d w%d ty%d -> NONE\n",
+                        S->beat, wi, (int)ins->near_type);
+            else if (ins->near_type == C_PERSON)
+                fprintf(stderr, "[near] t%d w%d ty%d -> w%d\n",
+                        S->beat, wi, (int)ins->near_type, g_near_who);
+            else
+                fprintf(stderr, "[near] t%d w%d ty%d -> (%d,%d)\n",
+                        S->beat, wi, (int)ins->near_type, x, y);
         }
     } else if (ins->akind == 1) {               /* set <operand> */
         Operand *o = &ins->op1;
@@ -3286,6 +3320,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
                     w->mem[ins->slot].y = w->y + DY[d];
                     w->mem[ins->slot].ntype = -1;
                     w->mem[ins->slot].wref = -1;
+                    w->mem[ins->slot].fedir = true;
                     w->pc++;
                 } else { *fi = 0; w->pc = ins->target + 1; }
                 if (ins->ndirs > 0) {
@@ -3599,6 +3634,7 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                             w->mem[ins->slot].y = w->y + DY[d];
                             w->mem[ins->slot].ntype = -1;
                             w->mem[ins->slot].wref = -1;
+                            w->mem[ins->slot].fedir = true;
                             w->pc++;
                         } else { *fi = 0; w->pc = ins->target + 1; }
                         continue;
@@ -4355,6 +4391,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 w->mem[ins->slot].y = w->y + DY[d];
                 w->mem[ins->slot].ntype = -1;
                 w->mem[ins->slot].wref = -1;
+                w->mem[ins->slot].fedir = true;
                 w->pc++;
             } else { *fi = 0; w->pc = ins->target + 1; }
             if (ins->ndirs > 0) {
