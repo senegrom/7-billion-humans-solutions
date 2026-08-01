@@ -1443,7 +1443,12 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
         }
         if (same) return c->op == O_EQ;
     }
-    if (!ha || !hb) return c->op == O_NE && (ha != hb);   /* missing value */
+    /* A comparison with nothing on one side is simply not true, for != just
+     * as for ==: a glance at a bare square during the instant a neighbour
+     * has lifted its cube reads as no answer, not as "different from 0" --
+     * which is what lets a counting loop poll `nw != 0` across a column
+     * being rebuilt without firing on the gap. */
+    if (!ha || !hb) return false;
     return num_cmp(c->op, a, b);
 }
 
