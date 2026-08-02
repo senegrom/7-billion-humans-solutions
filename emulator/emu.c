@@ -974,7 +974,7 @@ typedef struct {
  * simultaneous and make the idle fallback (t+1) advance a full frame.
  * EMU_MS_* env overrides are given in ms and rounded to frames. */
 static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
-           MS_TELL = 63, MS_IF = 20, MS_ASSIGN = 20, MS_WRITE = 82,
+           MS_TELL = 42, MS_IF = 30, MS_ASSIGN = 20, MS_WRITE = 57,
            MS_ERROR = 15;    /* an errored take/pickup (full hands): the red
                                 bubble displays ~1.5s but the program moves
                                 on quickly -- recorded speeds demand ~250ms */
@@ -4349,14 +4349,18 @@ static void fq_push(Worker *w, int id, float t) {
 /* frames of gating before an item action's effect, and the animation tail
  * that plays out afterwards (30 frames of animation in all) */
 static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
-/* The think bubble lasts a standard command, and the condition is read when it
- * is exactly half spent -- half of 333ms is 166.5, which is ten and a bit ticks
- * of sixteen, so the reading lands on the eleventh and the rest of the beat is
- * the other eleven.  It had been split 12 and 10, reading the world a tick
- * later than it is really read. */
-static int FQ_IF_WAIT = 11;
-static int FQ_IF_HOLD = 11;
-static int MS_CALC = 121;             /* the calc arithmetic animation */
+/* The think bubble is a half-second affair, and the condition is read when it
+ * is exactly half spent: 250ms of sixteen-millisecond ticks puts the reading
+ * on the sixteenth, and the bubble lingers to its 500ms before the branch is
+ * taken.  It had been living a 333ms life with an eleventh-tick reading --
+ * long enough to look right, short enough to read a stepping neighbour's
+ * square four ticks too early, which is the difference between a whole
+ * counting-house choreography finding its caller or freezing forever. */
+static int FQ_IF_WAIT = 16;
+static int FQ_IF_HOLD = 17;
+static int MS_CALC = 154;             /* the calc arithmetic animation, plus
+                                         the half-second thought that follows
+                                         it before the hands move again */
 /* 1 = run free bookkeeping in one tick.  (Bit 2 would also start the next
  * command on the tick its predecessor's timeline runs dry; the recorded
  * times say the game takes one more tick to notice, so it stays off.) */
@@ -4572,10 +4576,20 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_EFFECT, 0);
                 break;
             }
-            /* set writes its slot the moment it is spoken and holds the
-             * worker for a single frame -- short enough to vanish inside an
-             * ordinary program, long enough to be a beat, which is what the
-             * scripted speed runs use a row of them for */
+            /* set of a DIRECTION is a look: the worker turns to see what is
+             * there before remembering it, and the looking is a whole think
+             * bubble.  Setting from a number, a memory or the own hands
+             * touches nothing out in the world, writes the slot the moment
+             * it is spoken, and holds the worker for a single frame --
+             * short enough to vanish inside an ordinary program, long
+             * enough to be a beat, which is what the scripted speed runs
+             * use a row of them for */
+            if (ins->akind == 1 && ins->op1.kind == 1) {
+                fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
+                fq_push(w, FQ_EFFECT, 0);
+                fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
+                break;
+            }
             exec_assign(S, w, ins);
             w->pc++;
             w->busy = 1;
