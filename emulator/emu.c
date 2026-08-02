@@ -2525,13 +2525,21 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         if (o->kind == 1) {
             /* set remembers the THING on the tile; bare floor leaves the
              * slot empty (Terrain Leveler's approach march relies on
-             * "step mem1" no-opping until an anchor cube exists) */
+             * "step mem1" no-opping until an anchor cube exists).  A cube
+             * is remembered AS THAT CUBE -- later reads give its current
+             * value and later steps walk toward wherever it has been
+             * carried, exactly like a remembered held item.  (The decimal
+             * counting-house sorts its couriers by digits they looked at
+             * two errands ago, on cubes that have long since been picked
+             * up, rewritten and set down somewhere else.) */
             int nx = w->x + DX[o->dir], ny = w->y + DY[o->dir];
-            if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
-                && (S->grid[ny][nx].has_cube
-                    || S->grid[ny][nx].terrain != T_FLOOR
-                    || worker_at(S, nx, ny, (int)(w - S->w)) >= 0)) {
-                nv.k = MV_TILE; nv.x = nx; nv.y = ny;
+            if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h) {
+                if (S->grid[ny][nx].has_cube) {
+                    nv.k = MV_CUBEREF; nv.num = S->cube_id[ny][nx];
+                } else if (S->grid[ny][nx].terrain != T_FLOOR
+                           || worker_at(S, nx, ny, (int)(w - S->w)) >= 0) {
+                    nv.k = MV_TILE; nv.x = nx; nv.y = ny;
+                }
             }
         }
         else if (o->kind == 2) nv = w->mem[o->mem];
