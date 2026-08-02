@@ -2794,6 +2794,20 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
     return false;
 }
 
+/* Does this condition LOOK anywhere?  A term with a direction operand on
+ * either side (n/e/s/w/...) makes the worker raise the think bubble and
+ * study the square for the full thinking time.  A condition that consults
+ * only the worker's own head -- memory slots, the held item, plain
+ * numbers, kind words -- is answered in a single frame, no bubble. */
+static bool if_looks(const Instr *ins) {
+    for (int k = 0; k < ins->nconds; k++) {
+        if (ins->conds[k].lhs.kind == 1) return true;
+        if (!ins->conds[k].rhs_is_type && ins->conds[k].rhs.kind == 1)
+            return true;
+    }
+    return false;
+}
+
 /* how long the worker is busy after starting this command */
 static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
     switch (ins->op) {
@@ -2833,7 +2847,7 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
         case OP_WRITE: return w->holding ? MS_WRITE : MS_ITEM;
         case OP_ASSIGN: return MS_ASSIGN;
         case OP_TELL: return MS_TELL;
-        case OP_IF: return MS_IF;
+        case OP_IF: return if_looks(ins) ? MS_IF : 1;
         default: return 0;
     }
 }
@@ -4519,6 +4533,13 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     }
     switch (ins->op) {
         case OP_IF:
+            /* a condition that never looks outward -- memory, held item,
+             * numbers, kind words only -- is answered in a single frame */
+            if (!if_looks(ins)) {
+                fq_push(w, FQ_WAIT, 1);
+                fq_push(w, FQ_EFFECT, 0);
+                break;
+            }
             /* the think bubble: the condition is SAMPLED at the half-way
              * point but the worker stays occupied for the whole standard
              * command -- a branch decided on a world that may change again
