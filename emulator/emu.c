@@ -3244,6 +3244,29 @@ static void cont_exchange(Sim *S, int i, int j, int otx, int oty) {
     cont_glide_owned(S, j, ax, ay, osingle && otx == ax && oty == ay);
 }
 
+/* Move a gliding body one frame along its line.  The body covers a FIXED
+ * DISTANCE each frame -- walking speed, 3.0 tiles/s at 16 ms a frame = 0.048
+ * tiles -- not an equal share of the walk.  The two agree on straight steps
+ * (both cross the half-tile line on frame 11 of 21) but not on diagonals: at
+ * frame 15 of 30 an equal-share body sits EXACTLY on the half-tile line and
+ * the tile it reads as depends on which way the tie rounds, while a fixed-
+ * speed body is already 0.009 past it, so both coordinates flip cleanly ON
+ * frame 15.  A counting machine's button feels that frame: its presser
+ * approaches diagonally, and the press must land the frame the body reads as
+ * on the button tile.  Arrival stays the fixed frame count decided at
+ * set-off (see cont_walk); a body that runs out of ground early -- a
+ * displaced worker setting off mid-tile -- parks at the target and waits
+ * out its walk clock. */
+#define GLIDE_PER_FRAME 0.048   /* tiles of ground covered per frame */
+static void glide_body(Worker *w) {
+    double dx = w->wtx - w->fsx, dy = w->wty - w->fsy;
+    double dist = sqrt(dx * dx + dy * dy);
+    double f = dist > 1e-9 ? (double)w->wprog * GLIDE_PER_FRAME / dist : 1.0;
+    if (f > 1.0) f = 1.0;
+    w->fx = w->fsx + dx * f;
+    w->fy = w->fsy + dy * f;
+}
+
 /* advance a gliding worker; commit on arrival (with swap/cycle).  returns
  * true if anything about the board changed (for stall detection). */
 static bool cont_glide(Sim *S, Program *P, int i) {
@@ -3254,9 +3277,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
          * covering the ground between the two tiles. */
         w->wprog++;
         if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
-        double f = (double)w->wprog / (double)w->wtot;
-        w->fx = w->fsx + (tx - w->fsx) * f;
-        w->fy = w->fsy + (ty - w->fsy) * f;
+        glide_body(w);
         return true;
     }
     int occ = cont_occupant(S, tx, ty, i);
@@ -3360,9 +3381,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
     w->wowned = true;
     w->wprog++;
     if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
-    double frac = (double)w->wprog / (double)w->wtot;
-    w->fx = w->fsx + (tx - w->fsx) * frac;
-    w->fy = w->fsy + (ty - w->fsy) * frac;
+    glide_body(w);
     return true;
 }
 
