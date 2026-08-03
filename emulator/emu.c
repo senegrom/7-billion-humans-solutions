@@ -2569,8 +2569,23 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
              * up, rewritten and set down somewhere else.) */
             int nx = w->x + DX[o->dir], ny = w->y + DY[o->dir];
             if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h) {
+                int held = -1;
+                for (int k = 0; k < S->nw; k++)
+                    if (&S->w[k] != w && S->w[k].alive
+                        && seen_tx(S, k) == nx && seen_ty(S, k) == ny) {
+                        if (S->w[k].holding) held = S->w[k].held_id;
+                        break;
+                    }
                 if (S->grid[ny][nx].has_cube) {
                     nv.k = MV_CUBEREF; nv.num = S->cube_id[ny][nx];
+                } else if (held >= 0) {
+                    /* a cube in a neighbour's hands is seen too, and it is
+                     * the CUBE that is remembered -- reads give whatever is
+                     * written on it by the time of the read (the decimal
+                     * doubling-house sorts its scribes by digits their
+                     * neighbours were holding up long before the digits'
+                     * final rewrite) */
+                    nv.k = MV_CUBEREF; nv.num = held;
                 } else if (S->grid[ny][nx].terrain != T_FLOOR
                            || worker_at(S, nx, ny, (int)(w - S->w)) >= 0) {
                     nv.k = MV_TILE; nv.x = nx; nv.y = ny;
