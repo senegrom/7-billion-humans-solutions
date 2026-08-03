@@ -4614,11 +4614,14 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     switch (ins->op) {
         case OP_IF:
             /* a condition that never looks outward -- memory, held item,
-             * numbers, kind words only -- is answered in a single frame */
+             * numbers, kind words only -- is answered in a single frame:
+             * decided on the spot, the program moving on the next frame */
             if (!if_looks(ins)) {
-                fq_push(w, FQ_WAIT, 1);
-                fq_push(w, FQ_EFFECT, 0);
-                break;
+                if (if_true(S, ins, w)) w->pc++;
+                else w->pc = ins->target +
+                         (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
+                w->busy = 1;
+                *progressed = true; return;
             }
             /* the think bubble: the condition is SAMPLED at the half-way
              * point but the worker stays occupied for the whole standard
@@ -4638,8 +4641,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             }
             if (ins->akind == 2) {
                 /* calc runs the long finger-arithmetic; the slot takes the
-                 * result only once the sums are done */
-                fq_push(w, FQ_WAIT, (float)MS_CALC);
+                 * result only once the sums are done.  The frame spent
+                 * taking the command up is part of its length. */
+                fq_push(w, FQ_WAIT, (float)(MS_CALC - 1));
                 fq_push(w, FQ_EFFECT, 0);
                 break;
             }
@@ -4662,17 +4666,21 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             w->busy = 1;
             *progressed = true; return;
         case OP_TELL:
-            fq_push(w, FQ_WAIT, (float)(MS_TELL > 0 ? MS_TELL : 1));
+            /* the word is delivered at the end of the telling; the frame
+             * spent taking the command up is part of its length */
+            fq_push(w, FQ_WAIT, (float)(MS_TELL > 1 ? MS_TELL - 1 : 1));
             fq_push(w, FQ_EFFECT, 0);
             break;
         case OP_WRITE:
-            /* the writing animation runs to its end, the value lands, and
-             * the commit bookkeeping holds one more standard beat (empty
-             * hands never reach here -- that is an error, handled above) */
-            fq_push(w, FQ_ANIM, 56);
+            /* the writing animation runs to its end and the value lands as
+             * the pen lifts (empty hands never reach here -- that is an
+             * error, handled above); the frame spent taking the command up
+             * is part of its length */
+            fq_push(w, FQ_ANIM, 55);
             fq_push(w, FQ_WAITANIM, 0);
             fq_push(w, FQ_EFFECT, 0);
-            fq_push(w, FQ_WAIT, (float)(MS_WRITE > 56 ? MS_WRITE - 56 : 1));
+            if (MS_WRITE > 57)
+                fq_push(w, FQ_WAIT, (float)(MS_WRITE - 57));
             break;
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
             long cost = cmd_duration(S, w, ins);
@@ -4717,9 +4725,10 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             } else {
                 /* the hand does its work the moment the action starts -- the
                  * cube changes hands (or hits the floor) right away -- and
-                 * the rest of the animation holds the worker to the end */
+                 * the rest of the animation holds the worker to the end; the
+                 * frame spent taking the command up is part of its length */
                 fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL));
+                fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL - 1));
                 fq_push(w, FQ_WAITANIM, 0);
                 /* the cube being put down is on show at once but stays part
                  * of the putting-down until the whole gesture ends.  The
