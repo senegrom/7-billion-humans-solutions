@@ -56,6 +56,10 @@ typedef struct {
     int  owner;     /* worker who printed this cube (-1 = level cube) */
     int  settle;    /* frame until which the cube here is still being put
                        down -- visible already, but not yet liftable */
+    int  settle_by; /* who is putting it down: a worker earlier in the line
+                       finishes within the frame, so someone later in the
+                       line can lift that same frame; someone earlier has
+                       already had their turn and must wait one more */
 } Tile;
 
 typedef enum { CB_FIXED, CB_RAND, CB_RANDU } CubeMode;
@@ -4588,10 +4592,14 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
      * neighbour's release, not by its own loop length. */
     if (ins->op == OP_PICKUP && !w->holding) {
         bool ready = false, settling = false;
+        /* the putting-down ends inside the putter's own turn: someone later
+         * in the line can lift the cube that same frame, someone earlier has
+         * already acted this frame and reaches it one frame on */
+        #define SETTLING(t) ((t)->settle + ((t)->settle_by > i ? 1 : 0) > now)
         if (ins->mem_target >= 0) {
             int tx, ty;
             if (mem_tile(S, w, ins->mem_target, &tx, &ty)
-                && S->grid[ty][tx].has_cube && S->grid[ty][tx].settle > now)
+                && S->grid[ty][tx].has_cube && SETTLING(&S->grid[ty][tx]))
                 settling = true;
         } else {
             for (int k = 0; k < ins->ndirs && !ready; k++) {
@@ -4600,11 +4608,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 Tile *t = &S->grid[ny][nx];
                 if (t->terrain == T_PRINTER) ready = true;
                 else if (t->has_cube) {
-                    if (t->settle > now) settling = true;
+                    if (SETTLING(t)) settling = true;
                     else ready = true;
                 }
             }
         }
+        #undef SETTLING
         if (settling && !ready) { *progressed = true; return; }  /* wait for it to land */
     }
     if (ins->op == OP_TELL && (S->L->rules & R_SPEAK_ORDER)) {
@@ -4723,23 +4732,25 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_ANIM, 21);
                 fq_push(w, FQ_WAITANIM, 0);
             } else {
-                /* the hand does its work the moment the action starts -- the
-                 * cube changes hands (or hits the floor) right away -- and
-                 * the rest of the animation holds the worker to the end; the
-                 * frame spent taking the command up is part of its length */
-                fq_push(w, FQ_EFFECT, 0);
+                /* the hand does its work in the very tick the action starts
+                 * -- the cube changes hands (or hits the floor) before the
+                 * next worker in line even looks -- and the animation holds
+                 * the worker to the end; the frame spent taking the command
+                 * up is part of its length */
+                bool dropping = (ins->op == OP_DROP) && w->holding
+                    && S->grid[w->y][w->x].terrain == T_FLOOR
+                    && !S->grid[w->y][w->x].has_cube;
+                exec_action(S, P, i);
                 fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL - 1));
                 fq_push(w, FQ_WAITANIM, 0);
                 /* the cube being put down is on show at once but stays part
-                 * of the putting-down until the whole gesture ends.  The
-                 * stamp is set so a hand already waiting closes exactly as
-                 * the gesture finishes, allowing for the waiter's own
-                 * park-then-reach frames. */
-                if (ins->op == OP_DROP && w->holding
-                    && S->grid[w->y][w->x].terrain == T_FLOOR
-                    && !S->grid[w->y][w->x].has_cube)
+                 * of the putting-down until the whole gesture ends: a hand
+                 * already waiting for it closes the moment the gesture does */
+                if (dropping && !w->holding) {
                     S->grid[w->y][w->x].settle =
-                        now + FQ_ITEM_PRE + FQ_ITEM_TAIL - 1;
+                        now + FQ_ITEM_PRE + FQ_ITEM_TAIL;
+                    S->grid[w->y][w->x].settle_by = i;
+                }
             }
             break;
         }
