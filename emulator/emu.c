@@ -54,6 +54,8 @@ typedef struct {
     bool has_cube;
     int  cube;
     int  owner;     /* worker who printed this cube (-1 = level cube) */
+    int  settle;    /* frame until which the cube here is still being put
+                       down -- visible already, but not yet liftable */
 } Tile;
 
 typedef enum { CB_FIXED, CB_RAND, CB_RANDU } CubeMode;
@@ -4577,6 +4579,34 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             }
         }
     }
+    /* A cube still being put down cannot be lifted.  The square shows the
+     * cube from the moment the drop begins -- conditions and counters read
+     * it there -- but a hand reaching for it closes only once the putting-
+     * down is finished.  The reacher stands ready and grabs on the very
+     * frame the cube settles, which is what chains a row of workers passing
+     * work down a line into lockstep: each one's reach is clocked by the
+     * neighbour's release, not by its own loop length. */
+    if (ins->op == OP_PICKUP && !w->holding) {
+        bool ready = false, settling = false;
+        if (ins->mem_target >= 0) {
+            int tx, ty;
+            if (mem_tile(S, w, ins->mem_target, &tx, &ty)
+                && S->grid[ty][tx].has_cube && S->grid[ty][tx].settle > now)
+                settling = true;
+        } else {
+            for (int k = 0; k < ins->ndirs && !ready; k++) {
+                int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+                Tile *t = &S->grid[ny][nx];
+                if (t->terrain == T_PRINTER) ready = true;
+                else if (t->has_cube) {
+                    if (t->settle > now) settling = true;
+                    else ready = true;
+                }
+            }
+        }
+        if (settling && !ready) { *progressed = true; return; }  /* wait for it to land */
+    }
     if (ins->op == OP_TELL && (S->L->rules & R_SPEAK_ORDER)) {
         if (*told >= 0) { *progressed = true; return; }   /* retry next frame */
         *told = i;
@@ -4691,6 +4721,16 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_EFFECT, 0);
                 fq_push(w, FQ_ANIM, (float)(FQ_ITEM_PRE + FQ_ITEM_TAIL));
                 fq_push(w, FQ_WAITANIM, 0);
+                /* the cube being put down is on show at once but stays part
+                 * of the putting-down until the whole gesture ends.  The
+                 * stamp is set so a hand already waiting closes exactly as
+                 * the gesture finishes, allowing for the waiter's own
+                 * park-then-reach frames. */
+                if (ins->op == OP_DROP && w->holding
+                    && S->grid[w->y][w->x].terrain == T_FLOOR
+                    && !S->grid[w->y][w->x].has_cube)
+                    S->grid[w->y][w->x].settle =
+                        now + FQ_ITEM_PRE + FQ_ITEM_TAIL - 1;
             }
             break;
         }
