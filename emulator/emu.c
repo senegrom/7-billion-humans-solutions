@@ -1656,6 +1656,32 @@ static long near_key(int ux, int uy) {
     return 2025L * (ux * ux + uy * uy) + 45L * uy;
 }
 
+/* Where a body counts as being, for `nearest`.  A worker in mid-stride does not
+ * cross a square in a dead-straight line when a floor cube sits on its path: it
+ * swings about a third of a tile to the side to round the cube, then straightens
+ * again.  That swing is too small to change which square the body counts as
+ * standing on -- so it never shows up in what the conditions read -- but
+ * `nearest` compares raw distances, and a third of a tile is exactly enough to
+ * decide which of two people is nearer when they are otherwise a hair apart.
+ * A worker that is standing still, or gliding past open floor, is measured at
+ * its square, the same tidy board the conditions see. */
+#define BOW_SIDESTEP 0.3
+static void nearest_body(Sim *S, Worker *o, double *px, double *py) {
+    if (o->wtx < 0) { *px = o->x; *py = o->y; return; }          /* standing still */
+    Level *L = S->L;
+    int sxt = (int)lround(o->fsx), syt = (int)lround(o->fsy);
+    bool cube =
+        (sxt >= 0 && syt >= 0 && syt < L->h && sxt < L->w && S->grid[syt][sxt].has_cube) ||
+        (o->wtx >= 0 && o->wty >= 0 && o->wty < L->h && o->wtx < L->w && S->grid[o->wty][o->wtx].has_cube);
+    if (!cube) { *px = lround(o->fx); *py = lround(o->fy); return; } /* plain glide -> its square */
+    /* rounding a cube: the true gliding position, pushed to the (-dy,dx) side of
+     * travel by a third of a tile */
+    double bx = o->fx, by = o->fy;
+    double tx = o->wtx - o->fsx, ty = o->wty - o->fsy, len = sqrt(tx * tx + ty * ty);
+    if (len > 1e-6) { bx += BOW_SIDESTEP * (-ty / len); by += BOW_SIDESTEP * (tx / len); }
+    *px = bx; *py = by;
+}
+
 /* nearest thing of a type; false if none.  The caller's own tile counts (Seek
  * and Destroy remembers the cube underfoot that way).
  *
@@ -1675,20 +1701,23 @@ static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
     int sx = body_tx(w), sy = body_ty(w);
     unsigned char myreg = S->region[w->y][w->x];
     if (type == C_PERSON) {
-        /* people are considered in the order they came into the world, so a
-         * pair that is equally close AND equally far north settles on the
-         * earlier one */
+        /* people are compared by the smooth distance between their bodies, so
+         * the cube sidestep above can tip a near-tie; equal distances settle on
+         * the earlier-born (and, if that is equal too, the more northerly),
+         * exactly as the whole-tile ranking did.  For a body measured at its
+         * square this value is the very integer the tile ranking produced. */
+        double sxf, syf; nearest_body(S, w, &sxf, &syf);
+        double bestk = 0;
         for (int i = 0; i < S->nw; i++) {
             Worker *o = &S->w[i];
             if (o == w || !o->alive) continue;
             if (S->region[o->y][o->x] != myreg) continue;
-            int px = body_tx(o), py = body_ty(o);
-            long k = near_key(px - sx, py - sy);
-            if (getenv("EMU_NEARVERBOSE"))
-                fprintf(stderr, "[nearv] t%d w%d sees w%d body(%d,%d) logi(%d,%d) key%ld\n",
-                        S->beat, (int)(w - S->w), i, px, py, o->x, o->y, k);
-            if (!have || k < best) {
-                best = k; have = true; bx = px; by = py; g_near_who = i;
+            double pxf, pyf; nearest_body(S, o, &pxf, &pyf);
+            double dx = pxf - sxf, dy = pyf - syf;
+            double k = 2025.0 * (dx * dx + dy * dy) + 45.0 * dy;
+            if (!have || k < bestk) {
+                bestk = k; have = true;
+                bx = (int)lround(pxf); by = (int)lround(pyf); g_near_who = i;
             }
         }
         if (!have) return false;
