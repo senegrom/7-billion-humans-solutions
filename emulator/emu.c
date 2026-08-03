@@ -4420,9 +4420,11 @@ static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
  * counting-house choreography finding its caller or freezing forever. */
 static int FQ_IF_WAIT = 16;
 static int FQ_IF_HOLD = 17;
-static int MS_CALC = 154;             /* the calc arithmetic animation, plus
+static int MS_CALC = 122;             /* the calc arithmetic animation, plus
                                          the half-second thought that follows
-                                         it before the hands move again */
+                                         it before the hands move again; a
+                                         direction operand adds one whole
+                                         look on top (see the dispatch) */
 /* 1 = run free bookkeeping in one tick.  (Bit 2 would also start the next
  * command on the tick its predecessor's timeline runs dry; the recorded
  * times say the game takes one more tick to notice, so it stays off.) */
@@ -4670,8 +4672,15 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             if (ins->akind == 2) {
                 /* calc runs the long finger-arithmetic; the slot takes the
                  * result only once the sums are done.  The frame spent
-                 * taking the command up is part of its length. */
-                fq_push(w, FQ_WAIT, (float)(MS_CALC - 1));
+                 * taking the command up is part of its length.  An operand
+                 * naming a DIRECTION costs one whole look on top -- the same
+                 * look an if or a set pays for turning to a neighbouring
+                 * square, and like theirs it is paid once, not per operand.
+                 * Sums over blanks, numbers, memory and the own hands skip
+                 * the look and run a whole look shorter. */
+                int ms = MS_CALC + ((ins->op1.kind == 1 || ins->op2.kind == 1)
+                                        ? FQ_IF_WAIT + FQ_IF_HOLD - 1 : 0);
+                fq_push(w, FQ_WAIT, (float)(ms - 1));
                 fq_push(w, FQ_EFFECT, 0);
                 break;
             }
