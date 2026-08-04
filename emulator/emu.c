@@ -3526,14 +3526,15 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             w->busy = nop ? MS_ERRB : MS_ITEM;
             *progressed = true; return;
         }
-        /* A shredder is fed from its front square alone -- the walk's true
+        /* A machine is used from its front square alone -- the walk's true
          * destination -- so one square serves the whole queue, and the order
-         * a crowd is served in becomes the order it wins that square.  Other
+         * a crowd is served in becomes the order it wins that square.  This
+         * holds for taking from a printer as much as for feeding a shredder:
+         * a worker beside the machine but off its front square waits its
+         * turn to step round rather than reaching in from the corner.  Other
          * errands act from anywhere beside the target. */
         int fx0 = tx, fy0 = ty;
-        bool sfront = ins->op == OP_GIVETO
-                   && S->grid[ty][tx].terrain == T_SHREDDER
-                   && machine_front(S, &fx0, &fy0);
+        bool sfront = !onto && machine_front(S, &fx0, &fy0);
         #define ARR() (onto  ? (w->x == tx && w->y == ty) \
                      : sfront ? (w->x == fx0 && w->y == fy0) \
                              : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
@@ -4613,11 +4614,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         bool onto = (ins->op == OP_PICKUP);
         int tx, ty;
         if (mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            /* shredders are fed from their front square alone (see above) */
+            /* machines are used from their front square alone (see above) */
             int fx0 = tx, fy0 = ty;
-            bool sfront = ins->op == OP_GIVETO
-                       && S->grid[ty][tx].terrain == T_SHREDDER
-                       && machine_front(S, &fx0, &fy0);
+            bool sfront = !onto && machine_front(S, &fx0, &fy0);
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
                           : sfront ? (w->x == fx0 && w->y == fy0) \
                                   : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
