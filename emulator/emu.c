@@ -964,13 +964,18 @@ typedef struct {
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
+    int     print_next[MAXH][MAXW]; /* the value each printer will serve next:
+                                       a fresh printer's first sheet is always
+                                       0, and the roll happens as one is taken
+                                       -- for the sheet after it */
     int     hist[130], hist_n;   /* counting-machine display history */
     bool    ctr_down;            /* ...and whether its button was down last frame */
     int     feeds_this_beat;
     int     beat;
     long    now_ms, win_ms;      /* event clock; when the win state was reached */
     long    st_steps, st_bumps, st_items, st_waits;   /* speed-model counters */
-    unsigned rng;
+    unsigned rng;                /* the harness's dice: level fabrication only */
+    unsigned grng;               /* the game's own dice: step picks and prints */
 } Sim;
 
 /* Per-command durations, calibrated against recorded community speeds.
@@ -987,12 +992,25 @@ static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
                                 on quickly -- recorded speeds demand ~250ms */
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
+
+/* The dice the game itself rolls -- for a step that names several
+ * directions and for the value a printer prints.  It is the game's own
+ * generator: xorshift over a 32-bit state that starts, on a fresh machine,
+ * from one fixed power-on seed.  In the real game the state simply carries
+ * on from wherever the menus and earlier levels left it, so each trial
+ * seeds it differently; the first trial uses the power-on seed itself. */
+static unsigned game_rnd(Sim *S) {
+    unsigned x = S->grng ? S->grng : 0xABAB1981u;
+    x ^= x << 13; x ^= x >> 17; x ^= x << 5;
+    return S->grng = x;
+}
 static bool cube_locate(Sim *S, int id, int *tx, int *ty);
 
 static void sim_reset(Sim *S, Level *L, unsigned seed) {
     memset(S, 0, sizeof *S);
     S->L = L;
     S->rng = seed * 2654435761u + 12345u;
+    S->grng = seed == 0 ? 0xABAB1981u : S->rng | 1u;
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++)
             S->grid[y][x] = (Tile){ L->terr[y][x], L->goalpad[y][x], false, 0, -1 };
@@ -2835,7 +2853,9 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
             return false;
         S->prints_at[ny][nx]++;
         w->holding = true;
-        w->held = (int)(rnd(S) % (unsigned)(S->L->randmax + 1));
+        w->held = S->print_next[ny][nx];
+        S->print_next[ny][nx] =
+            (int)(game_rnd(S) % (unsigned)(S->L->randmax + 1));
         w->held_id = ++S->next_cube_id;
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = wi;
@@ -3464,9 +3484,23 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
         }
         int *pool = fnc > 0 ? freec : cand, pn = fnc > 0 ? fnc : nc;
         if (pn == 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
-        int d = (pn == 1) ? pool[0] : pool[rnd(S) % (unsigned)pn];
-        /* a step that names more than one direction is the flexible kind --
-         * which of them it took was a coin toss, so any of them will do */
+        /* A step that names one direction has nothing to choose.  One that
+         * names several draws over ALL of them, in the order written, and
+         * simply draws again when the pick is unwalkable or a body stands
+         * there -- uniform over the free squares, but the dice are rolled
+         * for the rejected picks too.  With every named square occupied
+         * there is nothing acceptable to draw: settle on any one of them
+         * and queue there. */
+        int d;
+        if (ins->ndirs == 1) d = pool[0];
+        else if (fnc > 0) {
+            for (;;) {
+                int cd = ins->dirs[game_rnd(S) % (unsigned)ins->ndirs];
+                bool ok = false;
+                for (int k = 0; k < fnc; k++) if (freec[k] == cd) ok = true;
+                if (ok) { d = cd; break; }
+            }
+        } else d = cand[game_rnd(S) % (unsigned)nc];
         cont_walk(S, i, w->x + DX[d], w->y + DY[d], true, ins->ndirs > 1);
         *progressed = true; return;
 }
