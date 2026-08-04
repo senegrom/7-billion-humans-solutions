@@ -92,9 +92,6 @@ typedef struct {
     bool done;      /* program finished (END or ran off the end); stays on board */
     bool exited;    /* left via a hole */
     int  exit_x, exit_y, exit_beat;
-    long next_ms;   /* when this worker's current command completes */
-    int  pend_x, pend_y; /* standing step intent left by a blocked step (-1 none):
-                            if the blocker later steps toward us, we swap */
     int  tgt_x, tgt_y;   /* aligned-hole-exit target (or -1) */
     MemVal mem[NMEM];
     int  fe_idx[MAXFOREACH];      /* foreachdir loop positions */
@@ -105,15 +102,14 @@ typedef struct {
     bool greeted;                 /* a word has reached this worker's ear */
     int  printed, fed;            /* printer takes / shredder feeds by this worker */
     int  last_tell;               /* beat of most recent tell (-1 = never) */
-    int  last_x, last_y, blocked_beats;   /* traffic-jam detection */
     int  fresh;     /* a just-acquired cube can't be taken from us until our
                        first decision about it completes (2 = acquiring,
                        1 = deciding, 0 = settled): Big Data's chains steal
                        only cubes their holder chose to keep */
-    /* continuous-movement scheduler (run_cont): the worker glides between tile
-       centres at a fixed speed, so diagonal steps take sqrt(2)x longer and
-       congas wave forward.  (x,y) is the LOGICAL tile, which only updates
-       once the walk arrives; (fx,fy) is the smooth position in between. */
+    /* the movement machinery: the worker glides between tile centres at a
+       fixed speed, so diagonal steps take sqrt(2)x longer and congas wave
+       forward.  (x,y) is the LOGICAL tile, which only updates once the walk
+       arrives; (fx,fy) is the smooth position in between. */
     double fx, fy;  /* smooth position in tile units (centre = integer coords) */
     int  wtx, wty;  /* tile being walked into (-1 = standing still) */
     bool wsingle;   /* a plain one-tile dir-step: advance pc on arrival */
@@ -132,7 +128,6 @@ typedef struct {
     bool wsettle;      /* the walk under way belongs to a step command: on
                           landing the body settles into the square first and
                           the program follows a frame later, not right away */
-    int  pend_exec;    /* command timed out; its effect has not landed yet */
     double fsx, fsy;   /* where the body was when that tile was taken */
     /* an item action aimed through a DIRECTION at a machine reads that
        direction once, where the command was taken up, and the errand then
@@ -1218,7 +1213,6 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->wintx = w->winty = -1;
         w->alive = true;
         w->exit_x = w->exit_y = -1;
-        w->pend_x = w->pend_y = -1;
         w->tgt_x = w->tgt_y = -1;
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = -1;
@@ -1505,16 +1499,6 @@ static bool if_true(Sim *S, Instr *ins, Worker *w) {
 static int worker_at(Sim *S, int x, int y, int self) {
     for (int i = 0; i < S->nw; i++)
         if (i != self && S->w[i].alive && S->w[i].x == x && S->w[i].y == y) return i;
-    return -1;
-}
-
-/* Movement blocking. A worker whose program has ended is still a worker
- * standing on that tile, so it blocks like any other -- but being finished is
- * exactly what makes it eligible to be shoved out of the way (see phase B). */
-static int blocking_worker_at(Sim *S, int x, int y, int self) {
-    for (int i = 0; i < S->nw; i++)
-        if (i != self && S->w[i].alive
-            && S->w[i].x == x && S->w[i].y == y) return i;
     return -1;
 }
 
@@ -2648,26 +2632,6 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
 /* shared action helpers (used by both dir- and mem-targeted forms) */
 
 static bool g_trace = false;
-static bool g_nochain = false;              /* experimental movement variant */
-/* Displace idle bystanders: a mover whose target tile holds a worker that is
- * standing completely idle pushes them into the tile it is vacating, instead
- * of waiting.  It only applies to fully idle blockers, so it changes little
- * on the recorded solutions (the crowded ones are blocked by workers that are
- * mid-command).  Switchable via EMU_SHOVE=1. */
-static bool g_shove = false;
-/* Whether a step whose listed directions are all blocked still costs a full
- * walk -- a failed attempt rather than a free wait.  Charging it tracks the
- * recorded times of crowded solutions more closely (their workers queue far
- * more than an uncharged retry allows).  Switchable via EMU_BALKCOST=1. */
-static bool g_balkcost = false;
-/* A pure control-flow node (jump/label/endif/else) occupies its worker for a
- * single frame rather than being free: exactly one instruction is dispatched
- * per frame, and those handlers return without starting a timed action. True
- * of the game, but the per-command durations here were fitted against
- * recorded times WITHOUT it, so they already absorb that frame -- switching
- * it on double-counts and costs both levels and speed accuracy until every
- * duration is re-fitted alongside it. EMU_CFCOST=1 to experiment. */
-static bool g_cfcost = false;
 
 static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py);
 
@@ -3180,10 +3144,7 @@ static void exec_action(Sim *S, Program *P, int i) {
  * on arrival.  Modelled here: diagonal steps take sqrt(2)x longer, a walker
  * keeps its source tile until it arrives (so a follower must wait for the
  * leader to vacate -- the conga wave), and two workers aimed into each other
- * swap.  Reuses every effect helper via exec_action().
- *
- * EXPERIMENTAL (EMU_CONT=1): the movement itself reproduces, but crowd
- * endgames still diverge from recorded runs, so it is not the default. */
+ * swap.  Reuses every effect helper via exec_action(). */
 
 /* A failed item action stops the worker for the error bubble before the
  * program moves on: picking up or taking with full hands, giving with empty
@@ -3464,82 +3425,13 @@ static bool cont_glide(Sim *S, Program *P, int i) {
 }
 
 /* run one instruction for a free worker (skipping free control flow). */
-static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int *told) {
+/* Dispatch a step command: weigh the squares it names, start the walk --
+ * or advance past a step with nowhere to go.  This is the scheduler's one
+ * entry into the walking machinery for a plain step. */
+static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
     Worker *w = &S->w[i];
-    int guard = 0, budget = P->n * 2 + 16;
-    for (;;) {
-        if (++guard > budget) return;
-        if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
-        Instr *ins = &P->instr[w->pc];
-        if (w->err_pc != w->pc) { w->errx = w->erry = -1; w->err_pc = -1; }
-        switch (ins->op) {
-            case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; continue;
-            case OP_JUMP:  w->pc = ins->target; *progressed = true; continue;
-            case OP_ELSE:  w->pc = ins->target; *progressed = true; continue;
-            case OP_ENDIF: w->pc++; *progressed = true; continue;
-            case OP_ENDFOR: {
-                /* The looping-back belongs to the sweep: an endfor returns
-                 * to its foreachdir only while a sweep is actually under
-                 * way.  A body entered sideways -- jumped into without ever
-                 * running the header -- has no sweep, and its endfor simply
-                 * falls out of the loop.  (A finished sweep never revisits
-                 * the endfor; the header walks past it on exhaustion.) */
-                Instr *fe = &P->instr[ins->target];
-                if (w->fe_idx[fe->fe_slot] == 0) w->pc++;
-                else w->pc = ins->target;
-                *progressed = true; continue;
-            }
-            case OP_FOREACH: {
-                static const int FE_RANK[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
-                int *fi = &w->fe_idx[ins->fe_slot];
-                unsigned char *ord = w->fe_ord[ins->fe_slot];
-                if (*fi == 0) {
-                    for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
-                    for (int k = 1; k < ins->ndirs; k++)
-                        for (int j = k; j > 0
-                             && FE_RANK[ins->dirs[ord[j]]] < FE_RANK[ins->dirs[ord[j-1]]]; j--) {
-                            unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
-                        }
-                }
-                if (*fi < ins->ndirs) {
-                    Dir d = ins->dirs[ord[(*fi)++]];
-                    w->mem[ins->slot].k = MV_TILE;
-                    w->mem[ins->slot].x = w->x + DX[d];
-                    w->mem[ins->slot].y = w->y + DY[d];
-                    w->mem[ins->slot].ntype = -1;
-                    w->mem[ins->slot].wref = -1;
-                    w->mem[ins->slot].fedir = true;
-                    w->pc++;
-                } else { *fi = 0; w->pc = ins->target + 1; }
-                if (ins->ndirs > 0) {
-                    /* each foreach step is a real wait of the standard command
-                     * duration divided by the number of directions listed, so
-                     * sweeping all of them costs one whole command -- it is
-                     * not free control flow. */
-                    int b = MS_STEP / ins->ndirs;
-                    w->busy = b > 0 ? b : 1;
-                    *progressed = true; return;
-                }
-                *progressed = true; continue;
-            }
-            case OP_LISTEN:
-                if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
-                    { w->heard = 0; w->pc++; *progressed = true; continue; }
-                return;                       /* idle: wait for a matching tell */
-            case OP_ASSIGN:
-                if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; *progressed = true; continue; }
-                break;
-            case OP_UNSUPPORTED:
-                fprintf(stderr, "error: unsupported command: %s\n", ins->raw);
-                exit(3);
-            default: break;
-        }
-        break;
-    }
     if (!w->alive || w->done) return;
     Instr *ins = &P->instr[w->pc];
-
-    if (ins->op == OP_STEP) {
         if (S->L->rules & R_NOWALK) { S->failed = true; return; }
         if (ins->mem_target >= 0) {
             int tx, ty;
@@ -3577,928 +3469,8 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
          * which of them it took was a coin toss, so any of them will do */
         cont_walk(S, i, w->x + DX[d], w->y + DY[d], true, ins->ndirs > 1);
         *progressed = true; return;
-    }
-
-    if (ins->mem_target >= 0
-        && (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM)) {
-        bool onto = (ins->op == OP_PICKUP);
-        int tx, ty;
-        bool nop = ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
-                || (ins->op == OP_GIVETO && !w->holding);
-        if (nop || !mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            w->pend_exec = 1;
-            w->busy = nop ? MS_ERRB : MS_ITEM;
-            *progressed = true; return;
-        }
-        /* A machine is used from its front square alone -- the walk's true
-         * destination -- so one square serves the whole queue, and the order
-         * a crowd is served in becomes the order it wins that square.  This
-         * holds for taking from a printer as much as for feeding a shredder:
-         * a worker beside the machine but off its front square waits its
-         * turn to step round rather than reaching in from the corner.  Other
-         * errands act from anywhere beside the target. */
-        int fx0 = tx, fy0 = ty;
-        bool sfront = !onto && machine_front(S, &fx0, &fy0);
-        #define ARR() (onto  ? (w->x == tx && w->y == ty) \
-                     : sfront ? (w->x == fx0 && w->y == fy0) \
-                             : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
-        if (ARR()) {
-            if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || ARR()) {
-                int mx, my;
-                if (machine_target(S, w, ins, &mx, &my)) {
-                    if (S->mach_busy[my][mx] > now) return;   /* machine busy: wait */
-                    S->mach_busy[my][mx] = now + 1;
-                }
-                w->pend_exec = 1; w->busy = MS_ITEM; *progressed = true; return;
-            }
-        }
-        #undef ARR
-        int rx = tx, ry = ty;
-        bool front = !onto && machine_front(S, &rx, &ry);
-        int d = route_step(S, w, rx, ry, front ? false : !onto);
-        if (d < 0) return;                                    /* no route: wait */
-        /* Every walk aimed at a thing re-derives where it is going each tick,
-         * machines included, so all of them can be nudged. */
-        cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
-        *progressed = true; return;
-    }
-
-    /* an item action whose DIRECTION lands on a machine binds to it and
-     * queues for its front square the same way (see the dispatch above) */
-    if (ins->mem_target < 0
-        && (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)) {
-        int mx, my;
-        if (dir_machine_lock(S, w, ins, &mx, &my)) {
-            int fx0 = mx, fy0 = my;
-            machine_front(S, &fx0, &fy0);
-            if (!(w->x == fx0 && w->y == fy0)) {
-                int d = route_step(S, w, fx0, fy0, false);
-                if (d < 0) return;                            /* no route: wait */
-                cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
-                *progressed = true; return;
-            }
-        }
-    }
-
-    if (ins->op == OP_TELL && (S->L->rules & R_SPEAK_ORDER)) {
-        if (*told >= 0) return;
-        *told = i;
-    }
-    if (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO) {
-        int mx, my;
-        if (machine_target(S, w, ins, &mx, &my)) {
-            if (S->mach_busy[my][mx] > now) return;
-            S->mach_busy[my][mx] = now + 1;
-        }
-    }
-    /* A command occupies the worker for its duration and its effect lands at
-     * the END of it -- an item changes hands as the animation finishes, and a
-     * condition reads the world when the worker has finished thinking about it,
-     * not when it starts.  That is what lets one worker react to the tile its
-     * neighbour has just left: the tile comes free while the condition is still
-     * being evaluated, rather than one whole command too late. */
-    {
-        bool err = false;
-        if ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
-            err = true;
-        else if (ins->op == OP_GIVETO && !w->holding)
-            err = true;
-        else if (ins->op == OP_WRITE && !w->holding)
-            err = true;
-        else if (ins->op == OP_DROP) {
-            if (!w->holding) err = true;
-            else if (S->grid[w->y][w->x].terrain == T_FLOOR
-                     && S->grid[w->y][w->x].has_cube) err = true;
-        }
-        if (err) {
-            w->pend_exec = 1;            /* the action still no-ops at the end */
-            w->busy = MS_ERRB;
-            *progressed = true; return;
-        }
-    }
-    long cost = cmd_duration(S, w, ins);
-    w->pend_exec = 1;
-    w->busy = (int)(cost > 0 ? cost : 1);
-    *progressed = true;
 }
 
-static bool run_cont(Sim *S, Program *P, int *out_rounds) {
-    static int cap = 0;
-    if (!cap) {
-        const char *e = getenv("EMU_CAP");
-        cap = e ? atoi(e) : 400000;
-        if (cap < 1000) cap = 400000;
-    }
-    if (level_won(S)) { *out_rounds = 0; return true; }
-    for (int i = 0; i < S->nw; i++) {
-        S->w[i].busy = 0; S->w[i].wtx = S->w[i].wty = -1;
-        S->w[i].wintx = S->w[i].winty = -1;
-        S->w[i].wowned = false;
-        S->w[i].pend_exec = 0;
-        S->w[i].fx = S->w[i].x; S->w[i].fy = S->w[i].y;
-    }
-    int now = 0, stall = 0;
-    while (now < cap) {
-        bool progressed = false, in_flight = false;
-        int told = -1;
-        S->beat = now;
-        S->feeds_this_beat = 0;
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            if (!w->alive || w->done || w->exited) continue;
-            if (w->wtx >= 0) {
-                if (cont_glide(S, P, i)) progressed = true;
-                in_flight = true;
-                continue;
-            }
-            /* Tick the command timer and, if that used up the last frame of
-             * it, go straight on to the next instruction in this same frame.
-             * Idling until the following frame would add a frame to every
-             * command a worker ever runs. */
-            if (w->busy > 0) {
-                --w->busy;
-                if (w->busy > 0) { in_flight = true; continue; }
-                if (w->pend_exec) {          /* the command's effect lands now */
-                    w->pend_exec = 0;
-                    exec_action(S, P, i);
-                    progressed = true;
-                    if (S->failed) { *out_rounds = now; return false; }
-                    in_flight = true; continue;
-                }
-            }
-            cont_free(S, P, i, now, &progressed, &told);
-            if (S->failed) { *out_rounds = now; return false; }
-            if (S->w[i].busy > 0 || S->w[i].wtx >= 0) in_flight = true;
-        }
-        now++;
-        if (S->L->nsw > 0) counter_press(S);
-        if (level_won(S)) { S->win_ms = now; *out_rounds = now; return true; }
-        if (S->failed)    { *out_rounds = now; return false; }
-        if (!in_flight && !progressed) { if (++stall >= 2) break; } else stall = 0;
-    }
-    *out_rounds = now;
-    if (g_trace) {
-        fprintf(stderr, "-- CONT final (now=%d) --\n", now);
-        trace_board(S, now);
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            fprintf(stderr, "  w%d (%d,%d)f(%.2f,%.2f)->(%d,%d)%s%s%s pc=%d busy=%d [%s]\n",
-                    i, w->x, w->y, w->fx, w->fy, w->wtx, w->wty,
-                    w->holding?" hold":"", w->done?" done":"", w->alive?"":" dead",
-                    w->pc, w->busy, w->pc < P->n ? P->instr[w->pc].raw : "end");
-        }
-    }
-    return false;
-}
-
-static bool run_beat(Sim *S, Program *P, int *out_rounds) {
-    int rounds = 0;
-    static int cap = 0;
-    if (!cap) {
-        const char *e = getenv("EMU_CAP");
-        cap = e ? atoi(e) : 20000;
-        if (cap < 100) cap = 20000;
-    }
-    const int CAP = cap;
-    if (level_won(S)) { *out_rounds = 0; return true; }
-
-    while (rounds < CAP) {
-        bool any_active = false;
-        int nactors = 0, nidle = 0, nbusy = 0;
-        Intent it[MAXWORKERS];
-        bool cf_frame[MAXWORKERS] = { false };  /* spent a frame on control flow */
-        S->feeds_this_beat = 0;
-
-        /* event clock: this batch happens at the earliest pending completion.
-         * Workers still mid-command (next_ms > t) hold their tiles but do not
-         * act; they are "busy", not idle. */
-        long t = -1;
-        for (int i = 0; i < S->nw; i++)
-            if (S->w[i].alive && !S->w[i].done
-                && (t < 0 || S->w[i].next_ms < t)) t = S->w[i].next_ms;
-        if (t < 0) break;                 /* nobody left to act */
-        S->now_ms = t;
-
-        /* phase A: every due worker flows through control ops and picks its
-         * action (sensing sees the pre-move board, so mutual swaps are
-         * symmetric). A worker whose control flow finds no action idles. */
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            it[i].action = -1; it[i].tx = -1; it[i].walk_only = false;
-            if (!w->alive || w->done) continue;
-            if (w->next_ms > t) { nbusy++; any_active = true; continue; }
-            int guard = 0, budget = P->n * 2 + 16, cfsteps = 0;
-            bool idle = false;
-            for (;;) {
-                if (++guard > budget) { idle = true; break; }   /* waiting on a condition */
-                if (w->pc >= P->n) { w->done = true; break; }
-                Instr *ins = &P->instr[w->pc];
-                /* A pure control-flow node still occupies the worker for one
-                 * frame: the executor advances to exactly one instruction per
-                 * frame, and jump/label/endif simply return without starting a
-                 * timed action. A tight loop therefore drifts by a frame per
-                 * iteration against a worker looping less often. */
-                if (g_cfcost && cfsteps > 0
-                    && (ins->op == OP_NOP || ins->op == OP_LABEL || ins->op == OP_JUMP
-                        || ins->op == OP_ELSE || ins->op == OP_ENDIF)) {
-                    cf_frame[i] = true;
-                    break;
-                }
-                switch (ins->op) {
-                    case OP_NOP: case OP_LABEL: w->pc++; cfsteps++; continue;
-                    case OP_JUMP: w->pc = ins->target; cfsteps++; continue;
-                    /* OP_IF falls through as an ACTION: evaluating a condition
-                     * takes time in the game (its cost shows in every
-                     * if-in-loop level's recorded speed) */
-                    case OP_ELSE: w->pc = ins->target; cfsteps++; continue;
-                    case OP_ENDIF: w->pc++; cfsteps++; continue;
-                    case OP_ASSIGN:
-                        /* assignments take time (an action beat) unless
-                         * calibrated free -- then they run inline */
-                        if (MS_ASSIGN == 0) { exec_assign(S, w, ins); w->pc++; continue; }
-                        break;
-                    case OP_FOREACH: {
-                        /* a sweep walks its neighbours clockwise from the
-                         * north-west corner and finishes on its own square:
-                         * nw n ne e se s sw w c */
-                        static const int FE_RANK[9] = {
-                            1, 5, 3, 7, 2, 0, 4, 6, 8
-                        };  /* indexed by Dir: n,s,e,w,ne,nw,se,sw,here */
-                        int *fi = &w->fe_idx[ins->fe_slot];
-                        unsigned char *ord = w->fe_ord[ins->fe_slot];
-                        if (*fi == 0) {
-                            for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
-                            for (int k = 1; k < ins->ndirs; k++)
-                                for (int j = k; j > 0
-                                     && FE_RANK[ins->dirs[ord[j]]] < FE_RANK[ins->dirs[ord[j-1]]]; j--) {
-                                    unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
-                                }
-                        }
-                        if (*fi < ins->ndirs) {
-                            Dir d = ins->dirs[ord[(*fi)++]];
-                            w->mem[ins->slot].k = MV_TILE;
-                            w->mem[ins->slot].x = w->x + DX[d];
-                            w->mem[ins->slot].y = w->y + DY[d];
-                            w->mem[ins->slot].ntype = -1;
-                            w->mem[ins->slot].wref = -1;
-                            w->mem[ins->slot].fedir = true;
-                            w->pc++;
-                        } else { *fi = 0; w->pc = ins->target + 1; }
-                        continue;
-                    }
-                    case OP_ENDFOR:
-                        /* no sweep under way (body jumped into) -> fall out */
-                        if (w->fe_idx[P->instr[ins->target].fe_slot] == 0) w->pc++;
-                        else w->pc = ins->target;
-                        continue;
-                    case OP_LISTEN:
-                        if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
-                            { w->heard = 0; w->pc++; continue; }
-                        idle = true;
-                        break;
-                    case OP_UNSUPPORTED:
-                        fprintf(stderr, "error: unsupported command: %s\n", ins->raw);
-                        exit(3);
-                    default: break;
-                }
-                break;
-            }
-            if (!w->alive || w->done) continue;
-            any_active = true;
-            /* a control-flow frame is progress, not a stall */
-            if (cf_frame[i]) { nbusy++; continue; }
-            if (idle) { nidle++; continue; }
-
-            Instr *ins = &P->instr[w->pc];
-            if (ins->op == OP_STEP) {
-                if (S->L->rules & R_NOWALK) { S->failed = true; }
-                nactors++;
-                it[i].action = w->pc;
-                if (w->pend_x >= 0) {
-                    /* resuming a parked (queued) step: stay committed to the
-                     * same target -- but give up when the blocker has seated
-                     * for good (they will never move; the program must get
-                     * to re-check its conditions: Reverse Line stops behind
-                     * the finished line instead of climbing onto it) -- a
-                     * FINISHED blocker is shoved aside instead, in phase B */
-                    it[i].tx = w->pend_x; it[i].ty = w->pend_y;
-                } else if (ins->mem_target >= 0) {
-                    /* "step memN" walks ALL THE WAY to the remembered thing
-                     * (Terrain Leveler's pass restart walks the whole column
-                     * back to its anchor); pc holds until arrival */
-                    int tx, ty;
-                    if (mem_tile(S, w, ins->mem_target, &tx, &ty)
-                        && !(w->x == tx && w->y == ty)) {
-                        int d = route_step(S, w, tx, ty, false);
-                        if (d >= 0) {
-                            it[i].walk_only = true;
-                            it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
-                        }
-                        /* no route: fall through as a bump (pc advances) */
-                    }
-                    /* nothing remembered / already there: completes as no-op */
-                } else {
-                    /* choose among listed dirs: random pick among passable ones */
-                    int cand[8], nc = 0;
-                    for (int k = 0; k < ins->ndirs; k++) {
-                        Dir d = ins->dirs[k];
-                        if (walkable(S, w->x + DX[d], w->y + DY[d])) cand[nc++] = d;
-                    }
-                    if (nc > 0) {
-                        int d = (nc == 1) ? cand[0] : cand[rnd(S) % (unsigned)nc];
-                        it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
-                    }
-                }
-            } else if (ins->mem_target >= 0
-                       && (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM)) {
-                /* using a remembered thing walks there first (implicit travel) --
-                 * but an action that would no-op anyway skips instantly, no walk */
-                int tx, ty;
-                if (w->x != w->last_x || w->y != w->last_y) {
-                    w->last_x = w->x; w->last_y = w->y; w->blocked_beats = 0;
-                } else w->blocked_beats++;
-                /* pickup goes to STAND ON the thing (you lift what's under
-                 * you); giveto/takefrom act from an adjacent tile */
-                bool onto = (ins->op == OP_PICKUP);
-                #define ARRIVED() (onto ? (w->x == tx && w->y == ty) \
-                                        : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
-                if (((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) && w->holding)
-                    || (ins->op == OP_GIVETO && !w->holding)) {
-                    nactors++;
-                    it[i].action = w->pc;        /* no-op action beat */
-                } else if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-                    nactors++;
-                    it[i].action = w->pc;        /* nothing remembered: no-op */
-                } else if (ARRIVED()) {
-                    /* arrived -- but if the remembered thing is gone from this
-                     * tile, chase its kind to the next nearest and keep going */
-                    if (!mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || ARRIVED()) {
-                        int mx, my;
-                        if (machine_target(S, w, ins, &mx, &my)
-                            && S->mach_busy[my][mx] > t) {
-                            nidle++;             /* machine mid-cycle: queue */
-                        } else {
-                            if (machine_target(S, w, ins, &mx, &my))
-                                S->mach_busy[my][mx] = t + 1;   /* claim */
-                            nactors++;
-                            it[i].action = w->pc;    /* act (or no-op) this beat */
-                        }
-                    } else {
-                        int d = route_step(S, w, tx, ty, !onto);
-                        if (d >= 0) {
-                            nactors++;
-                            it[i].action = w->pc;
-                            it[i].walk_only = true;
-                            it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
-                        } else nidle++;
-                    }
-                } else {
-                    if (S->L->rules & R_NOWALK) S->failed = true;
-                    int d = route_step(S, w, tx, ty, !onto);
-                    if (d >= 0 && w->blocked_beats > 3) {
-                        /* jammed in a crowd: shuffle to any free floor tile */
-                        int cand[8], nc = 0;
-                        for (int k = 0; k < 8; k++) {
-                            int nx = w->x + DX[k], ny = w->y + DY[k];
-                            if (nx>=0&&ny>=0&&nx<S->L->w&&ny<S->L->h
-                                && S->grid[ny][nx].terrain == T_FLOOR
-                                && blocking_worker_at(S, nx, ny, i) < 0) cand[nc++] = k;
-                        }
-                        if (nc > 0) d = cand[rnd(S) % (unsigned)nc];
-                    }
-                    if (d >= 0) {
-                        nactors++;
-                        it[i].action = w->pc;
-                        it[i].walk_only = true;
-                        it[i].tx = w->x + DX[d]; it[i].ty = w->y + DY[d];
-                    } else nidle++;              /* no route: wait */
-                }
-                #undef ARRIVED
-            } else {
-                int mx, my;
-                if ((ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)
-                    && machine_target(S, w, ins, &mx, &my)
-                    && S->mach_busy[my][mx] > t) {
-                    nidle++;                     /* machine mid-cycle: queue */
-                } else {
-                    if ((ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)
-                        && machine_target(S, w, ins, &mx, &my))
-                        S->mach_busy[my][mx] = t + 1;           /* claim */
-                    nactors++;
-                    it[i].action = w->pc;
-                }
-            }
-        }
-        if (S->failed) { *out_rounds = rounds; return false; }
-        if (!any_active) break;
-        /* all waiting and nothing in flight: frozen for good */
-        if (nactors == 0 && nidle > 0 && nbusy == 0) break;
-
-        /* speak-order rule: only one worker may tell per beat -- the one who
-         * spoke least recently (leftmost on a tie); the rest retry next beat */
-        if (S->L->rules & R_SPEAK_ORDER) {
-            int winner = -1;
-            for (int i = 0; i < S->nw; i++) {
-                if (it[i].action < 0 || P->instr[it[i].action].op != OP_TELL) continue;
-                if (winner < 0
-                    || S->w[i].last_tell < S->w[winner].last_tell
-                    || (S->w[i].last_tell == S->w[winner].last_tell && S->w[i].x < S->w[winner].x))
-                    winner = i;
-            }
-            for (int i = 0; i < S->nw; i++)
-                if (i != winner && it[i].action >= 0 && P->instr[it[i].action].op == OP_TELL)
-                    it[i].action = -1;           /* blocked; pc unchanged */
-        }
-
-        /* phase B: resolve movement simultaneously (swaps, chains, bumps) */
-        #define IS_MOVER(i) (it[i].tx >= 0 && it[i].action >= 0 \
-            && (it[i].walk_only || P->instr[it[i].action].op == OP_STEP))
-        int prex[MAXWORKERS], prey[MAXWORKERS];
-        for (int i = 0; i < S->nw; i++) { prex[i] = S->w[i].x; prey[i] = S->w[i].y; }
-        bool resolved[MAXWORKERS] = { false };
-        if (g_nochain) {
-            /* variant: a move only succeeds into a tile that was free at beat
-             * start; the sole exception is the mutual swap */
-            int px[MAXWORKERS], py[MAXWORKERS];
-            for (int i = 0; i < S->nw; i++) { px[i] = S->w[i].x; py[i] = S->w[i].y; }
-            for (int i = 0; i < S->nw; i++) {
-                Worker *w = &S->w[i];
-                if (!w->alive || w->done || resolved[i]) continue;
-                if (!IS_MOVER(i)) continue;
-                int occ = -1;
-                for (int j = 0; j < S->nw; j++)
-                    if (j != i && S->w[j].alive && px[j] == it[i].tx && py[j] == it[i].ty) { occ = j; break; }
-                if (occ < 0) {
-                    if (blocking_worker_at(S, it[i].tx, it[i].ty, i) < 0) {
-                        w->x = it[i].tx; w->y = it[i].ty; resolved[i] = true;
-                    }
-                } else if (!resolved[occ] && IS_MOVER(occ)
-                           && it[occ].tx == px[i] && it[occ].ty == py[i]) {
-                    Worker *o = &S->w[occ];
-                    o->x = it[occ].tx; o->y = it[occ].ty;
-                    w->x = it[i].tx; w->y = it[i].ty;
-                    resolved[i] = resolved[occ] = true;
-                }
-            }
-        } else {
-        for (;;) {
-            bool progress = false;
-            for (int i = 0; i < S->nw; i++) {
-                Worker *w = &S->w[i];
-                if (!w->alive || w->done || resolved[i]) continue;
-                if (!IS_MOVER(i)) continue;
-                int occ = blocking_worker_at(S, it[i].tx, it[i].ty, i);
-                if (occ < 0) {
-                    w->x = it[i].tx; w->y = it[i].ty;
-                    w->pend_x = w->pend_y = -1;
-                    resolved[i] = true; progress = true;
-                } else if (!resolved[occ] && IS_MOVER(occ)
-                           && it[occ].tx == w->x && it[occ].ty == w->y) {
-                    /* mutual swap: both trying to walk into each other */
-                    Worker *o = &S->w[occ];
-                    int ox = o->x, oy = o->y;
-                    o->x = it[occ].tx; o->y = it[occ].ty;
-                    w->x = ox; w->y = oy;
-                    w->pend_x = w->pend_y = -1;
-                    o->pend_x = o->pend_y = -1;
-                    resolved[i] = resolved[occ] = true; progress = true;
-                } else if (g_shove && it[occ].action < 0
-                           && S->w[occ].pend_x < 0
-                           && (S->w[occ].done || S->w[occ].next_ms <= t)) {
-                    /* THE SHOVE: a mover does not wait on a bystander. If the
-                     * blocker is standing completely idle -- not walking and
-                     * not mid-command -- it is displaced into the tile the
-                     * mover is leaving, and the mover takes its place. */
-                    Worker *o = &S->w[occ];
-                    int ox = o->x, oy = o->y;
-                    o->x = w->x; o->y = w->y;
-                    w->x = ox; w->y = oy;
-                    o->pend_x = o->pend_y = -1;
-                    w->pend_x = w->pend_y = -1;
-                    resolved[i] = true; progress = true;
-                } else if (S->w[occ].done && S->w[occ].next_ms <= t
-                           && S->w[occ].pend_x < 0) {
-                    /* THE SHOVE: a mover does not wait on a worker that has
-                     * finished its program. The finished worker is set walking
-                     * into the tile the mover is leaving -- but the mover does
-                     * NOT advance yet; the two intents meet and resolve as a
-                     * swap on the following beat, which costs the mover the
-                     * step it would otherwise have taken for free. Workers
-                     * still executing are never shoved, which is what lets a
-                     * queue form behind them. */
-                    S->w[occ].pend_x = w->x;
-                    S->w[occ].pend_y = w->y;
-                    progress = true;
-                } else {
-                    /* blocked -- but if the blocker left a standing intent to
-                     * step into OUR tile, the trade happens now */
-                    Worker *o = &S->w[occ];
-                    if (o->pend_x == w->x && o->pend_y == w->y) {
-                        int ox = o->x, oy = o->y;
-                        o->x = w->x; o->y = w->y;
-                        w->x = ox; w->y = oy;
-                        o->pend_x = o->pend_y = -1;
-                        w->pend_x = w->pend_y = -1;
-                        resolved[i] = true; progress = true;
-                        /* the trade completes o's parked step command */
-                        if (it[occ].action < 0 && o->pc < P->n
-                            && P->instr[o->pc].op == OP_STEP) {
-                            if (o->fresh > 0) o->fresh--;
-                            o->pc++;
-                            fall_check(S, o);
-                        }
-                    }
-                }
-            }
-            if (!progress) break;
-        }
-        /* blocked steppers leave their intent standing for a later trade */
-        for (int i = 0; i < S->nw; i++)
-            if (S->w[i].alive && !S->w[i].done && !resolved[i] && IS_MOVER(i)
-                && !it[i].walk_only) {
-                S->w[i].pend_x = it[i].tx;
-                S->w[i].pend_y = it[i].ty;
-            }
-        /* rotation cycles: A->B's tile, B->C's, C->A's -- everyone rotates.
-         * A ring of walkers can be jammed with their retries landing in
-         * DIFFERENT beats, so follow standing intents as well as this beat's
-         * movers -- otherwise the ring never finds itself all due at once and
-         * deadlocks (The Sorting Floor's five-worker carousel). */
-        #define HAS_EFF(k) (IS_MOVER(k) || S->w[k].pend_x >= 0)
-        #define EFF_TX(k)  (IS_MOVER(k) ? it[k].tx : S->w[k].pend_x)
-        #define EFF_TY(k)  (IS_MOVER(k) ? it[k].ty : S->w[k].pend_y)
-        for (int i = 0; i < S->nw; i++) {
-            if (resolved[i] || !S->w[i].alive || S->w[i].done || !HAS_EFF(i)) continue;
-            int chain[MAXWORKERS], cn = 0, cur = i;
-            bool cyc = false;
-            while (cn < S->nw) {
-                chain[cn++] = cur;
-                int occ = blocking_worker_at(S, EFF_TX(cur), EFF_TY(cur), cur);
-                if (occ < 0 || resolved[occ] || S->w[occ].done || !HAS_EFF(occ)) break;
-                if (occ == i) { cyc = true; break; }
-                bool seen = false;
-                for (int k = 0; k < cn; k++) if (chain[k] == occ) seen = true;
-                if (seen) break;
-                cur = occ;
-            }
-            if (cyc && cn > 1) {
-                for (int k = 0; k < cn; k++) {
-                    int m = chain[k];
-                    Worker *o = &S->w[m];
-                    bool mover = IS_MOVER(m);
-                    o->x = EFF_TX(m); o->y = EFF_TY(m);
-                    o->pend_x = o->pend_y = -1;
-                    resolved[m] = true;
-                    /* a ring member that was not due this beat still completes
-                     * the step it was parked on (a due one is advanced by the
-                     * pc pass below, which sees that it moved) */
-                    if (!mover && o->pc < P->n && P->instr[o->pc].op == OP_STEP) {
-                        if (o->fresh > 0) o->fresh--;
-                        o->pc++;
-                        fall_check(S, o);
-                    }
-                }
-            }
-        }
-        #undef HAS_EFF
-        #undef EFF_TX
-        #undef EFF_TY
-        }
-        /* an explicit step blocked by another worker WAITS (uncharged, pc
-         * held) and re-attempts at the next world event: walkers queue, and
-         * the retry lands in the same batch as the blocker's next move so
-         * chains and swaps resolve. Bumping through instead would let
-         * accumulator sweeps double-count their tile (Dangerous
-         * Spreadsheeting). */
-        bool balked[MAXWORKERS] = { false };
-        for (int i = 0; i < S->nw; i++)
-            if (IS_MOVER(i) && !it[i].walk_only
-                && P->instr[it[i].action].op == OP_STEP
-                && S->w[i].x == prex[i] && S->w[i].y == prey[i]) {
-                it[i].action = -1;               /* hold pc, wait for an event */
-                balked[i] = true;                /* a failed step still costs */
-            }
-        for (int i = 0; i < S->nw; i++)
-            if (IS_MOVER(i)) {
-                if (S->w[i].x != prex[i] || S->w[i].y != prey[i]) S->st_steps++;
-                else S->st_bumps++;
-            }
-        #undef IS_MOVER
-        for (int i = 0; i < S->nw; i++)
-            if (S->w[i].alive && !S->w[i].done && it[i].action >= 0 && !it[i].walk_only
-                && P->instr[it[i].action].op == OP_STEP) {
-                /* a step blocked by another worker RETRIES (walkers queue --
-                 * bumping through would let accumulator sweeps double-count
-                 * their own tile: Dangerous Spreadsheeting row sums).
-                 * Walls / no passable direction bump through as before. */
-                bool attempted = it[i].tx >= 0;
-                bool moved = (S->w[i].x != prex[i] || S->w[i].y != prey[i]);
-                if (attempted && !moved) continue;       /* hold pc, retry */
-                if (S->w[i].fresh > 0) S->w[i].fresh--;
-                S->w[i].pc++;
-                fall_check(S, &S->w[i]);
-            }
-        /* a mem-targeted step completes when the walk reaches the thing */
-        for (int i = 0; i < S->nw; i++)
-            if (S->w[i].alive && !S->w[i].done && it[i].action >= 0 && it[i].walk_only
-                && P->instr[it[i].action].op == OP_STEP) {
-                Instr *ins = &P->instr[it[i].action];
-                int tx, ty;
-                if (ins->mem_target >= 0
-                    && mem_tile(S, &S->w[i], ins->mem_target, &tx, &ty)
-                    && S->w[i].x == tx && S->w[i].y == ty) {
-                    if (S->w[i].fresh > 0) S->w[i].fresh--;
-                    S->w[i].pc++;
-                    fall_check(S, &S->w[i]);
-                }
-            }
-
-        /* phase C: non-movement actions on the moved board. Two sub-passes:
-         * hand-away actions (drop/giveto/pickup/end/...) resolve before
-         * takefrom, so a cube given away this beat cannot also be taken. */
-        for (int pass = 0; pass < 2; pass++)
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            if (!w->alive || w->done || it[i].action < 0 || it[i].walk_only) continue;
-            Instr *ins = &P->instr[it[i].action];
-            if (ins->op == OP_STEP) continue;
-            if ((ins->op == OP_TAKEFROM) != (pass == 1)) continue;
-            if (w->fresh > 0) w->fresh--;   /* one command boundary passed */
-            switch (ins->op) {
-                case OP_IF: {
-                    if (ins->nconds == 0) {
-                        fprintf(stderr, "error: unsupported condition: %s\n", ins->raw);
-                        exit(3);
-                    }
-                    /* false: jump into the else body (past the OP_ELSE), or
-                     * to the endif when there is no else */
-                    if (if_true(S, ins, w)) w->pc++;
-                    else w->pc = ins->target +
-                             (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
-                    break;
-                }
-                case OP_ASSIGN: exec_assign(S, w, ins); break;
-                case OP_PICKUP: {
-                    if (!w->holding) {
-                        if (ins->mem_target >= 0) {
-                            int tx, ty;
-                            if (mem_tile(S, w, ins->mem_target, &tx, &ty))
-                                pickup_at(S, w, i, tx, ty);
-                        } else
-                        for (int k = 0; k < ins->ndirs; k++) {
-                            Dir d = ins->dirs[k];
-                            int nx = w->x + DX[d], ny = w->y + DY[d];
-                            if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
-                            if (pickup_at(S, w, i, nx, ny)) break;
-                        }
-                    }
-                    break;
-                }
-                case OP_DROP: {
-                    if (!w->holding) break;
-                    Tile *t = &S->grid[w->y][w->x];
-                    /* dropping while standing on a cube keeps the held one
-                     * (Checkerboard's diagonal wander must never shed cubes
-                     * onto the other color) */
-                    if (!t->has_cube && t->terrain == T_FLOOR) {
-                        t->has_cube = true; t->cube = w->held; t->owner = w->held_owner;
-                        S->cube_id[w->y][w->x] = w->held_id;
-                        w->holding = false;
-                        S->drops++;
-                        if (g_trace)
-                            fprintf(stderr, "DROP w%d @(%d,%d) parity %d\n",
-                                    i, w->x, w->y, (w->x + w->y) & 1);
-                    }
-                    break;
-                }
-                case OP_GIVETO: {
-                    if (!w->holding) break;
-                    int cx[9], cy[9], nc = 0;
-                    if (ins->mem_target >= 0) {
-                        int nx, ny;
-                        if (!mem_tile(S, w, ins->mem_target, &nx, &ny)) break;
-                        if (abs(w->x-nx) > 1 || abs(w->y-ny) > 1) break;
-                        cx[nc] = nx; cy[nc] = ny; nc++;
-                    } else
-                        for (int k = 0; k < ins->ndirs; k++) {
-                            cx[nc] = w->x + DX[ins->dirs[k]];
-                            cy[nc] = w->y + DY[ins->dirs[k]]; nc++;
-                        }
-                    for (int k = 0; k < nc && w->holding; k++) {
-                        int nx = cx[k], ny = cy[k];
-                        if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
-                        if (S->grid[ny][nx].terrain == T_SHREDDER) {
-                            feed_shredder(S, w, i, nx, ny);
-                        } else if (ins->mem_target < 0 && divert_shredder(S, w, i, nx, ny)) {
-                            /* handled: a shredder overlapping the probed tile
-                             * took the cube (machines are wider than their
-                             * home tile; giveto prefers shredders) */
-                        } else {
-                            int j = worker_at(S, nx, ny, i);
-                            if (j >= 0 && !S->w[j].holding) {
-                                S->w[j].holding = true; S->w[j].held = w->held;
-                                S->w[j].held_src_x = w->held_src_x; S->w[j].held_src_y = w->held_src_y;
-                                S->w[j].held_owner = w->held_owner;
-                                S->w[j].held_id = w->held_id;
-                                S->w[j].fresh = 2;
-                                w->holding = false;
-                            }
-                            /* giving to empty floor is a NO-OP (Little
-                             * Exterminator 2 fires giveto at floor tiles
-                             * between shredder visits and must keep the
-                             * cube) */
-                        }
-                    }
-                    break;
-                }
-                case OP_TAKEFROM: {
-                    if (w->holding) break;
-                    if (ins->mem_target >= 0) {
-                        int tx, ty;
-                        if (!mem_tile(S, w, ins->mem_target, &tx, &ty)) break;
-                        if (abs(w->x-tx) > 1 || abs(w->y-ty) > 1) break;
-                        if (S->grid[ty][tx].terrain == T_PRINTER) {
-                            pickup_at(S, w, i, tx, ty);
-                        } else {
-                            int j = worker_at(S, tx, ty, i);
-                            if (j >= 0 && S->w[j].holding && S->w[j].fresh == 0) {
-                                w->holding = true; w->held = S->w[j].held;
-                                w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
-                                w->held_owner = S->w[j].held_owner;
-                                w->held_id = S->w[j].held_id;
-                                w->fresh = 2;
-                                S->w[j].holding = false;
-                            }
-                        }
-                        break;
-                    }
-                    for (int k = 0; k < ins->ndirs; k++) {
-                        Dir d = ins->dirs[k];
-                        int nx = w->x + DX[d], ny = w->y + DY[d];
-                        if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
-                        if (S->grid[ny][nx].terrain == T_PRINTER) {
-                            pickup_at(S, w, i, nx, ny);
-                            break;
-                        }
-                        int j = worker_at(S, nx, ny, i);
-                        if (j >= 0 && S->w[j].holding && S->w[j].fresh == 0) {
-                            w->holding = true; w->held = S->w[j].held;
-                            w->held_src_x = S->w[j].held_src_x; w->held_src_y = S->w[j].held_src_y;
-                            w->held_owner = S->w[j].held_owner;
-                            w->held_id = S->w[j].held_id;
-                            w->fresh = 2;
-                            S->w[j].holding = false;
-                            break;
-                        }
-                    }
-                    break;
-                }
-                case OP_WRITE: {
-                    int v;
-                    if (w->holding && operand_value(S, w, &ins->op1, &v)) {
-                        /* cube faces are two digits: written values wrap
-                         * into -99..99 (100 Cubes on the Floor's last
-                         * write is 100 and must read 0) */
-                        w->held = v % 100;
-                    }
-                    break;
-                }
-                case OP_TELL: {
-                    w->last_tell = S->beat;
-                    if (S->ntellev < MAXTELLEV) {
-                        TellEv *e = &S->tellev[S->ntellev++];
-                        e->worker = i; e->x = w->x;
-                        snprintf(e->word, sizeof e->word, "%s", ins->word);
-                    }
-                    /* the word reaches whoever is addressed, whatever they are doing */
-                    for (int j = 0; j < S->nw; j++) {
-                        if (j == i) continue;
-                        Worker *o = &S->w[j];
-                        if (!o->alive || o->done) continue;
-                        bool covered = false;
-                        if (ins->tt_kind == 1) covered = true;
-                        else if (ins->tt_kind == 2)
-                            covered = (o->x == w->x + DX[ins->tt_dir] && o->y == w->y + DY[ins->tt_dir]);
-                        else if (ins->tt_kind == 3) {
-                            int tx, ty;
-                            covered = mem_tile(S, w, ins->tt_mem, &tx, &ty) && o->x == tx && o->y == ty;
-                        }
-                        if (covered) {
-                            o->heard = MS_EARSHOT;
-                            o->greeted = true;
-                            snprintf(o->heard_word, sizeof o->heard_word, "%s", ins->word);
-                        }
-                    }
-                    break;
-                }
-                case OP_END:
-                    w->done = true;
-                    break;
-                default: break;
-            }
-            if (ins->op != OP_STEP) S->st_items++;
-            if (ins->op != OP_IF && (!w->done || ins->op == OP_END)) w->pc++;
-        }
-        S->st_waits += nidle;
-
-        /* advance the actors' clocks; idlers re-check at the next completion */
-        long batch_end = t, next_event = -1;
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            if (!w->alive || w->done) continue;
-            if (it[i].action >= 0) {
-                long d = it[i].walk_only ? MS_STEP
-                                         : cmd_duration(S, w, &P->instr[it[i].action]);
-                w->next_ms = t + (d > 0 ? d : 1);
-                if (w->next_ms > batch_end) batch_end = w->next_ms;
-                if (!it[i].walk_only && P->instr[it[i].action].op != OP_STEP)
-                    w->pend_x = w->pend_y = -1;   /* moved on to other work */
-            }
-            if (w->next_ms > t && (next_event < 0 || w->next_ms < next_event))
-                next_event = w->next_ms;
-        }
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            if (!w->alive || w->done) continue;
-            if (balked[i] && g_balkcost) {
-                /* a step whose candidates were all blocked still spends the
-                 * whole walk duration -- it is a failed attempt, not a free
-                 * wait, so a queued worker only re-tries once per walk */
-                w->next_ms = t + (MS_STEP > 0 ? MS_STEP : 1);
-            }
-            else if (cf_frame[i])            /* one frame of control flow */
-                w->next_ms = t + 1;
-            else if (it[i].action < 0 && w->next_ms <= t)  /* idled this batch */
-                w->next_ms = (next_event > t) ? next_event : t + 1;
-        }
-
-        S->beat++;
-        rounds++;
-        if (g_trace && (rounds <= 60 || rounds % 500 == 0)) {
-            trace_board(S, rounds);
-            for (int i = 0; i < S->nw; i++) {
-                Worker *w = &S->w[i];
-                fprintf(stderr, "  w%d (%d,%d)%s%s%s pc=%d t=%ld act=[%s]\n", i, w->x, w->y,
-                        w->holding?" hold":"", w->done?" done":"", w->alive?"":" dead",
-                        w->pc, w->next_ms, it[i].action >= 0 ? P->instr[it[i].action].raw : "-");
-            }
-        }
-        if (S->L->nsw > 0) counter_press(S);
-        if (level_won(S)) { S->win_ms = batch_end; *out_rounds = rounds; return true; }
-        if (S->failed)    { *out_rounds = rounds; return false; }
-    }
-    *out_rounds = rounds;
-    if (g_trace) {
-        fprintf(stderr, "-- final state (rounds=%d) --\n", rounds);
-        for (int y = 0; y < S->L->h; y++) {
-            bool any = false;
-            for (int x = 0; x < S->L->w; x++) if (S->grid[y][x].has_cube) any = true;
-            if (!any) continue;
-            fprintf(stderr, "  row %2d:", y);
-            for (int x = 0; x < S->L->w; x++)
-                if (S->grid[y][x].has_cube) fprintf(stderr, " %3d", S->grid[y][x].cube);
-                else fprintf(stderr, "   .");
-            fprintf(stderr, "\n");
-        }
-        if (S->nshrev) {
-            fprintf(stderr, "  shred order (src_x):");
-            for (int e = 0; e < S->nshrev; e++)
-                fprintf(stderr, " %d", S->shrev[e].src_x);
-            fprintf(stderr, "\n");
-        }
-        if (S->L->win == G_NEIGHBOR_COUNTS) {
-            int wrong = 0;
-            for (int y = 0; y < S->L->h; y++)
-                for (int x = 0; x < S->L->w; x++) {
-                    if (!S->grid[y][x].has_cube) continue;
-                    int nb = 0;
-                    for (int d = 0; d < 8; d++) {
-                        int nx = x + DX[d], ny = y + DY[d];
-                        if (nx>=0&&ny>=0&&nx<S->L->w&&ny<S->L->h&&S->grid[ny][nx].has_cube) nb++;
-                    }
-                    if (S->grid[y][x].cube != nb) {
-                        fprintf(stderr, "  wrong cube (%d,%d): shows %d, true %d\n",
-                                x, y, S->grid[y][x].cube, nb);
-                        wrong++;
-                    }
-                }
-            fprintf(stderr, "  neighbor-count mismatches: %d\n", wrong);
-        }
-        trace_board(S, rounds);
-        for (int i = 0; i < S->nw; i++) {
-            Worker *w = &S->w[i];
-            fprintf(stderr, "  w%d (%d,%d)%s%s%s pc=%d pend=(%d,%d) t=%ld [%s]\n",
-                    i, w->x, w->y,
-                    w->holding?" hold":"", w->done?" done":"", w->alive?"":" dead",
-                    w->pc, w->pend_x, w->pend_y, w->next_ms,
-                    w->pc < P->n ? P->instr[w->pc].raw : "end");
-        }
-    }
-    g_goal_dbg = g_trace;
-    bool won = level_won(S);
-    g_goal_dbg = false;
-    return won;
-}
 
 
 /* ---- the event-queue scheduler -------------------------------------------
@@ -4634,14 +3606,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 { w->heard = 0; w->pc++; }
             *progressed = true; return;        /* waiting costs the frame */
         case OP_STEP: {
-            int osave = w->pc;
-            cont_free(S, P, i, now, progressed, told);
+            step_dispatch(S, P, i, progressed);
             /* the step command covers its first stretch of ground on the
              * frame it is issued -- the body is already under way */
             if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
             if (w->wtx >= 0) w->wsettle = true;
             if (w->wtx >= 0 || w->busy > 0) w->fready = false;
-            (void)osave;
             *progressed = true; return;
         }
         default: break;
@@ -4969,7 +3939,7 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
     for (int i = 0; i < S->nw; i++) {
         Worker *w = &S->w[i];
         w->busy = 0; w->wtx = w->wty = -1;
-        w->wintx = w->winty = -1; w->wowned = false; w->pend_exec = 0;
+        w->wintx = w->winty = -1; w->wowned = false;
         w->fx = w->x; w->fy = w->y;
         w->evn = w->evcur = 0; w->animms = 0;
         w->fsusp = false; w->fready = true;
@@ -5078,35 +4048,21 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
     return false;
 }
 
-/* Default: the event-queue scheduler -- the most faithful of the three and
- * the current leader, passing every level either older scheduler passes.
- * EMU_CONT=0 selects the original event-driven beat model and EMU_CONT=1 the
- * continuous glide scheduler, both kept for comparison. */
 static bool run(Sim *S, Program *P, int *out_rounds) {
-    static int mode = -1;
-    if (mode < 0) { const char *e = getenv("EMU_CONT"); mode = e ? atoi(e) : 2; }
     { const char *c = getenv("EMU_CHAIN"); if (c) g_chain = atoi(c); }
     { const char *p = getenv("EMU_FQ");
       if (p) { int a, b, c, d;
                if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
                    FQ_ITEM_PRE = a; FQ_ITEM_TAIL = b; FQ_IF_WAIT = c;
                    FQ_FOREACH_BASE = d; } } }
-    if (mode >= 2) {
-        bool won = run_frame(S, P, out_rounds);
-        g_snap_n = -1;                 /* frame snapshots are its alone */
-        return won;
-    }
-    return mode ? run_cont(S, P, out_rounds) : run_beat(S, P, out_rounds);
+    bool won = run_frame(S, P, out_rounds);
+    g_snap_n = -1;                     /* frame snapshots are its alone */
+    return won;
 }
 
 int main(int argc, char **argv) {
     if (argc >= 2 && !strcmp(argv[1], "--trace")) { g_trace = true; argv++; argc--; }
     if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
-    if (getenv("EMU_NOCHAIN")) g_nochain = true;
-    { const char *ev;
-      if ((ev = getenv("EMU_SHOVE")))    g_shove    = atoi(ev) != 0;
-      if ((ev = getenv("EMU_BALKCOST"))) g_balkcost = atoi(ev) != 0;
-      if ((ev = getenv("EMU_CFCOST")))   g_cfcost   = atoi(ev) != 0; }
     if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
     { const char *e;   /* overrides in ms, rounded to 60fps frames */
       #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
