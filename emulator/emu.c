@@ -3518,6 +3518,34 @@ static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
 #define MS_TICK 16                    /* milliseconds in a tick */
 
+/* The standard look: half the thought before the eyes land on the square,
+ * the sample, then the other half while the thought completes.  Every
+ * command that turns to a neighbouring square pays exactly this shape --
+ * a condition, a set from a direction, a reach that finds empty hands. */
+static void fq_push_look(Worker *w) {
+    fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
+    fq_push(w, FQ_EFFECT, 0);
+    fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
+}
+
+/* A whole look with nothing there to act on, then the long red bubble of
+ * error; the program moves on once the bubble fades. */
+static void fq_push_look_error(Worker *w) {
+    fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD));
+    fq_push(w, FQ_WAIT, (float)MS_ERRB);
+    fq_push(w, FQ_EFFECT, 0);
+}
+
+/* A hand-off between workers is a throw and a catch: the cube is in the
+ * air for the throw, changes owner mid-gesture, and the catch is held out
+ * to the end. */
+static void fq_push_throw(Worker *w) {
+    fq_push(w, FQ_WAIT, 15);
+    fq_push(w, FQ_EFFECT, 0);
+    fq_push(w, FQ_ANIM, 21);
+    fq_push(w, FQ_WAITANIM, 0);
+}
+
 /* run the queue; returns false while something in it is still holding */
 static bool fq_pump(Sim *S, Program *P, int i) {
     Worker *w = &S->w[i];
@@ -3763,9 +3791,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
              * point but the worker stays occupied for the whole standard
              * command -- a branch decided on a world that may change again
              * before the branch is acted on */
-            fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
-            fq_push(w, FQ_EFFECT, 0);
-            fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
+            fq_push_look(w);
             break;
         case OP_ASSIGN:
             if (ins->akind == 0) {
@@ -3799,9 +3825,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
              * enough to be a beat, which is what the scripted speed runs
              * use a row of them for */
             if (ins->akind == 1 && ins->op1.kind == 1) {
-                fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
-                fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
+                fq_push_look(w);
                 break;
             }
             exec_assign(S, w, ins);
@@ -3876,27 +3900,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                         if (S->w[j].holding) laden = true;
                     }
                 }
-                if (laden) {
-                    fq_push(w, FQ_WAIT, 15);
-                    fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_ANIM, 21);
-                    fq_push(w, FQ_WAITANIM, 0);
-                } else if (anyone) {
-                    fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
-                    fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
-                } else {
-                    fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD));
-                    fq_push(w, FQ_WAIT, (float)MS_ERRB);
-                    fq_push(w, FQ_EFFECT, 0);
-                }
+                if (laden) fq_push_throw(w);
+                else if (anyone) fq_push_look(w);
+                else fq_push_look_error(w);
             } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
-                /* a hand-off is a throw and a catch: the cube is in the air
-                 * for the throw, changes owner, and the catch is held out */
-                fq_push(w, FQ_WAIT, 15);
-                fq_push(w, FQ_EFFECT, 0);
-                fq_push(w, FQ_ANIM, 21);
-                fq_push(w, FQ_WAITANIM, 0);
+                fq_push_throw(w);
             } else {
                 /* the hand does its work in the very tick the action starts
                  * -- the cube changes hands (or hits the floor) before the
