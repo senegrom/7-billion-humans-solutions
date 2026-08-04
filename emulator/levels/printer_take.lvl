@@ -1,10 +1,13 @@
-# takefrom-printer regression (synthetic, v2 format). The worker prints until
-# holding a value >= 50, feeding rejects to the shredder. Exercises: takefrom on
-# a printer (fresh random cube), giveto shredder, randomized trials, and the
+# takefrom-printer regression (synthetic, v2 format). The worker draws at the
+# printer's front square, walks rejects over to the shredder's front square and
+# feeds them there -- machines are used from their front square alone, so the
+# reject run is a two-step shuttle, the same shape the shredder-and-printer
+# levels use. Exercises: takefrom on a printer (fresh random cube), the errand
+# walk to a machine front, giveto shredder, randomized trials, and the
 # all_holding_min win check.
 name Printer Take
-dim 3 3
-ent printer 1 2
-ent shredder 0 1
-ent worker 1 1
+dim 4 3
+ent shredder 1 2
+ent printer 2 2
+ent worker 2 1
 goal all_holding_min 50

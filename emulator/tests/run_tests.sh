@@ -44,7 +44,7 @@ expect_win  levels/year14_shredding.lvl tests/year14.txt   4
 expect_win  levels/decision_demo.lvl    tests/decision.txt 5
 expect_win  levels/else_colon.lvl       tests/else_colon.txt 5
 expect_win  levels/swap_sort.lvl        tests/swap_sort.txt  6
-expect_win  levels/printer_take.lvl     tests/printer_take.txt 4
+expect_win  levels/printer_take.lvl     tests/printer_take.txt 6
 
 # Negative control: drop the delivery step -> cube never reaches the pad.
 printf 'step s\npickup c\nstep s\n' > tests/_broken.txt

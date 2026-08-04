@@ -134,6 +134,12 @@ typedef struct {
                           the program follows a frame later, not right away */
     int  pend_exec;    /* command timed out; its effect has not landed yet */
     double fsx, fsy;   /* where the body was when that tile was taken */
+    /* an item action aimed through a DIRECTION at a machine reads that
+       direction once, where the command was taken up, and the errand then
+       belongs to THAT machine however far the walk drifts.  The claim is
+       remembered here until the program moves to another command. */
+    int  errx, erry;   /* machine an item errand is bound to (-1 = none) */
+    int  err_pc;       /* command the binding belongs to */
 } Worker;
 
 typedef enum {
@@ -1217,6 +1223,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = -1;
         w->last_tell = -1;
+        w->errx = w->erry = -1; w->err_pc = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
             /* the safe hole lies straight through the worker's adjacent cube */
@@ -2709,10 +2716,43 @@ static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py) {
     return true;
 }
 
+/* An item action aimed through a direction at a machine binds to that
+ * machine the moment the command is taken up: the direction is read once,
+ * from the square the worker stood on then, and afterwards the errand
+ * follows the machine itself -- the worker queues for its front square and
+ * is served there, even though from the front the original direction may
+ * point at empty floor.  The binding lasts as long as the command does. */
+static bool dir_machine_lock(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
+    if (ins->mem_target >= 0) return false;
+    if (ins->op == OP_TAKEFROM ? w->holding : !w->holding) return false;
+    if (w->err_pc == w->pc && w->errx >= 0) {
+        *ox = w->errx; *oy = w->erry;
+        return true;
+    }
+    Terrain want = ins->op == OP_TAKEFROM ? T_PRINTER : T_SHREDDER;
+    for (int k = 0; k < ins->ndirs; k++) {
+        int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+        if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+        if (S->grid[ny][nx].terrain == want) {
+            w->errx = nx; w->erry = ny; w->err_pc = w->pc;
+            *ox = nx; *oy = ny;
+            return true;
+        }
+    }
+    return false;
+}
+
 /* which machine (printer for takefrom, shredder for giveto) this command is
  * about to use from where the worker stands -- the queueing gate needs to
  * know before the action fires */
 static bool machine_target(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
+    /* a bound errand already knows its machine, wherever the walk ended */
+    if (ins->mem_target < 0 && w->err_pc == w->pc && w->errx >= 0
+        && (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)
+        && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1) {
+        *ox = w->errx; *oy = w->erry;
+        return ins->op == OP_TAKEFROM ? !w->holding : w->holding;
+    }
     if (ins->op == OP_TAKEFROM) {
         if (w->holding) return false;
         if (ins->mem_target >= 0) {
@@ -2883,6 +2923,11 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
             /* NOTE: acting with full hands shows the game's error bubble
              * (display ~1.5s) but recorded speeds show the program moves on
              * at the normal action cost -- so no special charge here */
+            if (ins->op == OP_TAKEFROM && ins->mem_target < 0
+                && w->err_pc == w->pc && w->errx >= 0
+                && S->grid[w->erry][w->errx].terrain == T_PRINTER
+                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1)
+                return MS_PRINTER;
             if (ins->mem_target >= 0) {
                 int tx, ty;
                 if (mem_tile(S, w, ins->mem_target, &tx, &ty)
@@ -2898,6 +2943,11 @@ static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
         case OP_GIVETO: {
             /* giving while empty-handed is a quick no-op, not an error
              * (Cubical Communication's choreography fires bare givetos) */
+            if (ins->mem_target < 0
+                && w->err_pc == w->pc && w->errx >= 0
+                && S->grid[w->erry][w->errx].terrain == T_SHREDDER
+                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1)
+                return MS_SHRED;
             if (ins->mem_target >= 0) {
                 int tx, ty;
                 if (mem_tile(S, w, ins->mem_target, &tx, &ty)
@@ -2996,7 +3046,12 @@ static void exec_action(Sim *S, Program *P, int i) {
         case OP_GIVETO: {
             if (!w->holding) break;
             int cx[9], cy[9], nc = 0;
-            if (ins->mem_target >= 0) {
+            if (ins->mem_target < 0 && w->err_pc == w->pc && w->errx >= 0
+                && S->grid[w->erry][w->errx].terrain == T_SHREDDER
+                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1) {
+                /* a bound errand feeds ITS shredder, wherever the walk ended */
+                cx[nc] = w->errx; cy[nc] = w->erry; nc++;
+            } else if (ins->mem_target >= 0) {
                 int nx, ny;
                 if (!mem_tile(S, w, ins->mem_target, &nx, &ny)) break;
                 if (abs(w->x-nx) > 1 || abs(w->y-ny) > 1) break;
@@ -3046,6 +3101,14 @@ static void exec_action(Sim *S, Program *P, int i) {
                         S->w[j].holding = false;
                     }
                 }
+                break;
+            }
+            /* a bound machine errand takes from ITS machine, however the
+             * walk to the front has turned the original direction */
+            if (w->err_pc == w->pc && w->errx >= 0
+                && S->grid[w->erry][w->errx].terrain == T_PRINTER
+                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1) {
+                pickup_at(S, w, i, w->errx, w->erry);
                 break;
             }
             for (int k = 0; k < ins->ndirs; k++) {
@@ -3408,6 +3471,7 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
         if (++guard > budget) return;
         if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
         Instr *ins = &P->instr[w->pc];
+        if (w->err_pc != w->pc) { w->errx = w->erry = -1; w->err_pc = -1; }
         switch (ins->op) {
             case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; continue;
             case OP_JUMP:  w->pc = ins->target; *progressed = true; continue;
@@ -3557,6 +3621,23 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
          * machines included, so all of them can be nudged. */
         cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
         *progressed = true; return;
+    }
+
+    /* an item action whose DIRECTION lands on a machine binds to it and
+     * queues for its front square the same way (see the dispatch above) */
+    if (ins->mem_target < 0
+        && (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)) {
+        int mx, my;
+        if (dir_machine_lock(S, w, ins, &mx, &my)) {
+            int fx0 = mx, fy0 = my;
+            machine_front(S, &fx0, &fy0);
+            if (!(w->x == fx0 && w->y == fy0)) {
+                int d = route_step(S, w, fx0, fy0, false);
+                if (d < 0) return;                            /* no route: wait */
+                cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
+                *progressed = true; return;
+            }
+        }
     }
 
     if (ins->op == OP_TELL && (S->L->rules & R_SPEAK_ORDER)) {
@@ -4501,6 +4582,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Worker *w = &S->w[i];
     if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
     Instr *ins = &P->instr[w->pc];
+    if (w->err_pc != w->pc) { w->errx = w->erry = -1; w->err_pc = -1; }
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
     if (getenv("EMU_CMDLOG"))
@@ -4634,6 +4716,27 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     w->fready = false;
                 }
                 *progressed = true; return;   /* no route: wait a frame */
+            }
+        }
+    }
+    /* an item action whose DIRECTION lands on a machine is the same errand:
+     * the worker binds to that machine and queues for its front square,
+     * walking round when the square frees rather than reaching in from the
+     * side it happens to stand on */
+    if (ins->mem_target < 0
+        && (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)) {
+        int mx, my;
+        if (dir_machine_lock(S, w, ins, &mx, &my)) {
+            int fx0 = mx, fy0 = my;
+            machine_front(S, &fx0, &fy0);
+            if (!(w->x == fx0 && w->y == fy0)) {
+                int d = route_step(S, w, fx0, fy0, false);
+                if (d >= 0) {
+                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
+                    if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
+                    w->fready = false;
+                }
+                *progressed = true; return;   /* front taken: wait a frame */
             }
         }
     }
@@ -4784,6 +4887,38 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     fq_push(w, FQ_WAIT, 27);
                     fq_push(w, FQ_EFFECT, 0);
                     fq_push(w, FQ_WAIT, 26);
+                }
+            } else if (ins->op == OP_TAKEFROM && ins->mem_target < 0) {
+                /* what the direction finds shapes the reach, decided once
+                 * when the command is taken up: a neighbour with something
+                 * in hand is a throw and a catch; a neighbour with empty
+                 * hands costs one look and the hands come back empty; a
+                 * bare square (or a cube on the floor, which is for picking
+                 * up, not taking) is the look and then the long red bubble
+                 * of error -- either way the program then moves on */
+                bool anyone = false, laden = false;
+                for (int k = 0; k < ins->ndirs; k++) {
+                    int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                    if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+                    int j = worker_at(S, nx, ny, i);
+                    if (j >= 0) {
+                        anyone = true;
+                        if (S->w[j].holding) laden = true;
+                    }
+                }
+                if (laden) {
+                    fq_push(w, FQ_WAIT, 15);
+                    fq_push(w, FQ_EFFECT, 0);
+                    fq_push(w, FQ_ANIM, 21);
+                    fq_push(w, FQ_WAITANIM, 0);
+                } else if (anyone) {
+                    fq_push(w, FQ_WAIT, (float)FQ_IF_WAIT);
+                    fq_push(w, FQ_EFFECT, 0);
+                    fq_push(w, FQ_WAIT, (float)FQ_IF_HOLD);
+                } else {
+                    fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD));
+                    fq_push(w, FQ_WAIT, (float)MS_ERRB);
+                    fq_push(w, FQ_EFFECT, 0);
                 }
             } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
                 /* a hand-off is a throw and a catch: the cube is in the air

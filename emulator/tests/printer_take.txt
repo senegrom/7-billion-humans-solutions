@@ -1,6 +1,8 @@
 a:
 takefrom s
 if myitem < 50:
-	giveto w
+	step w
+	giveto s
+	step e
 endif
 jump a
