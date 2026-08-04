@@ -78,7 +78,7 @@ typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */
                                 still answers -- where a remembered square
                                 reads only what lies on the floor */ } MemVal;
 
-enum { NMEM = 4, MAXFOREACH = 24, WORDLEN = 32 };
+enum { NMEM = 4, MAXFOREACH = 64, WORDLEN = 32 };
 
 typedef struct {
     int  x, y;
