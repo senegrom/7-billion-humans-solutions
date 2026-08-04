@@ -3413,7 +3413,18 @@ static void cont_free(Sim *S, Program *P, int i, int now, bool *progressed, int 
             case OP_JUMP:  w->pc = ins->target; *progressed = true; continue;
             case OP_ELSE:  w->pc = ins->target; *progressed = true; continue;
             case OP_ENDIF: w->pc++; *progressed = true; continue;
-            case OP_ENDFOR: w->pc = ins->target; *progressed = true; continue;
+            case OP_ENDFOR: {
+                /* The looping-back belongs to the sweep: an endfor returns
+                 * to its foreachdir only while a sweep is actually under
+                 * way.  A body entered sideways -- jumped into without ever
+                 * running the header -- has no sweep, and its endfor simply
+                 * falls out of the loop.  (A finished sweep never revisits
+                 * the endfor; the header walks past it on exhaustion.) */
+                Instr *fe = &P->instr[ins->target];
+                if (w->fe_idx[fe->fe_slot] == 0) w->pc++;
+                else w->pc = ins->target;
+                *progressed = true; continue;
+            }
             case OP_FOREACH: {
                 static const int FE_RANK[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
                 int *fi = &w->fe_idx[ins->fe_slot];
@@ -3753,7 +3764,11 @@ static bool run_beat(Sim *S, Program *P, int *out_rounds) {
                         } else { *fi = 0; w->pc = ins->target + 1; }
                         continue;
                     }
-                    case OP_ENDFOR: w->pc = ins->target; continue;
+                    case OP_ENDFOR:
+                        /* no sweep under way (body jumped into) -> fall out */
+                        if (w->fe_idx[P->instr[ins->target].fe_slot] == 0) w->pc++;
+                        else w->pc = ins->target;
+                        continue;
                     case OP_LISTEN:
                         if (w->heard > 0 && !strcmp(w->heard_word, ins->word))
                             { w->heard = 0; w->pc++; continue; }
@@ -4494,7 +4509,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         case OP_JUMP:  w->pc = ins->target; *progressed = true; return;
         case OP_ELSE:  w->pc = ins->target; *progressed = true; return;
         case OP_ENDIF: w->pc++; *progressed = true; return;
-        case OP_ENDFOR: w->pc = ins->target; *progressed = true; return;
+        case OP_ENDFOR:
+            /* no sweep under way (body jumped into) -> fall out of the loop */
+            if (w->fe_idx[P->instr[ins->target].fe_slot] == 0) w->pc++;
+            else w->pc = ins->target;
+            *progressed = true; return;
         case OP_FOREACH: {
             static const int FE_RANK[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
             int *fi = &w->fe_idx[ins->fe_slot];
