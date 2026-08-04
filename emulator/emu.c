@@ -3686,15 +3686,24 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             *progressed = true; return;
         }
     }
-    /* an item action aimed at a remembered thing walks there first and only
-     * acts when it has arrived -- and if the remembered thing is gone from
-     * that tile by then, it chases the next nearest of the same kind */
-    if (ins->mem_target >= 0
-        && (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM)) {
+    /* An item action aimed at a thing walks to it first and acts only on
+     * arrival.  What it is aimed at resolves when the command comes up: a
+     * remembered target is re-derived as it moves -- the errand can be
+     * nudged, and if the remembered thing is gone it chases the next
+     * nearest of its kind -- while a direction is read once, where the
+     * worker stood, and a machine it lands on owns the errand however far
+     * the walk then drifts.  Machines are used from their front square
+     * alone; a pickup stands on the remembered square itself; everything
+     * else acts from any square beside the target. */
+    if (ins->op == OP_PICKUP || ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
         bool onto = (ins->op == OP_PICKUP);
         int tx, ty;
-        if (mem_tile(S, w, ins->mem_target, &tx, &ty)) {
-            /* machines are used from their front square alone (see above) */
+        bool have = false, bound = false;
+        if (ins->mem_target >= 0)
+            have = mem_tile(S, w, ins->mem_target, &tx, &ty);
+        else if (!onto)
+            have = bound = dir_machine_lock(S, w, ins, &tx, &ty);
+        if (have) {
             int fx0 = tx, fy0 = ty;
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
@@ -3702,7 +3711,8 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                                   : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
             bool act = false;
             if (FARR())
-                act = !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
+                act = bound
+                   || !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
             #undef FARR
             if (!act) {
                 int rx = tx, ry = ty;
@@ -3714,27 +3724,6 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     w->fready = false;
                 }
                 *progressed = true; return;   /* no route: wait a frame */
-            }
-        }
-    }
-    /* an item action whose DIRECTION lands on a machine is the same errand:
-     * the worker binds to that machine and queues for its front square,
-     * walking round when the square frees rather than reaching in from the
-     * side it happens to stand on */
-    if (ins->mem_target < 0
-        && (ins->op == OP_TAKEFROM || ins->op == OP_GIVETO)) {
-        int mx, my;
-        if (dir_machine_lock(S, w, ins, &mx, &my)) {
-            int fx0 = mx, fy0 = my;
-            machine_front(S, &fx0, &fy0);
-            if (!(w->x == fx0 && w->y == fy0)) {
-                int d = route_step(S, w, fx0, fy0, false);
-                if (d >= 0) {
-                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
-                    if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
-                    w->fready = false;
-                }
-                *progressed = true; return;   /* front taken: wait a frame */
             }
         }
     }
