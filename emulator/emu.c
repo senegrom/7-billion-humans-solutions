@@ -1005,7 +1005,9 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
     memset(S, 0, sizeof *S);
     S->L = L;
     S->rng = seed * 2654435761u + 12345u;
-    S->grng = seed == 0 ? 0xABAB1981u : S->rng | 1u;
+    /* trials are numbered from 1, so it is the FIRST trial that plays on
+     * the game's power-on seed; later trials sample other histories */
+    S->grng = seed == 1 ? 0xABAB1981u : S->rng | 1u;
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++)
             S->grid[y][x] =
