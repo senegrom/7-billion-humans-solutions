@@ -138,6 +138,8 @@ typedef struct {
     int  err_t0;       /* frame the binding was made on: the look a pointed
                           takefrom pays runs from here, overlapping any wait
                           in the queue (-1 = not yet stamped) */
+    int  smem_pc;      /* step-to-person command that has already strode
+                          (-1 = none): its completion beside them is free */
 } Worker;
 
 typedef enum {
@@ -1241,6 +1243,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->held_owner = -1;
         w->last_tell = -1;
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
+        w->smem_pc = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
             /* the safe hole lies straight through the worker's adjacent cube */
@@ -2503,6 +2506,17 @@ static bool mem_tile(Sim *S, Worker *w, int slot, int *tx, int *ty) {
     if (w->mem[slot].k == MV_CUBEREF)
         return cube_locate(S, w->mem[slot].num, tx, ty);
     if (w->mem[slot].k != MV_TILE) return false;
+    /* a slot that remembers a PERSON names the person, not the square they
+     * stood on: every use follows them to wherever they have since walked --
+     * read at the square they hold RIGHT NOW, which for someone mid-step is
+     * already the square they are stepping into */
+    if (w->mem[slot].wref >= 0 && w->mem[slot].wref < S->nw) {
+        Worker *o = &S->w[w->mem[slot].wref];
+        if (o->alive && !o->exited) {
+            *tx = o->x; *ty = o->y;
+            return true;
+        }
+    }
     *tx = w->mem[slot].x; *ty = w->mem[slot].y;
     return true;
 }
@@ -3430,13 +3444,46 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
     Instr *ins = &P->instr[w->pc];
         if (S->L->rules & R_NOWALK) { S->failed = true; return; }
         if (ins->mem_target >= 0) {
+            /* A step toward a remembered PERSON walks up beside them, not
+             * onto them.  The square to stand on is chosen first -- the
+             * touching square nearest the walker, judged the same way
+             * `nearest` judges closeness -- and the route is then drawn to
+             * that square, so a cardinal neighbour beats a diagonal one
+             * even where the path itself would happily cut the corner. */
+            bool person = (w->mem[ins->mem_target].wref >= 0);
             int tx, ty;
-            if (!mem_tile(S, w, ins->mem_target, &tx, &ty) || (w->x == tx && w->y == ty)) {
+            if (!mem_tile(S, w, ins->mem_target, &tx, &ty)
+                || (person ? (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1)
+                           : (w->x == tx && w->y == ty))) {
+                if (getenv("EMU_CMDLOG"))
+                    fprintf(stderr, "[smem] w%d noop tgt=%d,%d person=%d\n",
+                            (int)(w - S->w), tx, ty, (int)person);
                 if (w->fresh > 0) w->fresh--;
+                /* finding yourself already beside the person still costs
+                 * the stride you do not take: the body turns to them and
+                 * the program only then moves on.  Arriving beside them at
+                 * the end of a stride costs nothing more. */
+                if (person && w->smem_pc != w->pc) w->busy = 11;
+                w->smem_pc = -1;
                 w->pc++; *progressed = true; return;
+            }
+            if (person) {
+                long bestk = 0; int bx = -1, by = -1;
+                for (int dy = -1; dy <= 1; dy++)
+                    for (int dx = -1; dx <= 1; dx++) {
+                        if (!dx && !dy) continue;
+                        int ax = tx + dx, ay = ty + dy;
+                        if (ax < 0 || ay < 0 || ax >= S->L->w || ay >= S->L->h)
+                            continue;
+                        if (S->grid[ay][ax].terrain != T_FLOOR) continue;
+                        long k = near_key(ax - w->x, ay - w->y);
+                        if (bx < 0 || k < bestk) { bestk = k; bx = ax; by = ay; }
+                    }
+                if (bx >= 0) { tx = bx; ty = by; }
             }
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
+            if (person) w->smem_pc = w->pc;
             cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
             *progressed = true; return;
         }
@@ -3459,7 +3506,13 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             } else if (!cont_reserved(S, nx, ny, i)) freec[fnc++] = d;
         }
         int *pool = fnc > 0 ? freec : cand, pn = fnc > 0 ? fnc : nc;
-        if (pn == 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
+        if (pn == 0) {
+            /* a step with nowhere to go still takes its frame before the
+             * program moves on -- the skipped stride is not free */
+            if (w->fresh > 0) w->fresh--;
+            w->pc++; w->busy = 1;
+            *progressed = true; return;
+        }
         /* A step that names one direction has nothing to choose.  One that
          * names several draws over ALL of them, in the order written, and
          * simply draws again when the pick is unwalkable or a body stands
@@ -3642,6 +3695,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Instr *ins = &P->instr[w->pc];
     if (w->err_pc != w->pc) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
+        w->smem_pc = -1;
     }
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
@@ -3777,14 +3831,16 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         else if (!onto)
             have = bound = dir_machine_lock(S, w, ins, now, &tx, &ty);
         if (have) {
-            /* an idle press starts on its first sheet the moment anyone,
-             * however far away, sets out to take from it */
-            if (ins->op == OP_TAKEFROM && !w->holding
-                && S->grid[ty][tx].terrain == T_PRINTER
-                && S->press_done[ty][tx] == 0)
-                S->press_done[ty][tx] = now + 36;
             int fx0 = tx, fy0 = ty;
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
+            /* an idle press starts on its first sheet as its customer comes
+             * within a stride of the front square -- someone bound to it
+             * from further off has not started anything yet */
+            if (ins->op == OP_TAKEFROM && !w->holding && sfront
+                && S->grid[ty][tx].terrain == T_PRINTER
+                && S->press_done[ty][tx] == 0
+                && abs(w->x - fx0) <= 1 && abs(w->y - fy0) <= 1)
+                S->press_done[ty][tx] = now + 36;
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
                           : sfront ? (w->x == fx0 && w->y == fy0) \
                                   : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
