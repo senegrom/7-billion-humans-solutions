@@ -966,6 +966,10 @@ typedef struct {
     bool    door_exit;           /* the door acts as a walk-in exit */
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
+    long    mach_clear[MAXH][MAXW]; /* when the last customer stepped out of
+                                       the front square (0 = never served) */
+    long    press_done[MAXH][MAXW]; /* when the sheet now on the press is
+                                       finished (0 = the press stands idle) */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
     int     print_next[MAXH][MAXW]; /* the value each printer will serve next:
                                        a fresh printer's first sheet is always
@@ -3516,9 +3520,6 @@ static int MS_CALC = 122;             /* the calc arithmetic animation, plus
                                          it before the hands move again; a
                                          direction operand adds one whole
                                          look on top (see the dispatch) */
-static int MS_PRINT_HOLD = 76;        /* a printer serves one taker start-to-end:
-                                         36 frames of printing, 40 of throw and
-                                         catch -- the sheet is in hand at the end */
 static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
 #define MS_TICK 16                    /* milliseconds in a tick */
@@ -3776,6 +3777,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         else if (!onto)
             have = bound = dir_machine_lock(S, w, ins, now, &tx, &ty);
         if (have) {
+            /* an idle press starts on its first sheet the moment anyone,
+             * however far away, sets out to take from it */
+            if (ins->op == OP_TAKEFROM && !w->holding
+                && S->grid[ty][tx].terrain == T_PRINTER
+                && S->press_done[ty][tx] == 0)
+                S->press_done[ty][tx] = now + 36;
             int fx0 = tx, fy0 = ty;
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
@@ -3933,13 +3940,12 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 /* a machine holds one customer at a time; the next in line
                  * parks (uncharged) until the machine frees up */
                 int mx, my;
-                if (machine_target(S, w, ins, &mx, &my)) {
-                    if (S->mach_busy[my][mx] > now) { *progressed = true; return; }
-                    S->mach_busy[my][mx] =
-                        now + (ins->op == OP_GIVETO ? MS_SHRED_HOLD
-                                                    : look_left + MS_PRINT_HOLD);
-                }
+                bool machok = machine_target(S, w, ins, &mx, &my);
+                if (machok && S->mach_busy[my][mx] > now)
+                    { *progressed = true; return; }
                 if (ins->op == OP_GIVETO) {
+                    if (machok)
+                        S->mach_busy[my][mx] = now + MS_SHRED_HOLD;
                     /* Feeding a shredder: lean in, toss it into the maw --
                      * and be on your way at once, while the machine chews on
                      * its own.  How soon the feeder clears out after the
@@ -3955,10 +3961,32 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     fq_push(w, FQ_ANIM, 137);
                     fq_push(w, FQ_WAITANIM, 0);
                 } else {
-                    /* taking from a printer: the machine prints for 36
-                     * frames, then the sheet is thrown and caught over 40
-                     * more -- it is in the taker's hands only at the catch */
-                    fq_push(w, FQ_WAIT, (float)(look_left + 75));
+                    /* Taking from a printer is a serve with a pipeline.
+                     * The press runs a 36-frame print; the sheet is thrown
+                     * and caught over 40 more and is in the taker's hands
+                     * only at the catch.  The press starts the next sheet
+                     * as the previous taker steps out IF its next customer
+                     * is already stepping in -- a prompt queue rotation
+                     * catches a sheet that is nearly done, a straggler
+                     * finds the press idle and waits out the full print.
+                     * The taker stands engaged for 25 frames after the
+                     * catch while it steps out of the front square. */
+                    long arr = now + look_left;
+                    long pr;
+                    if (machok && S->mach_clear[my][mx] > 0) {
+                        long pc0 = S->mach_clear[my][mx];
+                        pr = (arr - pc0 <= 24 ? pc0 : arr) + 36;
+                    } else if (machok && S->press_done[my][mx] > 0) {
+                        pr = S->press_done[my][mx];
+                    } else {
+                        pr = arr + 36;
+                    }
+                    long grab_at = (pr > arr ? pr : arr) + 40;
+                    if (machok) {
+                        S->mach_busy[my][mx] = grab_at + 25;
+                        S->mach_clear[my][mx] = grab_at + 25;
+                    }
+                    fq_push(w, FQ_WAIT, (float)(grab_at - now));
                     fq_push(w, FQ_EFFECT, 0);
                 }
             } else if (ins->op == OP_TAKEFROM && ins->mem_target < 0) {
@@ -4118,6 +4146,21 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 if (w->pc == pc0) break;      /* waiting, not advancing */
             }
             if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
+        }
+        /* EMU_POSLOG prints every worker's body position and hands when
+         * anything moved -- the way to hold two runs' crowds side by side */
+        if (getenv("EMU_POSLOG")) {
+            static char pl_last[1024];
+            char pl[1024]; int pn = 0;
+            for (int i = 0; i < S->nw && pn < (int)sizeof pl - 40; i++) {
+                Worker *w = &S->w[i];
+                pn += snprintf(pl + pn, sizeof pl - pn, " w%d@%.1f,%.1f%s",
+                               i, w->fx, w->fy, w->holding ? "H" : "");
+            }
+            if (strcmp(pl, pl_last) != 0) {
+                fprintf(stderr, "[pos] t%d%s\n", now, pl);
+                snprintf(pl_last, sizeof pl_last, "%s", pl);
+            }
         }
         now++;
         if (S->L->nsw > 0) counter_press(S);
