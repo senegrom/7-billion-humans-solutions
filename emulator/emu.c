@@ -979,17 +979,12 @@ typedef struct {
 } Sim;
 
 /* Per-command durations, calibrated against recorded community speeds.
- * The clock runs in 60 fps FRAMES -- the game's native unit; every
- * command duration is an integer frame count (a step is 20 frames =
- * 333.33 ms, item ops 15 frames = 250 ms, printers/writes 72, shredders
- * 45, tells 60). Frame units keep same-frame workers exactly
- * simultaneous and make the idle fallback (t+1) advance a full frame.
- * EMU_MS_* env overrides are given in ms and rounded to frames. */
+ * The clock runs in FRAMES -- the game's native unit; every command
+ * duration is an integer frame count.  Frame units keep same-frame
+ * workers exactly simultaneous and make the idle fallback (t+1) advance
+ * a full frame. */
 static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
-           MS_TELL = 42, MS_IF = 30, MS_ASSIGN = 20, MS_WRITE = 57,
-           MS_ERROR = 15;    /* an errored take/pickup (full hands): the red
-                                bubble displays ~1.5s but the program moves
-                                on quickly -- recorded speeds demand ~250ms */
+           MS_TELL = 42, MS_IF = 30, MS_ASSIGN = 20, MS_WRITE = 57;
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
 
@@ -1259,8 +1254,6 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
  * standing at the listen command in the very instant it is spoken. */
 #define MS_EARSHOT 7
 
-static bool g_nothing_ignores_workers = false;   /* experimental sense variant */
-
 /* Where SENSES see a worker.  Movement bookkeeping gives a walker its
  * destination tile the moment it sets off (that is what blocks other
  * movers), but eyes track the body: a walking worker is seen on the tile
@@ -1306,11 +1299,10 @@ static bool tile_contains(Sim *S, int x, int y, const Worker *self, CmpKind what
             return false;
         case C_NOTHING: {
             if (t != T_FLOOR || S->grid[y][x].has_cube) return false;
-            if (!g_nothing_ignores_workers)
-                for (int i = 0; i < S->nw; i++)
-                    if (&S->w[i] != self && S->w[i].alive
-                        && seen_tx(S, i) == x && seen_ty(S, i) == y)
-                        return false;
+            for (int i = 0; i < S->nw; i++)
+                if (&S->w[i] != self && S->w[i].alive
+                    && seen_tx(S, i) == x && seen_ty(S, i) == y)
+                    return false;
             return true;
         }
         case C_SOMETHING:
@@ -1491,19 +1483,9 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
     return num_cmp(c->op, a, b);
 }
 
-static bool g_rightassoc = false;   /* experimental alternative fold order */
-
+/* Conditions fold left to right: A op B, then op C, then op D -- the way
+ * the game's own editor brackets them. */
 static bool if_true(Sim *S, Instr *ins, Worker *w) {
-    if (g_rightassoc) {
-        /* right-associative: A op (B op (C op D)) */
-        int i = ins->nconds - 1;
-        bool acc = cond_true(S, &ins->conds[i], w);
-        for (i--; i >= 0; i--) {
-            bool v = cond_true(S, &ins->conds[i], w);
-            acc = (ins->conds[i+1].conn == 1) ? (v && acc) : (v || acc);
-        }
-        return acc;
-    }
     bool acc = false;
     for (int i = 0; i < ins->nconds; i++) {
         bool v = cond_true(S, &ins->conds[i], w);
@@ -3543,10 +3525,6 @@ static int MS_CALC = 122;             /* the calc arithmetic animation, plus
                                          it before the hands move again; a
                                          direction operand adds one whole
                                          look on top (see the dispatch) */
-/* 1 = run free bookkeeping in one tick.  (Bit 2 would also start the next
- * command on the tick its predecessor's timeline runs dry; the recorded
- * times say the game takes one more tick to notice, so it stays off.) */
-static int g_chain = 1;
 static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
 static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
@@ -4028,9 +4006,11 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 if (S->failed) { *out_rounds = now; return false; }
                 in_flight = true;
                 w->fready = true;
-                /* the command's timeline ran dry inside this tick, and the
-                 * stepper comes after it: the next command starts now */
-                if (!(g_chain & 2)) continue;
+                /* the game takes one more tick to notice a drained timeline:
+                 * the next command starts on the FOLLOWING frame, not inside
+                 * this one (starting it here was measured against ten long
+                 * recorded runs and is worse on every one) */
+                continue;
             }
             if (S->failed) { *out_rounds = now; return false; }
             if (w->fsusp) { in_flight = true; continue; }
@@ -4043,7 +4023,6 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 int pc0 = w->pc;
                 fq_dispatch(S, P, i, now, &progressed, &told);
                 if (S->failed) { *out_rounds = now; return false; }
-                if (!(g_chain & 1)) break;
                 if (!w->alive || w->done || w->exited) break;
                 if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) break;
                 if (w->pc == pc0) break;      /* waiting, not advancing */
@@ -4080,12 +4059,6 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
 }
 
 static bool run(Sim *S, Program *P, int *out_rounds) {
-    { const char *c = getenv("EMU_CHAIN"); if (c) g_chain = atoi(c); }
-    { const char *p = getenv("EMU_FQ");
-      if (p) { int a, b, c, d;
-               if (sscanf(p, "%d,%d,%d,%d", &a, &b, &c, &d) == 4) {
-                   FQ_ITEM_PRE = a; FQ_ITEM_TAIL = b; FQ_IF_WAIT = c;
-                   FQ_FOREACH_BASE = d; } } }
     bool won = run_frame(S, P, out_rounds);
     g_snap_n = -1;                     /* frame snapshots are its alone */
     return won;
@@ -4093,21 +4066,6 @@ static bool run(Sim *S, Program *P, int *out_rounds) {
 
 int main(int argc, char **argv) {
     if (argc >= 2 && !strcmp(argv[1], "--trace")) { g_trace = true; argv++; argc--; }
-    if (getenv("EMU_RIGHTASSOC")) g_rightassoc = true;
-    if (getenv("EMU_NOTHING_IGNORES_WORKERS")) g_nothing_ignores_workers = true;
-    { const char *e;   /* overrides in ms, rounded to 60fps frames */
-      #define MS2F(v) (int)(((long)(v) * 3 + 25) / 50)
-      if ((e = getenv("EMU_MS_STEP")))    MS_STEP = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_ITEM")))    MS_ITEM = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_PRINTER"))) MS_PRINTER = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_SHRED")))   MS_SHRED = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_TELL")))    MS_TELL = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_IF")))      MS_IF = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_ASSIGN")))  MS_ASSIGN = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_WRITE")))   MS_WRITE = MS2F(atoi(e));
-      if ((e = getenv("EMU_MS_ERROR")))   MS_ERROR = MS2F(atoi(e));
-      #undef MS2F
-    }
     if (argc < 3 || argc > 4) {
         fprintf(stderr, "usage: %s [--trace] <level.lvl> <solution.txt> [trials]\n", argv[0]);
         return 1;
