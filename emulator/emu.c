@@ -135,6 +135,9 @@ typedef struct {
        remembered here until the program moves to another command. */
     int  errx, erry;   /* machine an item errand is bound to (-1 = none) */
     int  err_pc;       /* command the binding belongs to */
+    int  err_t0;       /* frame the binding was made on: the look a pointed
+                          takefrom pays runs from here, overlapping any wait
+                          in the queue (-1 = not yet stamped) */
 } Worker;
 
 typedef enum {
@@ -1233,7 +1236,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->held_src_x = w->held_src_y = -1;
         w->held_owner = -1;
         w->last_tell = -1;
-        w->errx = w->erry = -1; w->err_pc = -1;
+        w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
             /* the safe hole lies straight through the worker's adjacent cube */
@@ -2697,7 +2700,8 @@ static bool divert_shredder(Sim *S, Worker *w, int wi, int px, int py) {
  * follows the machine itself -- the worker queues for its front square and
  * is served there, even though from the front the original direction may
  * point at empty floor.  The binding lasts as long as the command does. */
-static bool dir_machine_lock(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
+static bool dir_machine_lock(Sim *S, Worker *w, Instr *ins, int now,
+                             int *ox, int *oy) {
     if (ins->mem_target >= 0) return false;
     if (ins->op == OP_TAKEFROM ? w->holding : !w->holding) return false;
     if (w->err_pc == w->pc && w->errx >= 0) {
@@ -2709,7 +2713,7 @@ static bool dir_machine_lock(Sim *S, Worker *w, Instr *ins, int *ox, int *oy) {
         int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
         if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
         if (S->grid[ny][nx].terrain == want) {
-            w->errx = nx; w->erry = ny; w->err_pc = w->pc;
+            w->errx = nx; w->erry = ny; w->err_pc = w->pc; w->err_t0 = now;
             *ox = nx; *oy = ny;
             return true;
         }
@@ -3482,7 +3486,8 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
  * animation only holds its own queue -- its tail plays out under whatever
  * the worker does next, so a pickup before a walk costs less wall time
  * than a pickup before another animation. */
-enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME };
+enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME,
+       FQ_GRAB, FQ_ERRND };
 
 static const float FQ_DT = 1.0f;      /* queue times are in frames */
 
@@ -3511,7 +3516,9 @@ static int MS_CALC = 122;             /* the calc arithmetic animation, plus
                                          it before the hands move again; a
                                          direction operand adds one whole
                                          look on top (see the dispatch) */
-static int MS_PRINT_HOLD = 53;        /* a printer serves one taker start-to-end */
+static int MS_PRINT_HOLD = 76;        /* a printer serves one taker start-to-end:
+                                         36 frames of printing, 40 of throw and
+                                         catch -- the sheet is in hand at the end */
 static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
 #define MS_TICK 16                    /* milliseconds in a tick */
@@ -3531,7 +3538,7 @@ static void fq_push_look(Worker *w) {
 static void fq_push_look_error(Worker *w) {
     fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD));
     fq_push(w, FQ_WAIT, (float)MS_ERRB);
-    fq_push(w, FQ_EFFECT, 0);
+    fq_push(w, FQ_ERRND, 0);
 }
 
 /* A hand-off between workers is a throw and a catch: the cube is in the
@@ -3542,6 +3549,17 @@ static void fq_push_throw(Worker *w) {
     fq_push(w, FQ_EFFECT, 0);
     fq_push(w, FQ_ANIM, 21);
     fq_push(w, FQ_WAITANIM, 0);
+}
+
+/* Taking from another worker's hands is no throw: the taker looks, then
+ * reaches across and lifts the cube out, and it is theirs only at the very
+ * end of the reach.  The one being robbed is pinned for the reach --
+ * whatever they were doing resumes only after the hand has withdrawn. */
+static void fq_push_steal(Worker *w) {
+    fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD));
+    fq_push(w, FQ_GRAB, 0);
+    fq_push(w, FQ_WAIT, 83);
+    fq_push(w, FQ_EFFECT, 0);
 }
 
 /* run the queue; returns false while something in it is still holding */
@@ -3566,6 +3584,47 @@ static bool fq_pump(Sim *S, Program *P, int i) {
                 w->evcur++; continue;
             case FQ_SUSPEND: w->fsusp = true;  w->evcur++; continue;
             case FQ_RESUME:  w->fsusp = false; w->evcur++; continue;
+            case FQ_GRAB: {
+                /* The taker's look has landed on the one to be robbed: pin
+                 * them for the reach.  The pin goes in AHEAD of whatever
+                 * resolution their own timeline was building towards, so a
+                 * command caught mid-flight settles only after the hand has
+                 * withdrawn. */
+                Instr *ins = &P->instr[w->pc];
+                int tx, ty, j = -1;
+                if (ins->mem_target >= 0) {
+                    if (mem_tile(S, w, ins->mem_target, &tx, &ty))
+                        j = worker_at(S, tx, ty, i);
+                } else {
+                    for (int k = 0; k < ins->ndirs && j < 0; k++) {
+                        int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+                        if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+                        int c = worker_at(S, nx, ny, i);
+                        if (c >= 0 && S->w[c].holding) j = c;
+                    }
+                }
+                if (j >= 0 && S->w[j].holding) {
+                    Worker *v = &S->w[j];
+                    int cap = (int)(sizeof v->evq / sizeof v->evq[0]);
+                    if (v->evn < cap) {
+                        int at = v->evcur;
+                        while (at < v->evn && v->evq[at].id != FQ_EFFECT
+                               && v->evq[at].id != FQ_ERRND) at++;
+                        for (int m = v->evn; m > at; m--) v->evq[m] = v->evq[m-1];
+                        v->evq[at].id = FQ_WAIT; v->evq[at].t = 84;
+                        v->evn++;
+                    }
+                }
+                w->evcur++; continue;
+            }
+            case FQ_ERRND:
+                /* the bubble fades and the program moves on -- the reach is
+                 * NOT retried on whatever the hands hold by then; a take
+                 * emptied mid-bubble advances empty-handed */
+                if (w->fresh > 0) w->fresh--;
+                S->st_items++;
+                w->pc++;
+                w->evcur++; continue;
             default: w->evcur++; continue;
         }
     }
@@ -3580,7 +3639,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Worker *w = &S->w[i];
     if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
     Instr *ins = &P->instr[w->pc];
-    if (w->err_pc != w->pc) { w->errx = w->erry = -1; w->err_pc = -1; }
+    if (w->err_pc != w->pc) {
+        w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
+    }
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
     if (getenv("EMU_CMDLOG"))
@@ -3676,9 +3737,22 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                      && S->grid[w->y][w->x].has_cube) err = true;
         }
         if (err) {
+            /* The error runs to its end and the program simply moves on --
+             * the reach is never retried on whatever the hands hold by
+             * then.  A take emptied mid-bubble (robbed from behind, in a
+             * bucket brigade) advances empty-handed all the same, which is
+             * why a head that reaches while still holding falls out of its
+             * loop for good.
+             * A POINTED take with full hands looks at the square first and
+             * only then stands through the bubble -- measured end to end at
+             * one frame under a look plus the bubble */
+            bool looked = (ins->op == OP_PICKUP || ins->op == OP_TAKEFROM)
+                       && w->holding && ins->mem_target < 0;
             fq_push(w, FQ_SUSPEND, 0);
+            if (looked)
+                fq_push(w, FQ_WAIT, (float)(FQ_IF_WAIT + FQ_IF_HOLD - 1));
             fq_push(w, FQ_WAIT, (float)MS_ERRB);
-            fq_push(w, FQ_EFFECT, 0);          /* no-ops, advances the program */
+            fq_push(w, FQ_ERRND, 0);
             fq_push(w, FQ_RESUME, 0);
             w->fready = false;
             *progressed = true; return;
@@ -3700,7 +3774,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         if (ins->mem_target >= 0)
             have = mem_tile(S, w, ins->mem_target, &tx, &ty);
         else if (!onto)
-            have = bound = dir_machine_lock(S, w, ins, &tx, &ty);
+            have = bound = dir_machine_lock(S, w, ins, now, &tx, &ty);
         if (have) {
             int fx0 = tx, fy0 = ty;
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
@@ -3845,13 +3919,25 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             break;
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
             if (item_at_machine(S, w, ins)) {
+                /* A POINTED takefrom pays its look before the machine
+                 * engages, but the look runs from the moment the command was
+                 * taken up, so a customer who waited in a queue has looked
+                 * long since and pays nothing extra -- only a worker already
+                 * standing at the front pays it end to end. */
+                int look_left = 0;
+                if (ins->op == OP_TAKEFROM && ins->mem_target < 0
+                    && w->err_pc == w->pc && w->err_t0 >= 0) {
+                    look_left = w->err_t0 + FQ_IF_WAIT + FQ_IF_HOLD + 1 - now;
+                    if (look_left < 0) look_left = 0;
+                }
                 /* a machine holds one customer at a time; the next in line
                  * parks (uncharged) until the machine frees up */
                 int mx, my;
                 if (machine_target(S, w, ins, &mx, &my)) {
                     if (S->mach_busy[my][mx] > now) { *progressed = true; return; }
                     S->mach_busy[my][mx] =
-                        now + (ins->op == OP_GIVETO ? MS_SHRED_HOLD : MS_PRINT_HOLD);
+                        now + (ins->op == OP_GIVETO ? MS_SHRED_HOLD
+                                                    : look_left + MS_PRINT_HOLD);
                 }
                 if (ins->op == OP_GIVETO) {
                     /* Feeding a shredder: lean in, toss it into the maw --
@@ -3869,34 +3955,46 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     fq_push(w, FQ_ANIM, 137);
                     fq_push(w, FQ_WAITANIM, 0);
                 } else {
-                    /* taking from a printer: lean in, wait out the print
-                     * cycle, catch the sheet, lean back */
-                    fq_push(w, FQ_WAIT, 27);
+                    /* taking from a printer: the machine prints for 36
+                     * frames, then the sheet is thrown and caught over 40
+                     * more -- it is in the taker's hands only at the catch */
+                    fq_push(w, FQ_WAIT, (float)(look_left + 75));
                     fq_push(w, FQ_EFFECT, 0);
-                    fq_push(w, FQ_WAIT, 26);
                 }
             } else if (ins->op == OP_TAKEFROM && ins->mem_target < 0) {
                 /* what the direction finds shapes the reach, decided once
                  * when the command is taken up: a neighbour with something
-                 * in hand is a throw and a catch; a neighbour with empty
-                 * hands costs one look and the hands come back empty; a
-                 * bare square (or a cube on the floor, which is for picking
-                 * up, not taking) is the look and then the long red bubble
-                 * of error -- either way the program then moves on */
-                bool anyone = false, laden = false;
+                 * in hand is the long reach into their hands; a neighbour
+                 * with empty hands costs one look and the hands come back
+                 * empty; a hole is the same short look, nothing there to
+                 * take; only a bare square (or a cube on the floor, which
+                 * is for picking up, not taking) is the look and then the
+                 * long red bubble of error -- either way the program then
+                 * moves on */
+                bool anyone = false, laden = false, hole = false;
                 for (int k = 0; k < ins->ndirs; k++) {
                     int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
                     if (nx<0||ny<0||nx>=S->L->w||ny>=S->L->h) continue;
+                    if (S->grid[ny][nx].terrain == T_HOLE) hole = true;
                     int j = worker_at(S, nx, ny, i);
                     if (j >= 0) {
                         anyone = true;
                         if (S->w[j].holding) laden = true;
                     }
                 }
-                if (laden) fq_push_throw(w);
-                else if (anyone) fq_push_look(w);
+                if (laden) fq_push_steal(w);
+                else if (anyone || hole) fq_push_look(w);
                 else fq_push_look_error(w);
-            } else if (ins->op == OP_GIVETO || ins->op == OP_TAKEFROM) {
+            } else if (ins->op == OP_TAKEFROM) {
+                /* a remembered target: the same reach into their hands, or
+                 * the same short look if they stand there empty-handed */
+                int tx, ty, j = -1;
+                if (mem_tile(S, w, ins->mem_target, &tx, &ty))
+                    j = worker_at(S, tx, ty, i);
+                if (j >= 0 && S->w[j].holding) fq_push_steal(w);
+                else if (j >= 0) fq_push_look(w);
+                else fq_push_look_error(w);
+            } else if (ins->op == OP_GIVETO) {
                 fq_push_throw(w);
             } else {
                 /* the hand does its work in the very tick the action starts
