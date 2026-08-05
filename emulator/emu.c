@@ -1763,6 +1763,8 @@ static bool level_won(Sim *S) {
                     if (S->grid[y][x].goal && !S->grid[y][x].has_cube) return false;
             return true;
         case G_SHREDDED_N:
+            if (g_goal_dbg)
+                fprintf(stderr, "shredded %d of %d\n", S->shredded, L->goal_a);
             return S->shredded >= L->goal_a;
         case G_ALL_EXITED:
             for (int i = 0; i < S->nw; i++) if (!S->w[i].exited) return false;
@@ -3764,8 +3766,13 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         case OP_IF:
             /* a condition that never looks outward -- memory, held item,
              * numbers, kind words only -- is answered in a single frame:
-             * decided on the spot, the program moving on the next frame */
+             * decided on the spot, the program moving on the next frame.
+             * It is still a command boundary: a holder spinning on such a
+             * condition is between commands every time round, which is what
+             * lets a neighbour lift the cube out of their hands -- the
+             * fixed-in-place brigade levels hand off exactly this way */
             if (!if_looks(ins)) {
+                if (w->fresh > 0) w->fresh--;
                 if (if_true(S, ins, w)) w->pc++;
                 else w->pc = ins->target +
                          (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
@@ -3782,6 +3789,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             if (ins->akind == 0) {
                 /* nearest is as free as a label: the memory points at the
                  * thing the same frame and the program moves right on */
+                if (w->fresh > 0) w->fresh--;
                 exec_assign(S, w, ins);
                 w->pc++;
                 *progressed = true; return;
@@ -3813,6 +3821,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push_look(w);
                 break;
             }
+            if (w->fresh > 0) w->fresh--;
             exec_assign(S, w, ins);
             w->pc++;
             w->busy = 1;
