@@ -972,8 +972,8 @@ typedef struct {
     bool    ctr_down;            /* ...and whether its button was down last frame */
     int     feeds_this_beat;
     int     beat;
-    long    now_ms, win_ms;      /* event clock; when the win state was reached */
-    long    st_steps, st_bumps, st_items, st_waits;   /* speed-model counters */
+    long    win_ms;              /* frame the win state was reached on */
+    long    st_items;            /* non-step effects fired (texture stat) */
     unsigned rng;                /* the harness's dice: level fabrication only */
     unsigned grng;               /* the game's own dice: step picks and prints */
 } Sim;
@@ -983,8 +983,8 @@ typedef struct {
  * duration is an integer frame count.  Frame units keep same-frame
  * workers exactly simultaneous and make the idle fallback (t+1) advance
  * a full frame. */
-static int MS_STEP = 21, MS_ITEM = 15, MS_PRINTER = 72, MS_SHRED = 45,
-           MS_TELL = 42, MS_IF = 30, MS_ASSIGN = 20, MS_WRITE = 57;
+static int MS_STEP = 21, MS_PRINTER = 72, MS_SHRED = 45,
+           MS_TELL = 42, MS_WRITE = 57;
 
 static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
 
@@ -1008,7 +1008,8 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
     S->grng = seed == 0 ? 0xABAB1981u : S->rng | 1u;
     for (int y = 0; y < L->h; y++)
         for (int x = 0; x < L->w; x++)
-            S->grid[y][x] = (Tile){ L->terr[y][x], L->goalpad[y][x], false, 0, -1 };
+            S->grid[y][x] =
+                (Tile){ L->terr[y][x], L->goalpad[y][x], false, 0, -1, 0, 0 };
 
     /* per-game randomizer specials (the game rolls these from its seed):
      * Terrain Leveler picks its value range per game -- half the games run
@@ -2523,7 +2524,7 @@ static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
  * Operands evaluate BEFORE the slot updates: "mem1 = calc mem1 + c" must
  * read the old mem1 (accumulator loops in Dangerous Spreadsheeting). */
 static void exec_assign(Sim *S, Worker *w, Instr *ins) {
-    MemVal nv = { MV_NOTHING, 0, 0, 0, -1, -1 };
+    MemVal nv = { MV_NOTHING, 0, 0, 0, -1, -1, false };
     if (ins->akind == 0) {                      /* nearest <type> */
         int x, y;
         bool got = find_nearest(S, w, ins->near_type, &x, &y);
@@ -2649,7 +2650,13 @@ static void feed_shredder(Sim *S, Worker *w, int wi, int nx, int ny) {
     w->holding = false;
     w->fed++;
     S->shredded++;
-    S->mach_busy[ny][nx] = S->now_ms + MS_SHRED;
+    /* Legacy stamp in ABSOLUTE frames (the clock it once added was removed
+     * with the batch engine at zero): after the opening seconds this lands
+     * in the past, so the effect re-opens the machine the moment it fires
+     * and the dispatch-side hold above is what actually spaces a queue.
+     * Every validated timing rests on exactly this -- read the machine's
+     * real cycle before touching it. */
+    S->mach_busy[ny][nx] = MS_SHRED;
     if (g_trace)
         fprintf(stderr, "FEED w%d -> shredder(%d,%d) total=%d\n", wi, nx, ny, S->shredded);
 }
@@ -2844,7 +2851,8 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->fresh = 2;
         w->printed++;
         S->pickups++;
-        S->mach_busy[ny][nx] = S->now_ms + MS_PRINTER;
+        S->mach_busy[ny][nx] = MS_PRINTER;   /* legacy absolute stamp: see
+                                                feed_shredder's note */
         return true;
     }
     if (t->has_cube) {
@@ -2881,58 +2889,32 @@ static bool if_looks(const Instr *ins) {
     return false;
 }
 
-/* how long the worker is busy after starting this command */
-static long cmd_duration(Sim *S, Worker *w, Instr *ins) {
-    switch (ins->op) {
-        case OP_STEP: return MS_STEP;
-        case OP_PICKUP: case OP_TAKEFROM: {
-            /* NOTE: acting with full hands shows the game's error bubble
-             * (display ~1.5s) but recorded speeds show the program moves on
-             * at the normal action cost -- so no special charge here */
-            if (ins->op == OP_TAKEFROM && ins->mem_target < 0
-                && w->err_pc == w->pc && w->errx >= 0
-                && S->grid[w->erry][w->errx].terrain == T_PRINTER
-                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1)
-                return MS_PRINTER;
-            if (ins->mem_target >= 0) {
-                int tx, ty;
-                if (mem_tile(S, w, ins->mem_target, &tx, &ty)
-                    && S->grid[ty][tx].terrain == T_PRINTER) return MS_PRINTER;
-            } else
-                for (int k = 0; k < ins->ndirs; k++) {
-                    int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
-                    if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
-                        && S->grid[ny][nx].terrain == T_PRINTER) return MS_PRINTER;
-                }
-            return MS_ITEM;
-        }
-        case OP_GIVETO: {
-            /* giving while empty-handed is a quick no-op, not an error
-             * (Cubical Communication's choreography fires bare givetos) */
-            if (ins->mem_target < 0
-                && w->err_pc == w->pc && w->errx >= 0
-                && S->grid[w->erry][w->errx].terrain == T_SHREDDER
-                && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1)
-                return MS_SHRED;
-            if (ins->mem_target >= 0) {
-                int tx, ty;
-                if (mem_tile(S, w, ins->mem_target, &tx, &ty)
-                    && S->grid[ty][tx].terrain == T_SHREDDER) return MS_SHRED;
-            } else
-                for (int k = 0; k < ins->ndirs; k++) {
-                    int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
-                    if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
-                        && S->grid[ny][nx].terrain == T_SHREDDER) return MS_SHRED;
-                }
-            return MS_ITEM;
-        }
-        case OP_DROP: return MS_ITEM;
-        case OP_WRITE: return w->holding ? MS_WRITE : MS_ITEM;
-        case OP_ASSIGN: return MS_ASSIGN;
-        case OP_TELL: return MS_TELL;
-        case OP_IF: return if_looks(ins) ? MS_IF : 1;
-        default: return 0;
+/* Is this item action about to use a machine (a takefrom or pickup at a
+ * printer, a giveto at a shredder)?  The machine event shapes and the
+ * one-customer busy gate apply exactly when it is.  A machine bound by a
+ * direction errand counts wherever the walk to its front square ended;
+ * otherwise the remembered tile or the named directions are scanned. */
+static bool item_at_machine(Sim *S, Worker *w, Instr *ins) {
+    Terrain want;
+    if (ins->op == OP_PICKUP || ins->op == OP_TAKEFROM) want = T_PRINTER;
+    else if (ins->op == OP_GIVETO) want = T_SHREDDER;
+    else return false;
+    if (ins->op != OP_PICKUP && ins->mem_target < 0
+        && w->err_pc == w->pc && w->errx >= 0
+        && S->grid[w->erry][w->errx].terrain == want
+        && abs(w->x - w->errx) <= 1 && abs(w->y - w->erry) <= 1)
+        return true;
+    if (ins->mem_target >= 0) {
+        int tx, ty;
+        return mem_tile(S, w, ins->mem_target, &tx, &ty)
+            && S->grid[ty][tx].terrain == want;
     }
+    for (int k = 0; k < ins->ndirs; k++) {
+        int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
+        if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h
+            && S->grid[ny][nx].terrain == want) return true;
+    }
+    return false;
 }
 
 static void trace_board(Sim *S, int round) {
@@ -3194,7 +3176,7 @@ static bool cont_reserved(Sim *S, int x, int y, int self) {
 
 /* land worker i on its walk target: update the logical tile + advance the
  * step (single-tile dir-steps advance pc; mem/travel walks re-evaluate). */
-static void cont_land(Sim *S, Program *P, int i) {
+static void cont_land(Sim *S, int i) {
     Worker *w = &S->w[i];
     if (!w->wowned) { w->x = w->wtx; w->y = w->wty; }   /* else already taken */
     w->fx = w->x; w->fy = w->y;
@@ -3317,7 +3299,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
         /* the tile is already ours: nothing left to contest, the body is just
          * covering the ground between the two tiles. */
         w->wprog++;
-        if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
+        if (w->wprog >= w->wtot) { cont_land(S, i); return true; }
         glide_body(w);
         return true;
     }
@@ -3421,7 +3403,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
     w->x = tx; w->y = ty;
     w->wowned = true;
     w->wprog++;
-    if (w->wprog >= w->wtot) { cont_land(S, P, i); return true; }
+    if (w->wprog >= w->wtot) { cont_land(S, i); return true; }
     glide_body(w);
     return true;
 }
@@ -3851,8 +3833,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 fq_push(w, FQ_WAIT, (float)(MS_WRITE - 57));
             break;
         case OP_PICKUP: case OP_DROP: case OP_GIVETO: case OP_TAKEFROM: {
-            long cost = cmd_duration(S, w, ins);
-            if (cost > MS_ITEM) {
+            if (item_at_machine(S, w, ins)) {
                 /* a machine holds one customer at a time; the next in line
                  * parks (uncharged) until the machine frees up */
                 int mx, my;
@@ -4107,7 +4088,7 @@ int main(int argc, char **argv) {
     static Sim S;
     int wins = 0, min_r = -1, max_r = -1, first_fail = -1;
     int min_sp = -1, max_sp = -1;
-    long sum_r = 0, sum_sp = 0, sum_steps = 0, sum_bumps = 0, sum_items = 0, sum_waits = 0;
+    long sum_r = 0, sum_sp = 0, sum_items = 0;
     for (int t = 0; t < trials; t++) {
         sim_reset(&S, &L, (unsigned)(t + 1));
         int rounds = 0;
@@ -4121,8 +4102,7 @@ int main(int argc, char **argv) {
             if (min_sp < 0 || sp < min_sp) min_sp = sp;
             if (sp > max_sp) max_sp = sp;
             sum_sp += sp;
-            sum_steps += S.st_steps; sum_bumps += S.st_bumps;
-            sum_items += S.st_items; sum_waits += S.st_waits;
+            sum_items += S.st_items;
         } else if (first_fail < 0) first_fail = t + 1;
     }
 
@@ -4136,10 +4116,9 @@ int main(int argc, char **argv) {
     if (wins) {
         printf("speed   : %.1f  (game seconds, avg over wins; range %d..%d)\n",
                (double)sum_sp/wins, min_sp, max_sp);
-        printf("rounds  : %d..%d  (event batches)\n", min_r, max_r);
-        printf("stats   : beats=%.1f steps=%.1f bumps=%.1f items=%.1f waits=%.1f (avg over wins)\n",
-               (double)sum_r/wins, (double)sum_steps/wins, (double)sum_bumps/wins,
-               (double)sum_items/wins, (double)sum_waits/wins);
+        printf("rounds  : %d..%d  (frames)\n", min_r, max_r);
+        printf("stats   : frames=%.1f items=%.1f (avg over wins)\n",
+               (double)sum_r/wins, (double)sum_items/wins);
     }
     /* a solution that wins some trials but not all is a luck-based ("retry
      * until it works") solution -- report it distinctly */
