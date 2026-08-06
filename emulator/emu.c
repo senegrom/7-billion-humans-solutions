@@ -4054,6 +4054,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     }
                     fq_push(w, FQ_WAIT, (float)(grab_at - now));
                     fq_push(w, FQ_EFFECT, 0);
+                    /* the catch has a follow-through: the take is not over
+                     * until the sheet is gathered in, a beat after it lands
+                     * in the hands.  The whole command runs that much
+                     * longer -- nothing downstream starts early. */
+                    fq_push(w, FQ_WAIT, 24);
                 }
             } else if (ins->op == OP_TAKEFROM && ins->mem_target < 0) {
                 /* what the direction finds shapes the reach, decided once
