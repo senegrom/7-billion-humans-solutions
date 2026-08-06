@@ -2451,33 +2451,11 @@ typedef struct {
     bool walk_only;   /* mid macro-walk: move but do not execute/advance */
 } Intent;
 
-/* Do this level's holes swallow whoever steps in? Generic holes are
- * shallow standable pits (Checkerboard's wanderers survive their
- * renovation pits); swallowing is per-level behavior on the levels whose
- * goal involves going (or being thrown) in. */
-static bool holes_swallow(const Level *L) {
-    switch (L->win) {
-        case G_ROOM_CLEARED:        /* everything into the pits */
-        case G_ALIGNED_HOLE_EXIT:   /* the safe hole / instant doom */
-        case G_ALL_EXITED:
-        case G_ALL_CUBES_HELD:      /* Little Exterminator dooms */
-        case G_WORKERS_EXIT_DOOR:
-        case G_ROYALE_MAX_REMAINS:
-        case G_DECRYPT_LEFT_EXIT:
-        case G_GLORY_DIVE:
-        case G_FASHION_UNIQUE:      /* redundant workers dive out */
-        case G_CUBES_LINE_ROW:      /* Collation Station's disposal */
-        case G_GOODBYE:
-            return true;
-        case G_SHRED_ALL:
-            return L->goal_a != 0;  /* the alive_all variant (LE2) */
-        default:
-            return false;
-    }
-}
-
+/* A hole swallows whoever lands in one, on every level -- there are no
+ * shallow pits.  A program can still march a worker in deliberately;
+ * stepping in by accident ends their day just the same. */
 static void fall_check(Sim *S, Worker *w) {
-    if ((S->grid[w->y][w->x].terrain == T_HOLE && holes_swallow(S->L))
+    if (S->grid[w->y][w->x].terrain == T_HOLE
         || (S->door_exit && w->x == S->L->door_x && w->y == S->L->door_y)) {
         w->alive = false; w->exited = true;
         w->exit_x = w->x; w->exit_y = w->y;
