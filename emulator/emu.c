@@ -3484,7 +3484,9 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
             if (person) w->smem_pc = w->pc;
-            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
+            /* only a walk that chases a PERSON can be made to give way --
+             * a walk to a remembered square is bound for that square */
+            cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, person);
             *progressed = true; return;
         }
         int cand[8], nc = 0, freec[8], fnc = 0;
@@ -3530,7 +3532,11 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                 if (ok) { d = cd; break; }
             }
         } else d = cand[game_rnd(S) % (unsigned)nc];
-        cont_walk(S, i, w->x + DX[d], w->y + DY[d], true, ins->ndirs > 1);
+        /* a plain stride is bound for the square it drew, however many
+         * directions were in the hat -- it is never made to give way.
+         * Only a walk chasing a thing (an errand, a person) can be
+         * crossed by someone it is blocking. */
+        cont_walk(S, i, w->x + DX[d], w->y + DY[d], true, false);
         *progressed = true; return;
 }
 
@@ -3835,7 +3841,8 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
             /* an idle press starts on its first sheet as its customer comes
              * within a stride of the front square -- someone bound to it
-             * from further off has not started anything yet */
+             * from further off has not started anything yet, and the serve
+             * itself dates the first sheet from the arrival instead */
             if (ins->op == OP_TAKEFROM && !w->holding && sfront
                 && S->grid[ty][tx].terrain == T_PRINTER
                 && S->press_done[ty][tx] == 0
@@ -3853,6 +3860,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 int rx = tx, ry = ty;
                 bool front = !onto && machine_front(S, &rx, &ry);
                 int d = route_step(S, w, rx, ry, front ? false : !onto);
+                if (getenv("EMU_ERRLOG"))
+                    fprintf(stderr, "[errw] t%d w%d @%d,%d -> %d,%d hop=%d\n",
+                            now, i, w->x, w->y, rx, ry, d);
                 if (d >= 0) {
                     cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
                     if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
