@@ -138,8 +138,9 @@ typedef struct {
     int  err_t0;       /* frame the binding was made on: the look a pointed
                           takefrom pays runs from here, overlapping any wait
                           in the queue (-1 = not yet stamped) */
-    int  smem_pc;      /* step-to-person command that has already strode
-                          (-1 = none): its completion beside them is free */
+    int  smem_face;    /* the person this body is already turned toward
+                          (-1 = none): stepping to them again is a glance;
+                          turning to someone new is a stand */
 } Worker;
 
 typedef enum {
@@ -1243,7 +1244,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->held_owner = -1;
         w->last_tell = -1;
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
-        w->smem_pc = -1;
+        w->smem_face = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
             /* the safe hole lies straight through the worker's adjacent cube */
@@ -3459,12 +3460,14 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                     fprintf(stderr, "[smem] w%d noop tgt=%d,%d person=%d\n",
                             (int)(w - S->w), tx, ty, (int)person);
                 if (w->fresh > 0) w->fresh--;
-                /* finding yourself already beside the person still costs
-                 * the stride you do not take: the body turns to them and
-                 * the program only then moves on.  Arriving beside them at
-                 * the end of a stride costs nothing more. */
-                if (person && w->smem_pc != w->pc) w->busy = 11;
-                w->smem_pc = -1;
+                /* standing beside the person already: stepping to someone
+                 * the body is turned toward is a glance and the program
+                 * moves straight on, but turning to face somebody NEW is
+                 * a stand -- the stride not taken still gets its beat */
+                if (person) {
+                    int who = w->mem[ins->mem_target].wref;
+                    if (who != w->smem_face) { w->busy = 11; w->smem_face = who; }
+                }
                 w->pc++; *progressed = true; return;
             }
             if (person) {
@@ -3483,7 +3486,7 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             }
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
-            if (person) w->smem_pc = w->pc;
+            if (person) w->smem_face = w->mem[ins->mem_target].wref;
             /* only a walk that chases a PERSON can be made to give way --
              * a walk to a remembered square is bound for that square */
             cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, person);
@@ -3701,7 +3704,6 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Instr *ins = &P->instr[w->pc];
     if (w->err_pc != w->pc) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
-        w->smem_pc = -1;
     }
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
