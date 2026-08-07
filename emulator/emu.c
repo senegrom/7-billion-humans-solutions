@@ -3530,14 +3530,16 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                 w->pc++; *progressed = true; return;
             }
             if (!person && w->mem[ins->mem_target].k == MV_CUBEREF
-                && S->grid[ty][tx].has_cube) {
-                /* the memory names a CUBE, and the cube is sitting on the
-                 * floor: a step cannot stand on it, and the refusal is the
-                 * long red bubble -- the body never stirs, however far off
-                 * the cube lies, and the program only moves on when the
-                 * bubble fades.  (The scripted speed runs lean on it as a
-                 * metronome.)  A remembered SQUARE is walked onto whatever
-                 * lies on it. */
+                && S->grid[ty][tx].has_cube
+                && S->grid[ty][tx].owner >= 0) {
+                /* the memory names a CUBE that a worker set down (a piece
+                 * of placed work, not part of the level's furniture): a
+                 * step cannot stand on it, and the refusal is the long red
+                 * bubble -- the body never stirs, however far off the cube
+                 * lies, and the program only moves on when the bubble
+                 * fades.  (The scripted speed runs lean on it as a
+                 * metronome.)  A step to a cube the level laid out, or to
+                 * a remembered SQUARE, walks there whatever lies on it. */
                 if (w->fresh > 0) w->fresh--;
                 w->pc++;
                 fq_push(w, FQ_WAIT, (float)MS_ERRB);
