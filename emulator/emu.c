@@ -2898,6 +2898,8 @@ static void counter_press(Sim *S) {
 /* returns true if something was picked up (or the worker exploded) */
 static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
     Tile *t = &S->grid[ny][nx];
+    if (getenv("EMU_PKLOG"))
+        fprintf(stderr, "[pk] t%d w%d @%d,%d\n", S->beat, wi, nx, ny);
     if (t->terrain == T_PRINTER) {               /* fresh print */
         /* the quiet-office printers hold exactly the ration of paper the goal
          * asks for -- runs dry after goal_a sheets, freezing the counts the
@@ -3531,10 +3533,11 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                 && S->grid[ty][tx].has_cube) {
                 /* the memory names a CUBE, and the cube is sitting on the
                  * floor: a step cannot stand on it, and the refusal is the
-                 * long red bubble -- the body never stirs and the program
-                 * only moves on when it fades.  (The scripted speed runs
-                 * lean on this bubble as a metronome.)  A step to a
-                 * remembered SQUARE walks there whatever lies on it. */
+                 * long red bubble -- the body never stirs, however far off
+                 * the cube lies, and the program only moves on when the
+                 * bubble fades.  (The scripted speed runs lean on it as a
+                 * metronome.)  A remembered SQUARE is walked onto whatever
+                 * lies on it. */
                 if (w->fresh > 0) w->fresh--;
                 w->pc++;
                 fq_push(w, FQ_WAIT, (float)MS_ERRB);
@@ -4338,6 +4341,26 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 if (w->pc == pc0) break;      /* waiting, not advancing */
             }
             if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
+        }
+        if (getenv("EMU_STACKLOG")) {
+            static long stacklast = -1;
+            for (int a = 0; a < S->nw; a++)
+                for (int b = a + 1; b < S->nw; b++) {
+                    Worker *wa = &S->w[a], *wb = &S->w[b];
+                    if (!wa->alive || !wb->alive || wa->exited || wb->exited)
+                        continue;
+                    if (wa->x == wb->x && wa->y == wb->y && now != stacklast) {
+                        stacklast = now;
+                        fprintf(stderr, "[stack] t%d w%d&w%d @%d,%d "
+                                "a:wtx=%d,%d int=%d,%d own=%d done=%d "
+                                "b:wtx=%d,%d int=%d,%d own=%d done=%d\n",
+                                now, a, b, wa->x, wa->y,
+                                wa->wtx, wa->wty, wa->wintx, wa->winty,
+                                (int)wa->wowned, (int)wa->done,
+                                wb->wtx, wb->wty, wb->wintx, wb->winty,
+                                (int)wb->wowned, (int)wb->done);
+                    }
+                }
         }
         /* EMU_POSLOG prints every worker's body position and hands when
          * anything moved -- the way to hold two runs' crowds side by side */
