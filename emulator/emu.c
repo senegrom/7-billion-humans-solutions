@@ -147,7 +147,7 @@ typedef struct {
     /* an errand's route is planned once and then followed: a walker blocked
        mid-route waits for its own next stride rather than dodging.  Only the
        remembered target moving re-plans it. */
-    unsigned char epath[96];
+    unsigned short epath[96];
     int  epn, epi;     /* stored hops and the next one to take */
     int  ep_pc;        /* command the stored route belongs to (-1 = none) */
     int  ep_tx, ep_ty; /* target it was planned for */
@@ -1567,7 +1567,7 @@ static bool walkable(Sim *S, int x, int y) {
 enum { RT_STEP = 14, RT_EDGE = 10, RT_STAND = 40, RT_HEUR = 10, RT_INF = 0x7FFFFFFF };
 
 static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
-                         bool adjacent_ok, unsigned char *hops, int cap) {
+                         bool adjacent_ok, unsigned short *hops, int cap) {
     Level *L = S->L;
     #define ISGOAL(X,Y) (adjacent_ok ? (abs((X)-tx)<=1 && abs((Y)-ty)<=1) \
                                      : ((X)==tx && (Y)==ty))
@@ -1640,10 +1640,23 @@ static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
         }
     }
     #undef ISGOAL
-    if (goal < 0) return -1;
+    if (goal < 0) {
+        if (getenv("EMU_ERRLOG"))
+            fprintf(stderr, "[noroute] @%d,%d -> %d,%d tterr=%d topen=%d tclosed=%d\n",
+                    self->x, self->y, tx, ty,
+                    (tx >= 0 && ty >= 0 && tx < L->w && ty < L->h)
+                        ? (int)S->grid[ty][tx].terrain : -1,
+                    (tx >= 0 && ty >= 0) ? (int)opened[ty][tx] : -1,
+                    (tx >= 0 && ty >= 0) ? (int)closed[ty][tx] : -1);
+        return -1;
+    }
     int cx = goal % MAXW, cy = goal / MAXW;
     if (hops) {
-        /* the whole route, first hop first */
+        /* the whole route as WAYPOINT SQUARES, first one first.  Squares,
+         * not directions: a walker displaced mid-route (swapped, rotated,
+         * shoved) still heads for the same squares from wherever it now
+         * stands, instead of replaying turns from the wrong starting
+         * point. */
         int n = 0;
         for (int x = cx, y = cy; from[y][x] != -2; ) {
             int d = from[y][x];
@@ -1652,8 +1665,8 @@ static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
         if (n > cap) return -1;
         int k = n;
         for (int x = cx, y = cy; from[y][x] != -2; ) {
+            hops[--k] = (unsigned short)(y * MAXW + x);
             int d = from[y][x];
-            hops[--k] = (unsigned char)d;
             x -= DX[d]; y -= DY[d];
         }
         return n;
@@ -1682,7 +1695,7 @@ static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_
 /* the whole route at once, for the walks that are planned once and then
  * followed to the end however long the waiting gets */
 static int route_path(Sim *S, const Worker *self, int tx, int ty,
-                      bool adjacent_ok, unsigned char *hops, int cap) {
+                      bool adjacent_ok, unsigned short *hops, int cap) {
     return path_step_buf(S, self, tx, ty, adjacent_ok, hops, cap);
 }
 
@@ -3920,27 +3933,42 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                  * and re-planned only when the remembered target itself
                  * moves: a walker blocked mid-route waits for its own next
                  * stride, however long that takes -- it does not dodge
-                 * around the jam even when a clear detour sits open */
+                 * around the jam even when a clear detour sits open.  A
+                 * body displaced ONTO its next square rejoins the route
+                 * there; one thrown clear of the line plans afresh. */
+                while (w->epi < w->epn
+                       && w->epath[w->epi] % MAXW == w->x
+                       && w->epath[w->epi] / MAXW == w->y) w->epi++;
+                int wx = -1, wy = -1;
+                if (w->epi < w->epn) {
+                    wx = w->epath[w->epi] % MAXW;
+                    wy = w->epath[w->epi] / MAXW;
+                }
                 if (w->ep_pc != w->pc || w->ep_tx != rx || w->ep_ty != ry
-                    || w->epi >= w->epn) {
+                    || w->epi >= w->epn
+                    || abs(wx - w->x) > 1 || abs(wy - w->y) > 1) {
                     int n = route_path(S, w, rx, ry, front ? false : !onto,
-                                       w->epath, (int)(sizeof w->epath));
+                                       w->epath,
+                                       (int)(sizeof w->epath / sizeof w->epath[0]));
                     if (getenv("EMU_ERRLOG"))
                         fprintf(stderr, "[plan] t%d w%d @%d,%d -> %d,%d "
-                                "was pc%d %d/%d now n=%d first=%d\n",
+                                "was pc%d %d/%d now n=%d\n",
                                 now, i, w->x, w->y, rx, ry,
-                                w->ep_pc, w->epi, w->epn, n,
-                                n > 0 ? w->epath[0] : -1);
+                                w->ep_pc, w->epi, w->epn, n);
                     w->epn = n > 0 ? n : 0;
                     w->epi = 0;
                     w->ep_pc = w->pc; w->ep_tx = rx; w->ep_ty = ry;
+                    wx = wy = -1;
+                    if (w->epi < w->epn) {
+                        wx = w->epath[w->epi] % MAXW;
+                        wy = w->epath[w->epi] / MAXW;
+                    }
                 }
-                int d = (w->epi < w->epn) ? w->epath[w->epi] : -1;
                 if (getenv("EMU_ERRLOG"))
-                    fprintf(stderr, "[errw] t%d w%d @%d,%d -> %d,%d hop=%d\n",
-                            now, i, w->x, w->y, rx, ry, d);
-                if (d >= 0) {
-                    cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
+                    fprintf(stderr, "[errw] t%d w%d @%d,%d -> %d,%d step=%d,%d\n",
+                            now, i, w->x, w->y, rx, ry, wx, wy);
+                if (wx >= 0) {
+                    cont_walk(S, i, wx, wy, false, true);
                     /* the walk belongs to this command: remember it happened,
                      * for the machines that greet a strolling customer
                      * differently from a standing one */
