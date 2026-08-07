@@ -138,6 +138,19 @@ typedef struct {
     int  err_t0;       /* frame the binding was made on: the look a pointed
                           takefrom pays runs from here, overlapping any wait
                           in the queue (-1 = not yet stamped) */
+    bool cmd_walked;   /* this command walked the body somewhere: a customer
+                          who strolled in engages the machine on arrival; one
+                          already standing there takes a beat to begin */
+    int  spr_pc;       /* command whose printer order has been placed (-1 =
+                          none): each take-order winds the press up once */
+    int  srvx, srvy;   /* machine a running serve belongs to */
+    /* an errand's route is planned once and then followed: a walker blocked
+       mid-route waits for its own next stride rather than dodging.  Only the
+       remembered target moving re-plans it. */
+    unsigned char epath[96];
+    int  epn, epi;     /* stored hops and the next one to take */
+    int  ep_pc;        /* command the stored route belongs to (-1 = none) */
+    int  ep_tx, ep_ty; /* target it was planned for */
     int  smem_face;    /* the person this body is already turned toward
                           (-1 = none): stepping to them again is a glance;
                           turning to someone new is a stand */
@@ -969,10 +982,11 @@ typedef struct {
     bool    door_exit;           /* the door acts as a walk-in exit */
     long    mach_busy[MAXH][MAXW]; /* machine mid-cycle until this time: one
                                       customer at a time (the printer queue) */
-    long    mach_clear[MAXH][MAXW]; /* when the last customer stepped out of
-                                       the front square (0 = never served) */
-    long    press_done[MAXH][MAXW]; /* when the sheet now on the press is
-                                       finished (0 = the press stands idle) */
+    long    press_stamp[MAXH][MAXW]; /* when the press was last wound up: a
+                                        take-order aimed at it (from anywhere)
+                                        or the serve's own print start; the
+                                        sheet is ready 32 frames after the
+                                        latest winding */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
     int     print_next[MAXH][MAXW]; /* the value each printer will serve next:
                                        a fresh printer's first sheet is always
@@ -1244,6 +1258,9 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->held_owner = -1;
         w->last_tell = -1;
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
+        w->cmd_walked = false;
+        w->spr_pc = -1; w->srvx = w->srvy = -1;
+        w->epn = w->epi = 0; w->ep_pc = -1; w->ep_tx = w->ep_ty = -1;
         w->smem_face = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
@@ -1549,8 +1566,8 @@ static bool walkable(Sim *S, int x, int y) {
  * be a hole -- diving in is allowed as the final step. */
 enum { RT_STEP = 14, RT_EDGE = 10, RT_STAND = 40, RT_HEUR = 10, RT_INF = 0x7FFFFFFF };
 
-static int path_step(Sim *S, const Worker *self, int tx, int ty,
-                     bool adjacent_ok) {
+static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
+                         bool adjacent_ok, unsigned char *hops, int cap) {
     Level *L = S->L;
     #define ISGOAL(X,Y) (adjacent_ok ? (abs((X)-tx)<=1 && abs((Y)-ty)<=1) \
                                      : ((X)==tx && (Y)==ty))
@@ -1576,9 +1593,10 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
         for (int x = 0; x < L->w; x++) {
             from[y][x] = -9; closed[y][x] = false; opened[y][x] = false;
         }
-    /* neighbours are offered x before y, positive before negative, cardinals
-     * before diagonals -- the order that breaks ties between equal routes */
-    static const int NEIGH[8] = { D_E, D_W, D_S, D_N, D_SE, D_SW, D_NE, D_NW };
+    /* neighbours are offered diagonals before cardinals (x before y,
+     * positive before negative within each) -- the order that breaks ties
+     * between equal routes: an open-floor route leads with its diagonals */
+    static const int NEIGH[8] = { D_SE, D_SW, D_NE, D_NW, D_E, D_W, D_S, D_N };
     static int openq[MAXW * MAXH * 4];
     int on = 0, goal = -1;
     g[self->y][self->x] = 0;
@@ -1623,8 +1641,24 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     }
     #undef ISGOAL
     if (goal < 0) return -1;
-    /* walk back to find the first step */
     int cx = goal % MAXW, cy = goal / MAXW;
+    if (hops) {
+        /* the whole route, first hop first */
+        int n = 0;
+        for (int x = cx, y = cy; from[y][x] != -2; ) {
+            int d = from[y][x];
+            x -= DX[d]; y -= DY[d]; n++;
+        }
+        if (n > cap) return -1;
+        int k = n;
+        for (int x = cx, y = cy; from[y][x] != -2; ) {
+            int d = from[y][x];
+            hops[--k] = (unsigned char)d;
+            x -= DX[d]; y -= DY[d];
+        }
+        return n;
+    }
+    /* walk back to find the first step */
     for (;;) {
         int d = from[cy][cx];
         int px = cx - DX[d], py = cy - DY[d];
@@ -1633,11 +1667,23 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     }
 }
 
+static int path_step(Sim *S, const Worker *self, int tx, int ty,
+                     bool adjacent_ok) {
+    return path_step_buf(S, self, tx, ty, adjacent_ok, NULL, 0);
+}
+
 /* one movement step toward a target.  There is no second opinion: the toll
  * already prices standing bodies into the route, and walking at one anyway is
  * a legitimate outcome -- the walk itself then sorts out the right of way. */
 static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_ok) {
     return path_step(S, self, tx, ty, adjacent_ok);
+}
+
+/* the whole route at once, for the walks that are planned once and then
+ * followed to the end however long the waiting gets */
+static int route_path(Sim *S, const Worker *self, int tx, int ty,
+                      bool adjacent_ok, unsigned char *hops, int cap) {
+    return path_step_buf(S, self, tx, ty, adjacent_ok, hops, cap);
 }
 
 /* does this tile hold a `nearest`-findable thing? Unlike IF-sensing, nearest
@@ -3142,6 +3188,26 @@ static void exec_action(Sim *S, Program *P, int i) {
  * silent instant retry, not an error.) */
 #define MS_ERRB 94              /* the error bubble, 1.5 s in ticks */
 
+/* ---- the event-queue scheduler's core ------------------------------------
+ * A command queues a little timeline and the queue carries the time:
+ * waits and new animations line up behind a running animation, while the
+ * command's effect and the suspend/resume bookkeeping are instant.  An
+ * animation only holds its own queue -- its tail plays out under whatever
+ * the worker does next, so a pickup before a walk costs less wall time
+ * than a pickup before another animation. */
+enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME,
+       FQ_GRAB, FQ_ERRND, FQ_PRESSWAIT, FQ_MACHREL };
+
+static const float FQ_DT = 1.0f;      /* queue times are in frames */
+
+static void fq_push(Worker *w, int id, float t) {
+    if (w->evn < (int)(sizeof w->evq / sizeof w->evq[0])) {
+        w->evq[w->evn].id = (unsigned char)id;
+        w->evq[w->evn].t = t;
+        w->evn++;
+    }
+}
+
 
 /* Which tile is a worker IN?  The one it holds -- and it takes hold of the tile
  * it is stepping into at the START of the step, letting go of the one behind it
@@ -3448,6 +3514,19 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                 }
                 w->pc++; *progressed = true; return;
             }
+            if (!person && w->mem[ins->mem_target].k == MV_CUBEREF
+                && S->grid[ty][tx].has_cube) {
+                /* the memory names a CUBE, and the cube is sitting on the
+                 * floor: a step cannot stand on it, and the refusal is the
+                 * long red bubble -- the body never stirs and the program
+                 * only moves on when it fades.  (The scripted speed runs
+                 * lean on this bubble as a metronome.)  A step to a
+                 * remembered SQUARE walks there whatever lies on it. */
+                if (w->fresh > 0) w->fresh--;
+                w->pc++;
+                fq_push(w, FQ_WAIT, (float)MS_ERRB);
+                *progressed = true; return;
+            }
             if (person) {
                 long bestk = 0; int bx = -1, by = -1;
                 for (int dy = -1; dy <= 1; dy++)
@@ -3522,26 +3601,6 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
 }
 
 
-
-/* ---- the event-queue scheduler -------------------------------------------
- * A command queues a little timeline and the queue carries the time:
- * waits and new animations line up behind a running animation, while the
- * command's effect and the suspend/resume bookkeeping are instant.  An
- * animation only holds its own queue -- its tail plays out under whatever
- * the worker does next, so a pickup before a walk costs less wall time
- * than a pickup before another animation. */
-enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME,
-       FQ_GRAB, FQ_ERRND };
-
-static const float FQ_DT = 1.0f;      /* queue times are in frames */
-
-static void fq_push(Worker *w, int id, float t) {
-    if (w->evn < (int)(sizeof w->evq / sizeof w->evq[0])) {
-        w->evq[w->evn].id = (unsigned char)id;
-        w->evq[w->evn].t = t;
-        w->evn++;
-    }
-}
 
 /* frames of gating before an item action's effect, and the animation tail
  * that plays out afterwards (30 frames of animation in all) */
@@ -3666,6 +3725,20 @@ static bool fq_pump(Sim *S, Program *P, int i) {
                 S->st_items++;
                 w->pc++;
                 w->evcur++; continue;
+            case FQ_PRESSWAIT:
+                /* the sheet flies when the press's wind-up runs out -- and
+                 * every fresh take-order aimed at this press winds it again,
+                 * so the wait re-reads the clock rather than counting */
+                if (w->srvx >= 0
+                    && S->beat < S->press_stamp[w->srvy][w->srvx] + 32)
+                    return false;
+                w->evcur++; continue;
+            case FQ_MACHREL:
+                /* the serve is fully wound down: the machine takes its next
+                 * customer from this frame */
+                if (w->srvx >= 0)
+                    S->mach_busy[w->srvy][w->srvx] = S->beat;
+                w->evcur++; continue;
             default: w->evcur++; continue;
         }
     }
@@ -3682,7 +3755,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
     Instr *ins = &P->instr[w->pc];
     if (w->err_pc != w->pc) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
+        w->cmd_walked = false;
     }
+    if (w->spr_pc != w->pc) w->spr_pc = -1;
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
     if (getenv("EMU_CMDLOG"))
@@ -3819,15 +3894,17 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         if (have) {
             int fx0 = tx, fy0 = ty;
             bool sfront = !onto && machine_front(S, &fx0, &fy0);
-            /* an idle press starts on its first sheet as its customer comes
-             * within a stride of the front square -- someone bound to it
-             * from further off has not started anything yet, and the serve
-             * itself dates the first sheet from the arrival instead */
-            if (ins->op == OP_TAKEFROM && !w->holding && sfront
-                && S->grid[ty][tx].terrain == T_PRINTER
-                && S->press_done[ty][tx] == 0
-                && abs(w->x - fx0) <= 1 && abs(w->y - fy0) <= 1)
-                S->press_done[ty][tx] = now + 36;
+            /* the take-order reaches the press the moment it is given --
+             * from across the room, and even while someone else's serve
+             * still waits on its sheet: the wind-up starts over.  The
+             * order goes out as the previous command winds down, one
+             * frame before the program visibly takes this one up. */
+            if (ins->op == OP_TAKEFROM && sfront && w->spr_pc != w->pc
+                && S->grid[ty][tx].terrain == T_PRINTER) {
+                w->spr_pc = w->pc;
+                if ((long)now - 1 > S->press_stamp[ty][tx])
+                    S->press_stamp[ty][tx] = now - 1;
+            }
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
                           : sfront ? (w->x == fx0 && w->y == fy0) \
                                   : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
@@ -3839,14 +3916,54 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             if (!act) {
                 int rx = tx, ry = ty;
                 bool front = !onto && machine_front(S, &rx, &ry);
-                int d = route_step(S, w, rx, ry, front ? false : !onto);
+                /* the route is planned once, when the errand takes it up,
+                 * and re-planned only when the remembered target itself
+                 * moves: a walker blocked mid-route waits for its own next
+                 * stride, however long that takes -- it does not dodge
+                 * around the jam even when a clear detour sits open */
+                if (w->ep_pc != w->pc || w->ep_tx != rx || w->ep_ty != ry
+                    || w->epi >= w->epn) {
+                    int n = route_path(S, w, rx, ry, front ? false : !onto,
+                                       w->epath, (int)(sizeof w->epath));
+                    if (getenv("EMU_ERRLOG"))
+                        fprintf(stderr, "[plan] t%d w%d @%d,%d -> %d,%d "
+                                "was pc%d %d/%d now n=%d first=%d\n",
+                                now, i, w->x, w->y, rx, ry,
+                                w->ep_pc, w->epi, w->epn, n,
+                                n > 0 ? w->epath[0] : -1);
+                    w->epn = n > 0 ? n : 0;
+                    w->epi = 0;
+                    w->ep_pc = w->pc; w->ep_tx = rx; w->ep_ty = ry;
+                }
+                int d = (w->epi < w->epn) ? w->epath[w->epi] : -1;
                 if (getenv("EMU_ERRLOG"))
                     fprintf(stderr, "[errw] t%d w%d @%d,%d -> %d,%d hop=%d\n",
                             now, i, w->x, w->y, rx, ry, d);
                 if (d >= 0) {
                     cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, true);
-                    if (w->wtx >= 0 && w->wprog == 0) cont_glide(S, P, i);
-                    w->fready = false;
+                    /* the walk belongs to this command: remember it happened,
+                     * for the machines that greet a strolling customer
+                     * differently from a standing one */
+                    w->err_pc = w->pc;
+                    w->cmd_walked = true;
+                    /* a refused step is not a turn spent: the asker looks
+                     * again next frame, so a freed square goes to the first
+                     * in line, not to whoever's poll lands on the lucky
+                     * parity.  Only a walk that actually gets going costs
+                     * the frame -- the first glide may still bounce off a
+                     * body that has not cleared, and that bounce is free. */
+                    if (w->wtx >= 0) {
+                        if (w->wprog == 0) cont_glide(S, P, i);
+                        if (w->wtx >= 0) {
+                            /* an errand hop lands like a step: the body
+                             * settles into the square for a frame before
+                             * the errand looks around again -- a whole
+                             * stride is the same length whoever walks it */
+                            w->epi++;
+                            w->wsettle = true;
+                            w->fready = false;
+                        }
+                    }
                 }
                 *progressed = true; return;   /* no route: wait a frame */
             }
@@ -4007,38 +4124,32 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                     fq_push(w, FQ_ANIM, 137);
                     fq_push(w, FQ_WAITANIM, 0);
                 } else {
-                    /* Taking from a printer is a serve with a pipeline.
-                     * The press runs a 36-frame print; the sheet is thrown
-                     * and caught over 40 more and is in the taker's hands
-                     * only at the catch.  The press starts the next sheet
-                     * as the previous taker steps out IF its next customer
-                     * is already stepping in -- a prompt queue rotation
-                     * catches a sheet that is nearly done, a straggler
-                     * finds the press idle and waits out the full print.
-                     * The taker stands engaged for 25 frames after the
-                     * catch while it steps out of the front square. */
-                    long arr = now + look_left;
-                    long pr;
-                    if (machok && S->mach_clear[my][mx] > 0) {
-                        long pc0 = S->mach_clear[my][mx];
-                        pr = (arr - pc0 <= 24 ? pc0 : arr) + 36;
-                    } else if (machok && S->press_done[my][mx] > 0) {
-                        pr = S->press_done[my][mx];
-                    } else {
-                        pr = arr + 36;
-                    }
-                    long grab_at = (pr > arr ? pr : arr) + 40;
+                    /* Taking from a printer is a serve against the press's
+                     * own wind-up.  The customer engages on arrival (one
+                     * already standing at the front takes a beat to begin,
+                     * and a pointed order finishes its look first), leans
+                     * in for 4, and the press starts the sheet.  The sheet
+                     * flies once the wind-up runs out, is 15 in the air,
+                     * and the catch is gathered in over 25 more before the
+                     * machine frees for the next in line. */
+                    long engage = now + look_left;
+                    if (!w->cmd_walked && look_left == 0) engage = now + 2;
                     if (machok) {
-                        S->mach_busy[my][mx] = grab_at + 25;
-                        S->mach_clear[my][mx] = grab_at + 25;
-                    }
-                    fq_push(w, FQ_WAIT, (float)(grab_at - now));
+                        w->srvx = mx; w->srvy = my;
+                        if (engage + 4 > S->press_stamp[my][mx])
+                            S->press_stamp[my][mx] = engage + 4;
+                        S->mach_busy[my][mx] = 0x3FFFFFFFL;
+                    } else
+                        w->srvx = w->srvy = -1;
+                    fq_push(w, FQ_WAIT, (float)(engage + 4 - now));
+                    if (machok) fq_push(w, FQ_PRESSWAIT, 0);
+                    else        fq_push(w, FQ_WAIT, 33);
+                    /* the flight starts the frame the wind-up clears and
+                     * the sheet is in the hands on the sixteenth */
+                    fq_push(w, FQ_WAIT, 16);
                     fq_push(w, FQ_EFFECT, 0);
-                    /* the catch has a follow-through: the take is not over
-                     * until the sheet is gathered in, a beat after it lands
-                     * in the hands.  The whole command runs that much
-                     * longer -- nothing downstream starts early. */
-                    fq_push(w, FQ_WAIT, 24);
+                    fq_push(w, FQ_WAIT, 26);
+                    fq_push(w, FQ_MACHREL, 0);
                 }
             } else if (ins->op == OP_TAKEFROM && ins->mem_target < 0) {
                 /* what the direction finds shapes the reach, decided once
@@ -4116,7 +4227,9 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
     if (level_won(S)) { *out_rounds = 0; return true; }
     for (int i = 0; i < S->nw; i++) {
         Worker *w = &S->w[i];
-        w->busy = 0; w->wtx = w->wty = -1;
+        /* power-on: the first commands are taken up a couple of frames
+         * before any body starts to move */
+        w->busy = 2; w->wtx = w->wty = -1;
         w->wintx = w->winty = -1; w->wowned = false;
         w->fx = w->x; w->fy = w->y;
         w->evn = w->evcur = 0; w->animms = 0;
