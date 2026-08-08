@@ -144,6 +144,9 @@ typedef struct {
     int  spr_pc;       /* command whose printer order has been placed (-1 =
                           none): each take-order winds the press up once */
     int  srvx, srvy;   /* machine a running serve belongs to */
+    bool ceded;        /* the serve is over and this body is only stepping
+                          out: its square is already up for claiming, and
+                          the next in line may set off across it */
     int  enroute_pc;   /* command whose journey this body is still on (-1 =
                           none): a walker is "on its way" from the moment a
                           travelling command starts until it arrives, pauses
@@ -1257,6 +1260,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
         w->cmd_walked = false;
         w->spr_pc = -1; w->srvx = w->srvy = -1;
+        w->ceded = false;
         w->enroute_pc = -1;
         w->smem_face = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
@@ -3202,6 +3206,7 @@ static int cont_occupant(Sim *S, int x, int y, int self) {
     for (int j = 0; j < S->nw; j++) {
         if (j == self) continue;
         Worker *o = &S->w[j];
+        if (o->ceded) continue;      /* stepping out: the square is claimable */
         if (o->alive && !o->exited && o->x == x && o->y == y) return j;
     }
     return -1;
@@ -3214,6 +3219,7 @@ static int cont_holder(Sim *S, int x, int y, int self) {
     for (int j = 0; j < S->nw; j++) {
         if (j == self) continue;
         Worker *o = &S->w[j];
+        if (o->ceded) continue;
         if (o->alive && !o->exited && o->x == x && o->y == y) return j;
     }
     return -1;
@@ -3222,7 +3228,7 @@ static bool cont_reserved(Sim *S, int x, int y, int self) {
     for (int j = 0; j < S->nw; j++) {
         if (j == self) continue;
         Worker *o = &S->w[j];
-        if (!o->alive || o->exited) continue;
+        if (!o->alive || o->exited || o->ceded) continue;
         if (o->x == x && o->y == y) return true;
         if (o->wtx == x && o->wty == y) return true;
     }
@@ -3245,6 +3251,7 @@ static void cont_land(Sim *S, int i) {
 /* begin a one-tile glide toward (tx,ty) */
 static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     Worker *w = &S->w[i];
+    w->ceded = false;            /* the step out is under way: normal rules */
     w->wtx = tx; w->wty = ty; w->wsingle = single; w->wflex = flex;
     w->wsettle = false;            /* each walk decides afresh how it lands */
     w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
@@ -3723,9 +3730,16 @@ static bool fq_pump(Sim *S, Program *P, int i) {
                 w->evcur++; continue;
             case FQ_MACHREL:
                 /* the serve is fully wound down: the machine takes its next
-                 * customer from this frame */
-                if (w->srvx >= 0)
+                 * customer from this frame -- and the served customer's hold
+                 * on the front square lifts with the same breath.  If it is
+                 * about to walk away, the next in line may claim the square
+                 * and set off NOW, crossing with the leaver's step out; a
+                 * customer who stays put keeps its ground. */
+                if (w->srvx >= 0) {
                     S->mach_busy[w->srvy][w->srvx] = S->beat;
+                    if (w->pc < P->n && P->instr[w->pc].op == OP_STEP)
+                        w->ceded = true;
+                }
                 w->evcur++; continue;
             default: w->evcur++; continue;
         }
@@ -3740,6 +3754,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                         bool *progressed, int *told) {
     Worker *w = &S->w[i];
     if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
+    w->ceded = false;   /* whatever comes next, the stand-aside is over */
     Instr *ins = &P->instr[w->pc];
     if (w->err_pc != w->pc) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
