@@ -144,13 +144,10 @@ typedef struct {
     int  spr_pc;       /* command whose printer order has been placed (-1 =
                           none): each take-order winds the press up once */
     int  srvx, srvy;   /* machine a running serve belongs to */
-    /* an errand's route is planned once and then followed: a walker blocked
-       mid-route waits for its own next stride rather than dodging.  Only the
-       remembered target moving re-plans it. */
-    unsigned short epath[96];
-    int  epn, epi;     /* stored hops and the next one to take */
-    int  ep_pc;        /* command the stored route belongs to (-1 = none) */
-    int  ep_tx, ep_ty; /* target it was planned for */
+    int  enroute_pc;   /* command whose journey this body is still on (-1 =
+                          none): a walker is "on its way" from the moment a
+                          travelling command starts until it arrives, pauses
+                          between strides included -- only arriving ends it */
     int  smem_face;    /* the person this body is already turned toward
                           (-1 = none): stepping to them again is a glance;
                           turning to someone new is a stand */
@@ -1260,7 +1257,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
         w->cmd_walked = false;
         w->spr_pc = -1; w->srvx = w->srvy = -1;
-        w->epn = w->epi = 0; w->ep_pc = -1; w->ep_tx = w->ep_ty = -1;
+        w->enroute_pc = -1;
         w->smem_face = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
         if (L->win == G_ALIGNED_HOLE_EXIT) {
@@ -1566,24 +1563,27 @@ static bool walkable(Sim *S, int x, int y) {
  * be a hole -- diving in is allowed as the final step. */
 enum { RT_STEP = 14, RT_EDGE = 10, RT_STAND = 40, RT_HEUR = 10, RT_INF = 0x7FFFFFFF };
 
-static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
-                         bool adjacent_ok, unsigned short *hops, int cap) {
+static int path_step(Sim *S, const Worker *self, int tx, int ty,
+                     bool adjacent_ok) {
     Level *L = S->L;
     #define ISGOAL(X,Y) (adjacent_ok ? (abs((X)-tx)<=1 && abs((Y)-ty)<=1) \
                                      : ((X)==tx && (Y)==ty))
     if (ISGOAL(self->x, self->y)) return -2;
     /* The toll board.  A square costs extra only while its holder has SETTLED
      * on it -- arrived somewhere and stopped.  Being stuck behind a jam is not
-     * settling: someone waiting their turn is still on their way, so a queue
-     * stays permeable and routing runs straight through it rather than around.
-     * (Only arriving clears the moving flag, and it raises the settled flag in
-     * the same breath.) */
+     * settling, and neither is the pause between two strides of one journey:
+     * a body is on its way from the moment its travelling command starts
+     * until the moment it arrives, so a queue stays permeable and routing
+     * runs straight through it rather than around.  (Only arriving clears
+     * the moving flag, and it raises the settled flag in the same breath.) */
     static bool stood[MAXH][MAXW];
     memset(stood, 0, sizeof stood);
     int me = (int)(self - S->w);
     for (int i = 0; i < S->nw; i++) {
         if (i == me || !S->w[i].alive) continue;
         if (S->w[i].wtx >= 0 || S->w[i].wintx >= 0) continue;
+        if (S->w[i].enroute_pc >= 0 && S->w[i].enroute_pc == S->w[i].pc)
+            continue;
         int bx = body_tx(&S->w[i]), by = body_ty(&S->w[i]);
         if (bx >= 0 && by >= 0 && bx < MAXW && by < MAXH) stood[by][bx] = true;
     }
@@ -1593,10 +1593,11 @@ static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
         for (int x = 0; x < L->w; x++) {
             from[y][x] = -9; closed[y][x] = false; opened[y][x] = false;
         }
-    /* neighbours are offered diagonals before cardinals (x before y,
-     * positive before negative within each) -- the order that breaks ties
-     * between equal routes: an open-floor route leads with its diagonals */
-    static const int NEIGH[8] = { D_SE, D_SW, D_NE, D_NW, D_E, D_W, D_S, D_N };
+    /* neighbours are offered cardinals before diagonals, east before west,
+     * south before north -- with earliest-entry-wins this order IS the
+     * tie-break between equal routes, and every stride re-asks it, so the
+     * order shapes whole trajectories, not just first steps */
+    static const int NEIGH[8] = { D_E, D_W, D_S, D_N, D_SE, D_SW, D_NE, D_NW };
     static int openq[MAXW * MAXH * 4];
     int on = 0, goal = -1;
     g[self->y][self->x] = 0;
@@ -1651,26 +1652,6 @@ static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
         return -1;
     }
     int cx = goal % MAXW, cy = goal / MAXW;
-    if (hops) {
-        /* the whole route as WAYPOINT SQUARES, first one first.  Squares,
-         * not directions: a walker displaced mid-route (swapped, rotated,
-         * shoved) still heads for the same squares from wherever it now
-         * stands, instead of replaying turns from the wrong starting
-         * point. */
-        int n = 0;
-        for (int x = cx, y = cy; from[y][x] != -2; ) {
-            int d = from[y][x];
-            x -= DX[d]; y -= DY[d]; n++;
-        }
-        if (n > cap) return -1;
-        int k = n;
-        for (int x = cx, y = cy; from[y][x] != -2; ) {
-            hops[--k] = (unsigned short)(y * MAXW + x);
-            int d = from[y][x];
-            x -= DX[d]; y -= DY[d];
-        }
-        return n;
-    }
     /* walk back to find the first step */
     for (;;) {
         int d = from[cy][cx];
@@ -1680,23 +1661,11 @@ static int path_step_buf(Sim *S, const Worker *self, int tx, int ty,
     }
 }
 
-static int path_step(Sim *S, const Worker *self, int tx, int ty,
-                     bool adjacent_ok) {
-    return path_step_buf(S, self, tx, ty, adjacent_ok, NULL, 0);
-}
-
 /* one movement step toward a target.  There is no second opinion: the toll
  * already prices standing bodies into the route, and walking at one anyway is
  * a legitimate outcome -- the walk itself then sorts out the right of way. */
 static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_ok) {
     return path_step(S, self, tx, ty, adjacent_ok);
-}
-
-/* the whole route at once, for the walks that are planned once and then
- * followed to the end however long the waiting gets */
-static int route_path(Sim *S, const Worker *self, int tx, int ty,
-                      bool adjacent_ok, unsigned short *hops, int cap) {
-    return path_step_buf(S, self, tx, ty, adjacent_ok, hops, cap);
 }
 
 /* does this tile hold a `nearest`-findable thing? Unlike IF-sensing, nearest
@@ -3562,6 +3531,7 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             int d = route_step(S, w, tx, ty, false);
             if (d < 0) { if (w->fresh > 0) w->fresh--; w->pc++; *progressed = true; return; }
             if (person) w->smem_face = w->mem[ins->mem_target].wref;
+            w->enroute_pc = w->pc;
             /* only a walk that chases a PERSON can be made to give way --
              * a walk to a remembered square is bound for that square */
             cont_walk(S, i, w->x + DX[d], w->y + DY[d], false, person);
@@ -3871,6 +3841,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                      && S->grid[w->y][w->x].has_cube) err = true;
         }
         if (err) {
+            /* the journey, if one was under way, ends here: a body standing
+             * through its error bubble has stopped like any settler */
+            w->enroute_pc = -1;
             /* The error runs to its end and the program simply moves on --
              * the reach is never retried on whatever the hands hold by
              * then.  A take emptied mid-bubble (robbed from behind, in a
@@ -3923,7 +3896,19 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 if ((long)now - 1 > S->press_stamp[ty][tx])
                     S->press_stamp[ty][tx] = now - 1;
             }
+            /* A printer serves at its front square alone; a shredder's maw
+             * is fed from any touching square.  The walk still aims for the
+             * shredder's front, but a feeder passing within reach tosses
+             * from where it stands the moment the machine is free -- only
+             * a busy machine keeps it walking (unless it is already parked
+             * on the front, where waiting is the whole point). */
+            bool giveshred = ins->op == OP_GIVETO
+                          && S->grid[ty][tx].terrain == T_SHREDDER;
             #define FARR() (onto  ? (w->x == tx && w->y == ty) \
+                          : giveshred ? (abs(w->x - tx) <= 1 \
+                                         && abs(w->y - ty) <= 1 \
+                                         && (S->mach_busy[ty][tx] <= now \
+                                             || (w->x == fx0 && w->y == fy0))) \
                           : sfront ? (w->x == fx0 && w->y == fy0) \
                                   : (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1))
             bool act = false;
@@ -3932,43 +3917,21 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                    || !mem_tile_fresh(S, w, ins->mem_target, &tx, &ty) || FARR();
             #undef FARR
             if (!act) {
+                w->enroute_pc = w->pc;
                 int rx = tx, ry = ty;
                 bool front = !onto && machine_front(S, &rx, &ry);
-                /* the route is planned once, when the errand takes it up,
-                 * and re-planned only when the remembered target itself
-                 * moves: a walker blocked mid-route waits for its own next
-                 * stride, however long that takes -- it does not dodge
-                 * around the jam even when a clear detour sits open.  A
-                 * body displaced ONTO its next square rejoins the route
-                 * there; one thrown clear of the line plans afresh. */
-                while (w->epi < w->epn
-                       && w->epath[w->epi] % MAXW == w->x
-                       && w->epath[w->epi] / MAXW == w->y) w->epi++;
+                /* The way there is asked afresh at every stride -- nothing
+                 * about the route is remembered.  The toll does the rest:
+                 * a queue of walkers still on their way stays cheap to
+                 * route through, so a blocked errand keeps choosing the
+                 * same jammed stride and waits its turn, however long that
+                 * takes -- but the moment a body in the line finishes and
+                 * settles for good, the asking flows around it.  A walker
+                 * displaced mid-errand simply asks again from wherever it
+                 * now stands. */
                 int wx = -1, wy = -1;
-                if (w->epi < w->epn) {
-                    wx = w->epath[w->epi] % MAXW;
-                    wy = w->epath[w->epi] / MAXW;
-                }
-                if (w->ep_pc != w->pc || w->ep_tx != rx || w->ep_ty != ry
-                    || w->epi >= w->epn
-                    || abs(wx - w->x) > 1 || abs(wy - w->y) > 1) {
-                    int n = route_path(S, w, rx, ry, front ? false : !onto,
-                                       w->epath,
-                                       (int)(sizeof w->epath / sizeof w->epath[0]));
-                    if (getenv("EMU_ERRLOG"))
-                        fprintf(stderr, "[plan] t%d w%d @%d,%d -> %d,%d "
-                                "was pc%d %d/%d now n=%d\n",
-                                now, i, w->x, w->y, rx, ry,
-                                w->ep_pc, w->epi, w->epn, n);
-                    w->epn = n > 0 ? n : 0;
-                    w->epi = 0;
-                    w->ep_pc = w->pc; w->ep_tx = rx; w->ep_ty = ry;
-                    wx = wy = -1;
-                    if (w->epi < w->epn) {
-                        wx = w->epath[w->epi] % MAXW;
-                        wy = w->epath[w->epi] / MAXW;
-                    }
-                }
+                int d = route_step(S, w, rx, ry, front ? false : !onto);
+                if (d >= 0) { wx = w->x + DX[d]; wy = w->y + DY[d]; }
                 if (getenv("EMU_ERRLOG"))
                     fprintf(stderr, "[errw] t%d w%d @%d,%d -> %d,%d step=%d,%d\n",
                             now, i, w->x, w->y, rx, ry, wx, wy);
@@ -3992,7 +3955,6 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                              * settles into the square for a frame before
                              * the errand looks around again -- a whole
                              * stride is the same length whoever walks it */
-                            w->epi++;
                             w->wsettle = true;
                             w->fready = false;
                         }
@@ -4000,6 +3962,9 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 }
                 *progressed = true; return;   /* no route: wait a frame */
             }
+            /* arrived: the journey is over -- a customer parked here waiting
+             * for the machine stands like anyone else who has settled */
+            w->enroute_pc = -1;
         }
     }
     /* A cube still being put down cannot be lifted.  The square shows the
