@@ -60,6 +60,7 @@ expect_win  levels/else_colon.lvl       tests/else_colon.txt 5
 expect_win  levels/swap_sort.lvl        tests/swap_sort.txt  6
 expect_win  levels/printer_take.lvl     tests/printer_take.txt 6
 expect_win  levels/printer_queue.lvl    tests/printer_queue.txt 4 154
+expect_win  levels/finished_intent.lvl  tests/finished_intent.txt 4 119
 
 # A customer whose next step points into the printer stays at the front.  It
 # must not become transparent merely because the next opcode says "step".

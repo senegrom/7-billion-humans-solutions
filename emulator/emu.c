@@ -2977,6 +2977,17 @@ static void trace_board(Sim *S, int round) {
 /* run one trial to completion; returns win, fills *out_rounds. Real solutions
  * finish in well under a few thousand beats; the cap bounds failing runs. */
 
+/* A blocked errand remembers the square it meant to enter in wintx/winty.
+ * Once the program ends that destination is no longer a live claim: keeping
+ * it makes the seated worker look perpetually in transit and prevents a later
+ * walker from pushing past.  A real displacement glide, wtx/wty, is retained
+ * so a worker which finishes while being moved can still land. */
+static void finish_worker(Worker *w) {
+    w->done = true;
+    w->wintx = w->winty = -1;
+    w->enroute_pc = -1;
+}
+
 /* Apply the non-movement effect of the instruction at w->pc and advance pc.
  * Shared by the schedulers so their action semantics stay identical -- never
  * called for OP_STEP (movement lives in the scheduler itself). */
@@ -3149,7 +3160,7 @@ static void exec_action(Sim *S, Program *P, int i) {
             break;
         }
         case OP_END:
-            w->done = true;
+            finish_worker(w);
             break;
         default: break;
     }
@@ -3749,7 +3760,11 @@ static bool fq_pump(Sim *S, Program *P, int i, bool *tail_step) {
 static void fq_dispatch(Sim *S, Program *P, int i, int now,
                         bool *progressed, int *told) {
     Worker *w = &S->w[i];
-    if (w->pc >= P->n) { w->done = true; *progressed = true; return; }
+    if (w->pc >= P->n) {
+        finish_worker(w);
+        *progressed = true;
+        return;
+    }
     Instr *ins = &P->instr[w->pc];
     if (w->err_pc != w->pc) {
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
