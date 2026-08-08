@@ -1,0 +1,6 @@
+mem1 = nearest printer
+takefrom mem1
+step n
+giveto w
+a:
+jump a

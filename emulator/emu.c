@@ -3650,9 +3650,13 @@ static void fq_push_steal(Worker *w) {
     fq_push(w, FQ_EFFECT, 0);
 }
 
-/* run the queue; returns false while something in it is still holding */
-static bool fq_pump(Sim *S, Program *P, int i) {
+/* Run the queue; returns false while something in it is still holding.
+ * A printer's final link can chain directly into an immediately following
+ * step.  Report that tail so run_frame can build its walking intent after the
+ * frame's movers have all run, ready for arbitration on the next mover tick. */
+static bool fq_pump(Sim *S, Program *P, int i, bool *tail_step) {
     Worker *w = &S->w[i];
+    *tail_step = false;
     while (w->evcur < w->evn) {
         struct { unsigned char id; float t; } *ev =
             (void *)&w->evq[w->evcur];
@@ -3723,9 +3727,15 @@ static bool fq_pump(Sim *S, Program *P, int i) {
                 w->evcur++; continue;
             case FQ_MACHREL:
                 /* the serve is fully wound down: the machine takes its next
-                 * customer from this frame */
-                if (w->srvx >= 0)
+                 * customer from this frame.  The game's link pump also builds
+                 * a directly-following step here, rather than waiting another
+                 * command-dispatch tick.  The claim itself remains intact
+                 * until normal hop arbitration atomically moves or swaps it. */
+                if (w->srvx >= 0) {
                     S->mach_busy[w->srvy][w->srvx] = S->beat;
+                    if (w->pc < P->n && P->instr[w->pc].op == OP_STEP)
+                        *tail_step = true;
+                }
                 w->evcur++; continue;
             default: w->evcur++; continue;
         }
@@ -4236,6 +4246,7 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
     int now = 0, stall = 0;
     while (now < cap) {
         bool progressed = false, in_flight = false;
+        bool tail_step[MAXWORKERS] = { false };
         int told = -1;
         S->beat = now;
         S->feeds_this_beat = 0;
@@ -4281,7 +4292,11 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 w->fready = true;
             }
             if (w->evn > 0) {
-                if (!fq_pump(S, P, i)) { in_flight = true; continue; }
+                bool chained_step;
+                if (!fq_pump(S, P, i, &chained_step)) {
+                    in_flight = true; continue;
+                }
+                tail_step[i] = chained_step;
                 progressed = true;
                 if (S->failed) { *out_rounds = now; return false; }
                 in_flight = true;
@@ -4307,6 +4322,18 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) break;
                 if (w->pc == pc0) break;      /* waiting, not advancing */
             }
+            if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
+        }
+        /* The real event-link pump can append a direct step when a printer
+         * serve drains.  Build those intents only after every worker's mover
+         * has run this frame: claims stay unique now, and the next mover tick
+         * resolves the same swap/conga arbitration as any ordinary step. */
+        for (int i = 0; i < S->nw; i++) {
+            if (!tail_step[i]) continue;
+            Worker *w = &S->w[i];
+            if (!w->alive || w->done || w->exited || w->wtx >= 0) continue;
+            step_dispatch(S, P, i, &progressed);
+            if (S->failed) { *out_rounds = now; return false; }
             if (w->evn > 0 || w->wtx >= 0 || w->busy > 0) in_flight = true;
         }
         if (getenv("EMU_STACKLOG")) {

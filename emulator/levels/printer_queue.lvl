@@ -1,0 +1,11 @@
+# Two-worker printer queue regression.  The follower is earlier in entity
+# order than the customer at the front: the game's final serve link stages the
+# customer's step, then next-frame arbitration swaps their claims atomically.
+# That order makes the follower's body begin one frame later and exposes both
+# an omitted tail-step link and an over-broad transparent-worker shortcut.
+name Printer Queue
+dim 3 4
+ent printer 1 3
+ent worker 1 1
+ent worker 1 2
+goal all_workers_holding
