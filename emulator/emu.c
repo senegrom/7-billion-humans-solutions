@@ -2532,28 +2532,35 @@ static bool mem_tile(Sim *S, Worker *w, int slot, int *tx, int *ty) {
     return true;
 }
 
-/* like mem_tile, but a stale nearest-ref (the thing is gone from that tile)
- * re-resolves to the current nearest of the same type -- the game's workers
- * chase the THING they remembered, not the square it stood on */
+/* like mem_tile, but a stale nearest-ref (the thing is gone from that tile,
+ * or lifted off the floor entirely) re-resolves to the current nearest of
+ * the same type -- the game's workers chase the THING they remembered, not
+ * the square it stood on, and when it is gone they settle on the next one */
 static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
-    if (!mem_tile(S, w, slot, tx, ty)) return false;
+    bool okc = mem_tile(S, w, slot, tx, ty);
     MemVal *m = &w->mem[slot];
-    if (m->ntype >= 0 && !nearest_matches(S, w, (CmpKind)m->ntype, *tx, *ty)) {
-        int x, y;
-        if (find_nearest(S, w, (CmpKind)m->ntype, &x, &y)) {
-            m->x = x; m->y = y;
-            /* settling on a different person makes it THAT person the slot
-             * names from now on */
-            if (m->ntype == (int)C_PERSON) m->wref = g_near_who;
-            *tx = x; *ty = y;
-        } else {
-            m->k = MV_NOTHING;
-            m->ntype = -1;
-            m->wref = -1;
-            return false;
+    if (okc && (m->ntype < 0
+                || nearest_matches(S, w, (CmpKind)m->ntype, *tx, *ty)))
+        return true;
+    if (m->ntype < 0) return okc;
+    int x, y;
+    if (find_nearest(S, w, (CmpKind)m->ntype, &x, &y)) {
+        m->x = x; m->y = y;
+        /* settling on a different person makes it THAT person the slot
+         * names from now on -- and settling on a different cube likewise
+         * makes it THAT cube */
+        if (m->ntype == (int)C_PERSON) m->wref = g_near_who;
+        if (m->k == MV_CUBEREF) {
+            if (S->cube_id[y][x]) m->num = S->cube_id[y][x];
+            else { m->k = MV_TILE; m->num = 0; }
         }
+        *tx = x; *ty = y;
+        return true;
     }
-    return true;
+    m->k = MV_NOTHING;
+    m->ntype = -1;
+    m->wref = -1;
+    return false;
 }
 
 /* nearest / set / calc assignment (control-flow speed: executes inline).
@@ -2568,6 +2575,14 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
             nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
             /* remembering the nearest PERSON remembers the person */
             if (ins->near_type == C_PERSON) nv.wref = g_near_who;
+            /* and remembering the nearest DATACUBE remembers the cube: the
+             * slot follows it wherever it goes, and a step toward it is a
+             * step toward placed work, refused with the long red bubble
+             * when a worker set it down */
+            if (ins->near_type == C_DATACUBE && S->grid[y][x].has_cube
+                && S->cube_id[y][x]) {
+                nv.k = MV_CUBEREF; nv.num = S->cube_id[y][x];
+            }
         }
         /* EMU_NEARLOG prints every nearest resolution -- who asked, at what
          * beat, and what won -- the way to hold two runs side by side */
@@ -3894,7 +3909,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         int tx, ty;
         bool have = false, bound = false;
         if (ins->mem_target >= 0)
-            have = mem_tile(S, w, ins->mem_target, &tx, &ty);
+            have = mem_tile_fresh(S, w, ins->mem_target, &tx, &ty);
         else if (!onto)
             have = bound = dir_machine_lock(S, w, ins, now, &tx, &ty);
         if (have) {
