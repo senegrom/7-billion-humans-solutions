@@ -3282,6 +3282,10 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
+    if (getenv("EMU_WTLOG"))
+        fprintf(stderr, "[wt] t%d w%d @%d,%d -> %d,%d tot%d cube%d\n",
+                S->beat, i, w->x, w->y, tx, ty, w->wtot,
+                (int)S->grid[ty][tx].has_cube);
 }
 
 /* A machine has a FRONT: a walk aimed at one heads for the single square one
@@ -3324,7 +3328,6 @@ static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
     m->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
     if (m->wtot < 1) m->wtot = 1;
     m->wprog = 0;
-    (void)S;
 }
 
 /* trade places with the worker holding the tile we are entering: we glide
