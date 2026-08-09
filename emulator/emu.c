@@ -988,6 +988,12 @@ typedef struct {
                                         sheet is ready 32 frames after the
                                         latest winding */
     int     prints_at[MAXH][MAXW]; /* dispense count per printer tile */
+    int     lift_t[MAXH][MAXW];    /* frame a floor cube was last lifted: the
+                                      tidied board the senses read is rebuilt
+                                      between frames, so a cube picked up
+                                      mid-frame is still seen on its square
+                                      by everyone sensing later that frame */
+    int     lift_id[MAXH][MAXW];   /* which cube that was */
     int     print_next[MAXH][MAXW]; /* the value each printer will serve next:
                                        a fresh printer's first sheet is always
                                        0, and the roll happens as one is taken
@@ -1678,10 +1684,14 @@ static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_
  * shredder) */
 static bool nearest_matches(Sim *S, const Worker *self, CmpKind type, int x, int y) {
     if (tile_contains(S, x, y, self, type)) return true;
-    if (type == C_DATACUBE)
+    if (type == C_DATACUBE) {
+        /* the tidied board is rebuilt between frames: a cube lifted
+         * earlier THIS frame still answers from the square it left */
+        if (S->lift_t[y][x] == S->beat && S->beat > 0) return true;
         for (int i = 0; i < S->nw; i++)
             if (&S->w[i] != self && S->w[i].alive && S->w[i].holding
                 && S->w[i].x == x && S->w[i].y == y) return true;
+    }
     return false;
 }
 
@@ -2575,13 +2585,16 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
             nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
             /* remembering the nearest PERSON remembers the person */
             if (ins->near_type == C_PERSON) nv.wref = g_near_who;
-            /* and remembering the nearest DATACUBE remembers the cube: the
-             * slot follows it wherever it goes, and a step toward it is a
-             * step toward placed work, refused with the long red bubble
-             * when a worker set it down */
-            if (ins->near_type == C_DATACUBE && S->grid[y][x].has_cube
-                && S->cube_id[y][x]) {
-                nv.k = MV_CUBEREF; nv.num = S->cube_id[y][x];
+            /* and remembering the nearest DATACUBE remembers the cube:
+             * later reads follow it wherever it has gone -- into a
+             * neighbour's hands, your own, or a new square -- and a step
+             * toward it is refused with the long red bubble while a
+             * worker-placed cube lies there */
+            if (ins->near_type == C_DATACUBE) {
+                int cid = S->cube_id[y][x];
+                if (!cid && S->lift_t[y][x] == S->beat)
+                    cid = S->lift_id[y][x];
+                if (cid) { nv.k = MV_CUBEREF; nv.num = cid; }
             }
         }
         /* EMU_NEARLOG prints every nearest resolution -- who asked, at what
@@ -2921,6 +2934,8 @@ static bool pickup_at(Sim *S, Worker *w, int wi, int nx, int ny) {
         w->held_src_x = nx; w->held_src_y = ny;
         w->held_owner = t->owner;
         w->fresh = 2;
+        S->lift_t[ny][nx] = S->beat;
+        S->lift_id[ny][nx] = S->cube_id[ny][nx];
         t->has_cube = false; t->owner = -1;
         S->cube_id[ny][nx] = 0;
         S->pickups++;
@@ -3536,7 +3551,10 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
                 }
                 w->pc++; *progressed = true; return;
             }
-            if (!person && w->mem[ins->mem_target].k == MV_CUBEREF
+            if (!person
+                && (w->mem[ins->mem_target].k == MV_CUBEREF
+                    || (w->mem[ins->mem_target].k == MV_TILE
+                        && w->mem[ins->mem_target].ntype == (int)C_DATACUBE))
                 && S->grid[ty][tx].has_cube
                 && S->grid[ty][tx].owner >= 0) {
                 /* the memory names a CUBE that a worker set down (a piece
