@@ -3280,6 +3280,15 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     int diag = (tx != w->x && ty != w->y);
     int base = MS_STEP > 0 ? MS_STEP : 1;
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    /* A stride with a NORTHWARD component onto a square holding a floor
+     * cube swings around the cube's far side -- the body walks a longer
+     * line at the same speed, so the stride runs a quarter longer.  Any
+     * other approach (south, east, west, the southward diagonals) walks
+     * straight in at the plain stride's pace, which is why a march up a
+     * cube field keeps a slower cadence than the same march back down. */
+    if (S->grid[ty][tx].has_cube && S->grid[ty][tx].terrain == T_FLOOR
+        && ty < w->y)
+        w->wtot = diag ? 36 : 26;
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
     if (getenv("EMU_WTLOG"))
@@ -3319,6 +3328,7 @@ static void mover_goal(const Worker *o, int *tx, int *ty) {
 static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
     Worker *m = &S->w[k];
     int diag = (tx != m->x && ty != m->y);
+    int northward = (ty < m->y);
     m->fsx = m->fx; m->fsy = m->fy;
     m->x = tx; m->y = ty;                   /* the claim flips at set-off */
     m->wtx = tx; m->wty = ty;
@@ -3326,6 +3336,9 @@ static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
     m->wintx = m->winty = -1;
     int base = MS_STEP > 0 ? MS_STEP : 1;
     m->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    if (S->grid[ty][tx].has_cube && S->grid[ty][tx].terrain == T_FLOOR
+        && northward)
+        m->wtot = diag ? 36 : 26;   /* the swing around an entered cube */
     if (m->wtot < 1) m->wtot = 1;
     m->wprog = 0;
 }
