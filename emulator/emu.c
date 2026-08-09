@@ -85,6 +85,7 @@ typedef struct {
     bool holding;
     int  held;
     int  held_id;                 /* identity of the held cube (0 = none) */
+    int  drop_id;                 /* cube still in hand while its drop animates */
     int  held_src_x, held_src_y;  /* floor tile the held cube came from (-1 = printed) */
     int  held_owner;              /* printing worker of the held cube (-1 = level cube) */
     int  pc;
@@ -128,6 +129,8 @@ typedef struct {
     bool wsettle;      /* the walk under way belongs to a step command: on
                           landing the body settles into the square first and
                           the program follows a frame later, not right away */
+    bool route_landing;/* that landing beat is still route-transparent: the
+                          next journey node is already being handed over */
     double fsx, fsy;   /* where the body was when that tile was taken */
     /* an item action aimed through a DIRECTION at a machine reads that
        direction once, where the command was taken up, and the errand then
@@ -525,6 +528,10 @@ static void load_level(const char *path, Level *L) {
             else if (!strcmp(kind, "shredder"))                       L->terr[y][x] = T_SHREDDER;
             else if (!strcmp(kind, "printer"))                        L->terr[y][x] = T_PRINTER;
             else if (!strcmp(kind, "sign"))                           ; /* decorative floor */
+            else if (!strcmp(kind, "goal") || !strcmp(kind, "goalpad")) {
+                L->terr[y][x] = T_FLOOR;
+                L->goalpad[y][x] = true;
+            }
             else if (!strcmp(kind, "worker")) {
                 if (L->nworkers >= MAXWORKERS) die("too many workers");
                 L->sx[L->nworkers] = x; L->sy[L->nworkers] = y; L->nworkers++;
@@ -1581,7 +1588,8 @@ static int path_step(Sim *S, const Worker *self, int tx, int ty,
     int me = (int)(self - S->w);
     for (int i = 0; i < S->nw; i++) {
         if (i == me || !S->w[i].alive) continue;
-        if (S->w[i].wtx >= 0 || S->w[i].wintx >= 0) continue;
+        if (S->w[i].wtx >= 0 || S->w[i].wintx >= 0
+            || S->w[i].route_landing) continue;
         if (S->w[i].enroute_pc >= 0 && S->w[i].enroute_pc == S->w[i].pc)
             continue;
         int bx = body_tx(&S->w[i]), by = body_ty(&S->w[i]);
@@ -2003,10 +2011,19 @@ static bool level_won(Sim *S) {
                     if (S->reach[y][x] && !S->grid[y][x].has_cube) return false;
             return true;
         case G_CHECKERBOARD: {
-            /* the game only demands the pattern tiles be COVERED -- every
-             * room tile of the seed cube's parity needs a cube (the printer
-             * excuses its own tile); what lands on the other color is
-             * nobody's business */
+            /* Real levels carry the squares belonging to the requested
+             * checkerboard as goal pads.  Only those squares need covering;
+             * cubes elsewhere are harmless.  Keep the parity-derived rule as
+             * a compatibility fallback for older hand-written level files. */
+            bool masked = false;
+            for (int y = 0; y < L->h; y++)
+                for (int x = 0; x < L->w; x++)
+                    if (S->grid[y][x].goal) {
+                        masked = true;
+                        if (!S->grid[y][x].has_cube) return false;
+                    }
+            if (masked) return true;
+
             int par = (S->icx[0] + S->icy[0]) & 1;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
@@ -3036,7 +3053,11 @@ static void exec_action(Sim *S, Program *P, int i) {
             if (!t->has_cube && t->terrain == T_FLOOR) {
                 t->has_cube = true; t->cube = w->held; t->owner = w->held_owner;
                 S->cube_id[w->y][w->x] = w->held_id;
-                w->holding = false;
+                /* The game publishes the cube in CUBEMAP at the start of the
+                 * gesture but keeps the same cube pointer in the worker's
+                 * hand until the animation drains.  During that overlap the
+                 * floor and held-item sensors can both see it. */
+                w->drop_id = w->held_id;
                 S->drops++;
                 if (g_trace)
                     fprintf(stderr, "DROP w%d @(%d,%d) parity %d\n",
@@ -3198,7 +3219,7 @@ static void exec_action(Sim *S, Program *P, int i) {
  * the worker does next, so a pickup before a walk costs less wall time
  * than a pickup before another animation. */
 enum { FQ_WAIT = 1, FQ_ANIM, FQ_WAITANIM, FQ_EFFECT, FQ_SUSPEND, FQ_RESUME,
-       FQ_GRAB, FQ_ERRND, FQ_PRESSWAIT, FQ_MACHREL };
+       FQ_GRAB, FQ_ERRND, FQ_PRESSWAIT, FQ_MACHREL, FQ_DROPREL };
 
 static const float FQ_DT = 1.0f;      /* queue times are in frames */
 
@@ -3755,6 +3776,15 @@ static bool fq_pump(Sim *S, Program *P, int i, bool *tail_step) {
                         *tail_step = true;
                 }
                 w->evcur++; continue;
+            case FQ_DROPREL:
+                /* A drop has shown its cube on the floor throughout the
+                 * gesture; only now does the hand let go of that same cube. */
+                if (w->drop_id) {
+                    if (w->holding && w->held_id == w->drop_id)
+                        w->holding = false;
+                    w->drop_id = 0;
+                }
+                w->evcur++; continue;
             default: w->evcur++; continue;
         }
     }
@@ -4231,10 +4261,11 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 /* the cube being put down is on show at once but stays part
                  * of the putting-down until the whole gesture ends: a hand
                  * already waiting for it closes the moment the gesture does */
-                if (dropping && !w->holding) {
+                if (dropping && w->drop_id) {
                     S->grid[w->y][w->x].settle =
                         now + FQ_ITEM_PRE + FQ_ITEM_TAIL;
                     S->grid[w->y][w->x].settle_by = i;
+                    fq_push(w, FQ_DROPREL, 0);
                 }
             }
             break;
@@ -4300,8 +4331,13 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                     /* a step's landing is not the program moving on: the body
                      * settles into the square first and the next command is
                      * only taken up a frame later -- which is what lets a
-                     * neighbour see the walker standing there before it acts */
+                     * neighbour see the walker standing there before it acts.
+                     * The game's mover has already handed the route state to
+                     * that next node, however, so another pathfinder must not
+                     * price this one-frame bridge as a permanently parked
+                     * body and dodge around it. */
                     w->wsettle = false;
+                    w->route_landing = true;
                     w->busy = 1;
                     continue;
                 }
@@ -4311,6 +4347,7 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                 --w->busy;
                 in_flight = true;
                 if (w->busy > 0) continue;
+                w->route_landing = false;
                 w->fready = true;
             }
             if (w->evn > 0) {

@@ -1,0 +1,5 @@
+pickup n
+step e
+step n
+drop
+end
