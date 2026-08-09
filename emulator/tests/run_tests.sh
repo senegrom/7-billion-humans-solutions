@@ -61,6 +61,11 @@ expect_win  levels/swap_sort.lvl        tests/swap_sort.txt  6
 expect_win  levels/printer_take.lvl     tests/printer_take.txt 6
 expect_win  levels/printer_queue.lvl    tests/printer_queue.txt 4 154
 expect_win  levels/finished_intent.lvl  tests/finished_intent.txt 4 119
+expect_win  levels/shred_min_held.lvl   tests/shred_min_held.txt 5 56
+
+# Holding unrelated cubes is allowed, but the first shred must still be the
+# room minimum.  Feeding the 2 instead of the 1 must never complete the goal.
+expect_fail levels/shred_min_held.lvl tests/shred_min_wrong.txt 1000
 
 # A customer whose next step points into the printer stays at the front.  It
 # must not become transparent merely because the next opcode says "step".

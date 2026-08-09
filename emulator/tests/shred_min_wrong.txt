@@ -1,0 +1,6 @@
+pickup c
+if myitem == 2:
+	mem1 = nearest shredder
+	giveto mem1
+endif
+end

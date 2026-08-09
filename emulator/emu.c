@@ -2075,7 +2075,14 @@ static bool level_won(Sim *S) {
             if (S->nshrev != 1) return false;
             int mn = S->icv[0];
             for (int k = 1; k < S->nic; k++) if (S->icv[k] < mn) mn = S->icv[k];
-            return S->shrev[0].value == mn && floor_cube_count(S) == S->nic - 1;
+            /* Winning is about what entered the shredder, not where every
+             * other cube happens to be at that instant.  Seek and Destroy 3's
+             * speed strategy has the losing candidates in workers' hands on
+             * their way into the hole when the minimum is fed; demanding that
+             * all of them still lie on the floor made that real strategy
+             * impossible.  Because the level is checked after every frame,
+             * nshrev==1 still means the first shred must be the minimum. */
+            return S->shrev[0].value == mn;
         }
         case G_CUBES_INCREMENTED: {
             /* every initial value must reappear incremented, cubes back on the
