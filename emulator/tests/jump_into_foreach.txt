@@ -1,0 +1,5 @@
+jump inside
+mem1 = foreachdir e:
+	inside:
+	pickup mem1
+endfor

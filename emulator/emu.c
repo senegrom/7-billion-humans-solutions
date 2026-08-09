@@ -47,7 +47,7 @@ static bool g_goal_dbg = false;
 enum { MAXW = 64, MAXH = 64, MAXWORKERS = 128, MAXPROG = 4096, MAXLABELS = 256,
        MAXCUBES = 512, MAXDEV = 64 };
 
-typedef enum { T_FLOOR, T_WALL, T_HOLE, T_SHREDDER, T_PRINTER } Terrain;
+typedef enum { T_FLOOR, T_WALL, T_HOLE, T_SHREDDER, T_PRINTER, T_BOSS } Terrain;
 
 typedef struct {
     Terrain terrain;
@@ -69,6 +69,11 @@ typedef struct { int x, y; CubeMode mode; int value; } CubeDef;
 /* a memory slot holds nothing, a number, or a remembered tile; tiles found by
  * `nearest <type>` remember the type so a stale reference can re-resolve */
 typedef enum { MV_NOTHING, MV_NUM, MV_TILE, MV_CUBEREF } MemKind;
+typedef struct {
+    MemKind k;
+    int num, x, y;
+    int wref;
+} MemAtom;
 /* wref: when the slot was filled by `nearest worker` it names that PERSON, not
  * the square they were standing on, so it keeps their index and follows them. */
 typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */
@@ -77,7 +82,13 @@ typedef struct { MemKind k; int num, x, y; int ntype; /* CmpKind or -1 */
                                 its square the way a pointed direction does --
                                 a cube held aloft by the worker standing there
                                 still answers -- where a remembered square
-                                reads only what lies on the floor */ } MemVal;
+                                reads only what lies on the floor */
+                 int read_id; /* nearest-cube identity retained for numeric
+                                 reads while movement still targets the tile */
+                 int nalt; /* multi-direction set stores every visible thing;
+                              actions use the primary fields above, while a
+                              numeric read falls through this ordered list */
+                 MemAtom alt[32]; } MemVal;
 
 enum { NMEM = 4, MAXFOREACH = 64, WORDLEN = 32 };
 
@@ -121,6 +132,9 @@ typedef struct {
     int  wprog, wtot; /* frames elapsed / total for the walk in progress */
     int  wintx, winty; /* tile a blocked travel walk still means to enter */
     bool wowned;       /* the tile being walked into has already been taken */
+    bool wcurve;       /* this walk uses the sidestep around a floor cube */
+    bool woffcenter;   /* the last sidestep stopped just short of tile centre;
+                          the next walk spends a frame snapping into place */
     /* the per-worker command timeline for the event-queue scheduler */
     struct { unsigned char id; float t; } evq[24];
     int  evn, evcur;
@@ -147,6 +161,8 @@ typedef struct {
                           already standing there takes a beat to begin */
     int  spr_pc;       /* command whose printer order has been placed (-1 =
                           none): each take-order winds the press up once */
+    int  calc_pc;      /* calc whose operand entities were sampled at dispatch */
+    MemAtom calc_a, calc_b;
     int  srvx, srvy;   /* machine a running serve belongs to */
     int  enroute_pc;   /* command whose journey this body is still on (-1 =
                           none): a walker is "on its way" from the moment a
@@ -567,6 +583,13 @@ static void load_level(const char *path, Level *L) {
     }
     fclose(f);
     if (L->w == 0 || L->h == 0) die("level missing dim");
+    if (L->win == G_DISTANCES_FROM_DOOR && L->door_x >= 0) {
+        /* The marker is the lower-right corner of the boss's 2x2 body.  Boss
+         * squares block movement but are not walls to directional sensing. */
+        for (int dy = -1; dy <= 0; dy++)
+            for (int dx = -1; dx <= 0; dx++)
+                L->terr[L->door_y + dy][L->door_x + dx] = T_BOSS;
+    }
     if (L->win == G_BINARY_COUNTER || L->win == G_DECIMAL_COUNTER
         || L->win == G_DECIMAL_DOUBLER) {
         /* the machine's layout is fixed relative to the starting digit cubes:
@@ -1266,7 +1289,7 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         w->last_tell = -1;
         w->errx = w->erry = -1; w->err_pc = -1; w->err_t0 = -1;
         w->cmd_walked = false;
-        w->spr_pc = -1; w->srvx = w->srvy = -1;
+        w->spr_pc = -1; w->calc_pc = -1; w->srvx = w->srvy = -1;
         w->enroute_pc = -1;
         w->smem_face = -1;
         for (int m = 0; m < NMEM; m++) w->mem[m].k = MV_NOTHING;
@@ -1304,6 +1327,9 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
  * not seen a frame fresher than one later in it. */
 static int  g_snap_n = -1;                       /* <0 = snapshot off */
 static int  g_snap_x[MAXWORKERS], g_snap_y[MAXWORKERS];
+static int  g_snap_cube_id[MAXH][MAXW];
+static bool g_snap_holding[MAXWORKERS];
+static int  g_snap_held_id[MAXWORKERS], g_snap_held_value[MAXWORKERS];
 static int body_tx(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fx) : w->x; }
 static int body_ty(const Worker *w) { return w->wtx >= 0 ? (int)lround(w->fy) : w->y; }
 static int seen_tx(const Sim *S, int i) {
@@ -1311,6 +1337,12 @@ static int seen_tx(const Sim *S, int i) {
 }
 static int seen_ty(const Sim *S, int i) {
     return (g_snap_n > i) ? g_snap_y[i] : body_ty(&S->w[i]);
+}
+static bool seen_holding(const Sim *S, int i) {
+    return (g_snap_n > i) ? g_snap_holding[i] : S->w[i].holding;
+}
+static int seen_held_value(const Sim *S, int i) {
+    return (g_snap_n > i) ? g_snap_held_value[i] : S->w[i].held;
 }
 
 /* Does the tile CONTAIN the queried thing? A tile is a set of contents: it can
@@ -1370,7 +1402,7 @@ static bool value_at2(Sim *S, int x, int y, const Worker *self, bool see_held, i
     for (int i = 0; i < S->nw; i++)
         if (&S->w[i] != self && S->w[i].alive
             && seen_tx(S, i) == x && seen_ty(S, i) == y) {
-            if (S->w[i].holding) { *out = S->w[i].held; return true; }
+            if (seen_holding(S, i)) { *out = seen_held_value(S, i); return true; }
             return false;
         }
     return false;
@@ -1384,6 +1416,66 @@ static bool num_cmp(CmpOp op, int a, int b) {
         case O_LE: return a <= b;  case O_GE: return a >= b;
     }
     return false;
+}
+
+static bool cube_value_by_id(Sim *S, int id, int *out) {
+    if (!id) return false;
+    for (int i = 0; i < S->nw; i++)
+        if (S->w[i].alive && S->w[i].holding && S->w[i].held_id == id) {
+            *out = S->w[i].held;
+            return true;
+        }
+    for (int y = 0; y < S->L->h; y++)
+        for (int x = 0; x < S->L->w; x++)
+            if (S->cube_id[y][x] == id) {
+                *out = S->grid[y][x].cube;
+                return true;
+            }
+    return false;
+}
+
+static bool mem_atom_value(Sim *S, Worker *w, const MemAtom *a, int *out) {
+    if (a->k == MV_NUM) { *out = a->num; return true; }
+    if (a->k == MV_CUBEREF) return cube_value_by_id(S, a->num, out);
+    if (a->k != MV_TILE) return false;
+    if (a->wref >= 0 && a->wref < S->nw) {
+        Worker *other = &S->w[a->wref];
+        if (!other->alive || !seen_holding(S, a->wref)) return false;
+        *out = seen_held_value(S, a->wref);
+        return true;
+    }
+    return value_at2(S, a->x, a->y, w, false, out);
+}
+
+static bool mem_atom_contains(Sim *S, Worker *w, const MemAtom *a,
+                              CmpKind type) {
+    if (a->k == MV_CUBEREF) {
+        int x, y;
+        bool exists = cube_locate(S, a->num, &x, &y);
+        if (type == C_DATACUBE || type == C_SOMETHING) return exists;
+        if (type == C_NOTHING) return !exists;
+        return false;
+    }
+    if (a->k != MV_TILE) return type == C_NOTHING;
+    if (a->wref >= 0) {
+        bool exists = a->wref < S->nw && S->w[a->wref].alive;
+        if (type == C_PERSON || type == C_SOMETHING) return exists;
+        if (type == C_NOTHING) return !exists;
+        return false;
+    }
+    return tile_contains(S, a->x, a->y, w, type);
+}
+
+static void mem_add_atom(MemVal *m, MemAtom a) {
+    if (m->nalt >= (int)(sizeof m->alt / sizeof m->alt[0])) return;
+    m->alt[m->nalt++] = a;
+    if (m->nalt == 1) {
+        m->k = a.k;
+        m->num = a.num;
+        m->x = a.x;
+        m->y = a.y;
+        m->wref = a.wref;
+    }
 }
 
 /* numeric value of an operand; false when there is no value to read.
@@ -1403,32 +1495,89 @@ static bool operand_value(Sim *S, Worker *w, const Operand *o, int *out) {
         case 2: {
             MemVal *m = &w->mem[o->mem];
             if (m->k == MV_NUM)  { *out = m->num; return true; }
+            /* `set sw,n` stores an ordered list of the things those arrows
+             * saw.  Its primary entry remains the target for pickup/step,
+             * but a numeric read skips entries
+             * which have no number to show (most notably an empty-handed
+             * person) and uses the first readable one. */
+            if (m->nalt > 0) {
+                for (int i = 0; i < m->nalt; i++)
+                    if (mem_atom_value(S, w, &m->alt[i], out)) return true;
+                return false;
+            }
             /* a slot that remembers a PERSON asks THEM for a number, and what
              * a person has to show is whatever is in their hands -- wherever
              * they have wandered off to since.  (A slot that remembers a
              * SQUARE still reads only what lies on that floor.) */
             if (m->k == MV_TILE && m->wref >= 0) {
                 Worker *o2 = &S->w[m->wref];
-                if (!o2->alive || !o2->holding) return false;
-                *out = o2->held; return true;
+                if (!o2->alive || !seen_holding(S, m->wref)) return false;
+                *out = seen_held_value(S, m->wref); return true;
             }
-            if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, m->fedir, out);
-            if (m->k == MV_CUBEREF) {
+            if (m->k == MV_TILE && m->read_id) {
                 for (int i = 0; i < S->nw; i++)
-                    if (S->w[i].alive && S->w[i].holding && S->w[i].held_id == m->num) {
+                    if (S->w[i].alive && S->w[i].holding
+                        && S->w[i].held_id == m->read_id) {
                         *out = S->w[i].held; return true;
                     }
                 for (int y = 0; y < S->L->h; y++)
                     for (int x = 0; x < S->L->w; x++)
-                        if (S->cube_id[y][x] == m->num) {
+                        if (S->cube_id[y][x] == m->read_id) {
                             *out = S->grid[y][x].cube; return true;
                         }
                 return false;
+            }
+            if (m->k == MV_TILE) return value_at2(S, m->x, m->y, w, m->fedir, out);
+            if (m->k == MV_CUBEREF) {
+                return cube_value_by_id(S, m->num, out);
             }
             return false;
         }
     }
     return false;
+}
+
+/* A calc fixes WHICH thing each operand names when the command starts, but a
+ * referenced cube can be rewritten during the long arithmetic animation.  In
+ * that case the result uses the value on that same cube when the sum finishes,
+ * not a different neighbour and not the stale number from dispatch. */
+static MemAtom calc_snapshot(Sim *S, Worker *w, const Operand *o) {
+    MemAtom a = { .k = MV_NUM, .num = 0, .wref = -1 };
+    if (o->kind == 0) { a.num = o->num; return a; }
+    if (o->kind == 3) {
+        if (w->holding) { a.k = MV_CUBEREF; a.num = w->held_id; }
+        return a;
+    }
+    if (o->kind == 1) {
+        int x = body_tx(w) + DX[o->dir], y = body_ty(w) + DY[o->dir];
+        if (x < 0 || y < 0 || x >= S->L->w || y >= S->L->h) return a;
+        int id = g_snap_cube_id[y][x];
+        if (id) { a.k = MV_CUBEREF; a.num = id; return a; }
+        for (int i = 0; i < S->nw; i++)
+            if (&S->w[i] != w && S->w[i].alive
+                && seen_tx(S, i) == x && seen_ty(S, i) == y
+                && g_snap_holding[i]) {
+                a.k = MV_CUBEREF; a.num = g_snap_held_id[i];
+                return a;
+            }
+        return a;
+    }
+    if (o->kind == 2) {
+        MemVal *m = &w->mem[o->mem];
+        if (m->nalt > 0) {
+            for (int i = 0; i < m->nalt; i++) {
+                int ignored;
+                if (mem_atom_value(S, w, &m->alt[i], &ignored))
+                    return m->alt[i];
+            }
+            return a;
+        }
+        a.k = m->k; a.num = m->num; a.x = m->x; a.y = m->y; a.wref = m->wref;
+        if (m->k == MV_TILE && m->read_id) {
+            a.k = MV_CUBEREF; a.num = m->read_id; a.wref = -1;
+        }
+    }
+    return a;
 }
 
 static bool cond_true(Sim *S, Cond *c, Worker *w) {
@@ -1440,7 +1589,12 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
                                body_ty(w) + DY[c->lhs.dir], w, c->rhs_type);
         else if (c->lhs.kind == 2) {
             MemVal *m = &w->mem[c->lhs.mem];
-            if (m->k == MV_TILE)         eq = tile_contains(S, m->x, m->y, w, c->rhs_type);
+            if (m->nalt > 0) {
+                eq = false;
+                for (int i = 0; i < m->nalt && !eq; i++)
+                    eq = mem_atom_contains(S, w, &m->alt[i], c->rhs_type);
+            }
+            else if (m->k == MV_TILE)    eq = tile_contains(S, m->x, m->y, w, c->rhs_type);
             else if (m->k == MV_CUBEREF) {
                 int tx, ty;
                 bool exists = cube_locate(S, m->num, &tx, &ty);
@@ -1685,6 +1839,20 @@ static int route_step(Sim *S, const Worker *self, int tx, int ty, bool adjacent_
  * (the crowd chases the carrier of the last cube instead of besieging the
  * shredder) */
 static bool nearest_matches(Sim *S, const Worker *self, CmpKind type, int x, int y) {
+    /* The game's type registries are rebuilt once at the start of a frame.
+     * A pickup by an early worker therefore cannot make a cube disappear
+     * from a later worker's `nearest` query in that same frame (nor can it
+     * make the newly held copy appear somewhere else yet). */
+    if (type == C_DATACUBE && g_snap_n >= 0) {
+        if (x >= 0 && y >= 0 && x < S->L->w && y < S->L->h
+            && g_snap_cube_id[y][x] != 0)
+            return true;
+        for (int i = 0; i < g_snap_n; i++)
+            if (&S->w[i] != self && g_snap_holding[i]
+                && g_snap_x[i] == x && g_snap_y[i] == y)
+                return true;
+        return false;
+    }
     if (tile_contains(S, x, y, self, type)) return true;
     if (type == C_DATACUBE)
         for (int i = 0; i < S->nw; i++)
@@ -1741,6 +1909,31 @@ static void nearest_body(Sim *S, Worker *o, double *px, double *py) {
  * the square in FRONT of it rather than from the machine itself, the same near
  * side the walk to it aims for. */
 static int g_near_who;      /* index of the person `nearest` last settled on */
+
+/* Identity of the cube which made a nearest-datacube result match.  This
+ * reads the same frame registry as find_nearest: memory retains the selected
+ * cube, not merely the square on which that cube happened to be noticed. */
+static int nearest_cube_id(Sim *S, const Worker *self, int x, int y) {
+    if (g_snap_n >= 0) {
+        if (x >= 0 && y >= 0 && x < S->L->w && y < S->L->h
+            && g_snap_cube_id[y][x] != 0)
+            return g_snap_cube_id[y][x];
+        for (int i = 0; i < g_snap_n; i++)
+            if (&S->w[i] != self && g_snap_holding[i]
+                && g_snap_x[i] == x && g_snap_y[i] == y)
+                return g_snap_held_id[i];
+        return 0;
+    }
+    if (x >= 0 && y >= 0 && x < S->L->w && y < S->L->h
+        && S->cube_id[y][x] != 0)
+        return S->cube_id[y][x];
+    for (int i = 0; i < S->nw; i++)
+        if (&S->w[i] != self && S->w[i].alive && S->w[i].holding
+            && body_tx(&S->w[i]) == x && body_ty(&S->w[i]) == y)
+            return S->w[i].held_id;
+    return 0;
+}
+
 static bool find_nearest(Sim *S, Worker *w, CmpKind type, int *ox, int *oy) {
     Level *L = S->L;
     long best = 0; bool have = false; int bx = 0, by = 0;
@@ -2363,7 +2556,13 @@ static bool level_won(Sim *S) {
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++)
                     if (S->grid[y][x].has_cube) {
-                        if (S->grid[y][x].cube != avg) return false;
+                        if (S->grid[y][x].cube != avg) {
+                            if (g_goal_dbg)
+                                fprintf(stderr,
+                                        "cubes_avg: (%d,%d) shows %d, expected %d\n",
+                                        x, y, S->grid[y][x].cube, avg);
+                            return false;
+                        }
                         n++;
                     }
             return n == S->nic;
@@ -2388,12 +2587,25 @@ static bool level_won(Sim *S) {
                     if (was_cube || ring != 8) continue;
                     any = true;
                     Tile *t = &S->grid[y][x];
-                    if (!t->has_cube || t->cube != sum) return false;
+                    if (!t->has_cube || t->cube != sum) {
+                        if (g_goal_dbg)
+                            fprintf(stderr,
+                                    "flower_sums: center (%d,%d) expected %d, has=%d value=%d\n",
+                                    x, y, sum, t->has_cube,
+                                    t->has_cube ? t->cube : -1);
+                        return false;
+                    }
                 }
             return any;
         }
         case G_SHRED_MAX_PER_GROUP: {
-            if (S->nshrev != S->ngroups) return false;
+            bool ok = true;
+            if (S->nshrev != S->ngroups) {
+                if (!g_goal_dbg) return false;
+                fprintf(stderr, "shred_max: %d events for %d groups\n",
+                        S->nshrev, S->ngroups);
+                ok = false;
+            }
             for (int g = 0; g < S->ngroups; g++) {
                 int mx = -1;
                 for (int k = 0; k < S->nic; k++)
@@ -2404,12 +2616,24 @@ static bool level_won(Sim *S) {
                         if (S->ic_group[k] == g
                             && S->icx[k] == S->shrev[e].src_x && S->icy[k] == S->shrev[e].src_y) {
                             ev++;
-                            if (S->shrev[e].value != mx) return false;
+                            if (S->shrev[e].value != mx) {
+                                if (!g_goal_dbg) return false;
+                                fprintf(stderr,
+                                        "shred_max: group %d expected %d, got %d from (%d,%d) by w%d\n",
+                                        g, mx, S->shrev[e].value,
+                                        S->shrev[e].src_x, S->shrev[e].src_y,
+                                        S->shrev[e].worker);
+                                ok = false;
+                            }
                         }
                 }
-                if (ev != 1) return false;
+                if (ev != 1) {
+                    if (!g_goal_dbg) return false;
+                    fprintf(stderr, "shred_max: group %d matched %d events\n", g, ev);
+                    ok = false;
+                }
             }
-            return true;
+            return ok;
         }
         case G_BINARY_COUNTER:
             if (S->hist_n == 0) return false;
@@ -2442,11 +2666,9 @@ static bool level_won(Sim *S) {
             return ok;
         }
         case G_MAX_NEIGHBORS: {
-            int n = 0;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->grid[y][x].has_cube) continue;
-                    n++;
                     int nb = 0;
                     for (int d = 0; d < 8; d++) {
                         int nx = x + DX[d], ny = y + DY[d];
@@ -2454,7 +2676,10 @@ static bool level_won(Sim *S) {
                     }
                     if (nb > L->goal_a) return false;
                 }
-            return n == S->nic;
+            /* Held cubes (and cubes carried away with a destroyed worker)
+             * have no neighbours.  Requiring every initial cube to remain on
+             * the floor rejects the level's intended pickup-and-prune solution. */
+            return true;
         }
         case G_GLORY_DIVE:
             if (S->glory_x < 0) return false;
@@ -2465,12 +2690,23 @@ static bool level_won(Sim *S) {
             return true;
         case G_DISTANCES_FROM_DOOR:
             /* floor cubes only; a held cube is exempt from grading */
+            {
+            bool ok = true;
             for (int y = 0; y < L->h; y++)
                 for (int x = 0; x < L->w; x++) {
                     if (!S->grid[y][x].has_cube) continue;
-                    if (S->grid[y][x].cube != S->dist_door[y][x]) return false;
+                    if (S->grid[y][x].cube != S->dist_door[y][x]) {
+                        if (g_goal_dbg)
+                            fprintf(stderr,
+                                    "door_distance: (%d,%d) shows %d, expected %d\n",
+                                    x, y, S->grid[y][x].cube,
+                                    S->dist_door[y][x]);
+                        if (!g_goal_dbg) return false;
+                        ok = false;
+                    }
                 }
-            return true;
+            return ok;
+            }
         case G_SORTED_GRID: {
             /* initial positions in row-major order must hold ascending values */
             int idx[MAXCUBES];
@@ -2505,8 +2741,20 @@ static bool level_won(Sim *S) {
                 for (int x = 0; x < L->w; x++) {
                     if (!S->reach[y][x]) continue;
                     bool want = (filled < S->nic);
-                    if (S->grid[y][x].has_cube != want) return false;
-                    if (want && L->goal_a && S->grid[y][x].cube != S->icv[idx[filled]]) return false;
+                    if (S->grid[y][x].has_cube != want) {
+                        if (g_goal_dbg)
+                            fprintf(stderr, "defrag: (%d,%d) has=%d want=%d at rank %d\n",
+                                    x, y, S->grid[y][x].has_cube, want, filled);
+                        return false;
+                    }
+                    if (want && L->goal_a && S->grid[y][x].cube != S->icv[idx[filled]]) {
+                        if (g_goal_dbg)
+                            fprintf(stderr,
+                                    "defrag: (%d,%d) rank %d has value %d, expected %d\n",
+                                    x, y, filled, S->grid[y][x].cube,
+                                    S->icv[idx[filled]]);
+                        return false;
+                    }
                     if (want) filled++;
                 }
             return filled == S->nic;
@@ -2586,12 +2834,37 @@ static bool mem_tile(Sim *S, Worker *w, int slot, int *tx, int *ty) {
  * re-resolves to the current nearest of the same type -- the game's workers
  * chase the THING they remembered, not the square it stood on */
 static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
-    if (!mem_tile(S, w, slot, tx, ty)) return false;
     MemVal *m = &w->mem[slot];
+    if (m->k == MV_CUBEREF) {
+        if (cube_locate(S, m->num, tx, ty)) return true;
+        /* A nearest-selected cube which disappears while this command is
+         * already walking may be replaced by the next nearest one.  The
+         * command-start stale check happens before an errand is marked in
+         * flight, so a cube gone before the command began still errors in
+         * place; only an actual journey earns this re-target. */
+        if (m->ntype >= 0) {
+            int x, y;
+            if (find_nearest(S, w, (CmpKind)m->ntype, &x, &y)) {
+                int cube = m->ntype == (int)C_DATACUBE
+                    ? nearest_cube_id(S, w, x, y) : 0;
+                if (cube) { m->k = MV_CUBEREF; m->num = cube; }
+                else      { m->k = MV_TILE; m->x = x; m->y = y; }
+                *tx = x; *ty = y;
+                return true;
+            }
+        }
+        m->k = MV_NOTHING;
+        m->ntype = -1;
+        m->wref = -1;
+        return false;
+    }
+    if (!mem_tile(S, w, slot, tx, ty)) return false;
     if (m->ntype >= 0 && !nearest_matches(S, w, (CmpKind)m->ntype, *tx, *ty)) {
         int x, y;
         if (find_nearest(S, w, (CmpKind)m->ntype, &x, &y)) {
             m->x = x; m->y = y;
+            m->read_id = m->ntype == (int)C_DATACUBE
+                ? nearest_cube_id(S, w, x, y) : 0;
             /* settling on a different person makes it THAT person the slot
              * names from now on */
             if (m->ntype == (int)C_PERSON) m->wref = g_near_who;
@@ -2610,12 +2883,20 @@ static bool mem_tile_fresh(Sim *S, Worker *w, int slot, int *tx, int *ty) {
  * Operands evaluate BEFORE the slot updates: "mem1 = calc mem1 + c" must
  * read the old mem1 (accumulator loops in Dangerous Spreadsheeting). */
 static void exec_assign(Sim *S, Worker *w, Instr *ins) {
-    MemVal nv = { MV_NOTHING, 0, 0, 0, -1, -1, false };
+    MemVal nv = { 0 };
+    nv.k = MV_NOTHING;
+    nv.ntype = -1;
+    nv.wref = -1;
+    for (int i = 0; i < (int)(sizeof nv.alt / sizeof nv.alt[0]); i++)
+        nv.alt[i].wref = -1;
     if (ins->akind == 0) {                      /* nearest <type> */
         int x, y;
         bool got = find_nearest(S, w, ins->near_type, &x, &y);
         if (got) {
-            nv.k = MV_TILE; nv.x = x; nv.y = y; nv.ntype = (int)ins->near_type;
+            nv.k = MV_TILE; nv.x = x; nv.y = y;
+            nv.ntype = (int)ins->near_type;
+            if (ins->near_type == C_DATACUBE)
+                nv.read_id = nearest_cube_id(S, w, x, y);
             /* remembering the nearest PERSON remembers the person */
             if (ins->near_type == C_PERSON) nv.wref = g_near_who;
         }
@@ -2647,10 +2928,11 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
              * up, rewritten and set down somewhere else.) */
             int nx = w->x + DX[o->dir], ny = w->y + DY[o->dir];
             if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h) {
-                int held = -1;
+                int who = -1, held = -1;
                 for (int k = 0; k < S->nw; k++)
                     if (&S->w[k] != w && S->w[k].alive
                         && seen_tx(S, k) == nx && seen_ty(S, k) == ny) {
+                        who = k;
                         if (S->w[k].holding) held = S->w[k].held_id;
                         break;
                     }
@@ -2664,8 +2946,13 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
                      * neighbours were holding up long before the digits'
                      * final rewrite) */
                     nv.k = MV_CUBEREF; nv.num = held;
-                } else if (S->grid[ny][nx].terrain != T_FLOOR
-                           || worker_at(S, nx, ny, (int)(w - S->w)) >= 0) {
+                } else if (who >= 0) {
+                    /* An empty-handed person is still an object, and memory
+                     * names that person rather than the square they occupied.
+                     * A later numeric read follows them and reads whatever
+                     * they have since picked up. */
+                    nv.k = MV_TILE; nv.x = nx; nv.y = ny; nv.wref = who;
+                } else if (S->grid[ny][nx].terrain != T_FLOOR) {
                     nv.k = MV_TILE; nv.x = nx; nv.y = ny;
                 }
             }
@@ -2678,16 +2965,44 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         }
         else { nv.k = MV_NUM; nv.num = o->num; }
     } else if (ins->akind == 3) {
-        /* set <dir,dir,...>: remember the first listed tile that holds a
-         * THING (wall, machine, cube, or person); bare floor tries the next
-         * (Unique Fashion Party's "set sw,n" sorts keepers by what's there) */
+        /* set <dir,dir,...> remembers every listed THING, in arrow order.
+         * A square can contribute more than one object: most importantly a
+         * worker holding a cube contributes both the cube and the worker.
+         * The first object is the command's target/identity; numeric reads
+         * can fall through an entry which has nothing numeric to show. */
         for (int k = 0; k < ins->ndirs; k++) {
             int nx = w->x + DX[ins->dirs[k]], ny = w->y + DY[ins->dirs[k]];
-            bool thing = nx < 0 || ny < 0 || nx >= S->L->w || ny >= S->L->h
-                || S->grid[ny][nx].terrain != T_FLOOR
-                || S->grid[ny][nx].has_cube
-                || worker_at(S, nx, ny, (int)(w - S->w)) >= 0;
-            if (thing) { nv.k = MV_TILE; nv.x = nx; nv.y = ny; break; }
+            int who = -1;
+            if (nx >= 0 && ny >= 0 && nx < S->L->w && ny < S->L->h)
+                for (int j = 0; j < S->nw; j++)
+                    if (&S->w[j] != w && S->w[j].alive
+                        && seen_tx(S, j) == nx && seen_ty(S, j) == ny) {
+                        who = j;
+                        break;
+                    }
+            bool oob = nx < 0 || ny < 0 || nx >= S->L->w || ny >= S->L->h;
+            bool cube = !oob && S->grid[ny][nx].has_cube;
+            bool held = who >= 0 && g_snap_holding[who];
+            bool terrain = oob || S->grid[ny][nx].terrain != T_FLOOR;
+            if (!cube && !held && who < 0 && !terrain) continue;
+            if (cube) {
+                MemAtom a = { .k = MV_CUBEREF,
+                              .num = S->cube_id[ny][nx], .wref = -1 };
+                mem_add_atom(&nv, a);
+            }
+            if (held) {
+                MemAtom a = { .k = MV_CUBEREF,
+                              .num = g_snap_held_id[who], .wref = -1 };
+                mem_add_atom(&nv, a);
+            }
+            if (who >= 0) {
+                MemAtom a = { .k = MV_TILE, .x = nx, .y = ny, .wref = who };
+                mem_add_atom(&nv, a);
+            }
+            if (terrain) {
+                MemAtom a = { .k = MV_TILE, .x = nx, .y = ny, .wref = -1 };
+                mem_add_atom(&nv, a);
+            }
         }
     } else if (ins->akind == 4) {               /* set nothing: clear the slot */
         ;                                       /* nv already nothing */
@@ -2695,8 +3010,14 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         /* a missing operand counts as 0 ("1 + wall" labels the line's first
          * cube 1 in Identify Yourselves); only division by zero fails */
         int a = 0, b = 0;
-        operand_value(S, w, &ins->op1, &a);
-        operand_value(S, w, &ins->op2, &b);
+        if (w->calc_pc == w->pc) {
+            (void)mem_atom_value(S, w, &w->calc_a, &a);
+            (void)mem_atom_value(S, w, &w->calc_b, &b);
+            w->calc_pc = -1;
+        } else {
+            operand_value(S, w, &ins->op1, &a);
+            operand_value(S, w, &ins->op2, &b);
+        }
         switch (ins->calcop) {
             case '+': nv.k = MV_NUM; nv.num = a + b; break;
             case '-': nv.k = MV_NUM; nv.num = a - b; break;
@@ -2714,6 +3035,15 @@ static void exec_assign(Sim *S, Worker *w, Instr *ins) {
         }
     }
     w->mem[ins->slot] = nv;
+    if (getenv("EMU_MEMLOG")) {
+        Operand mo = { .kind = 2, .mem = ins->slot };
+        int mv = 0;
+        bool have = operand_value(S, w, &mo, &mv);
+        fprintf(stderr, "[mem] t%d w%d pc%d slot%d kind%d xy=%d,%d wref=%d read_id=%d ntype=%d value%s%d\n",
+                S->beat, (int)(w - S->w), w->pc, ins->slot + 1,
+                (int)nv.k, nv.x, nv.y, nv.wref, nv.read_id, nv.ntype,
+                have ? "=" : "?", mv);
+    }
 }
 
 /* shared action helpers (used by both dir- and mem-targeted forms) */
@@ -2978,6 +3308,26 @@ static bool if_looks(const Instr *ins) {
     return false;
 }
 
+/* A numeric comparison against the ordered object list produced by a
+ * multi-arrow set is resolved as part of that memory command's value stream;
+ * it does not occupy the one-frame no-bubble condition beat.  This lets the
+ * following nearest assignment settle in the same frame.  Type tests on the
+ * list, and tests of an ordinary/nearest memory, retain the normal beat. */
+static bool if_inline_multimem_numeric(Worker *w, const Instr *ins) {
+    bool saw_list = false;
+    for (int k = 0; k < ins->nconds; k++) {
+        const Cond *c = &ins->conds[k];
+        if (c->rhs_is_type) return false;
+        const Operand *ops[2] = { &c->lhs, &c->rhs };
+        for (int j = 0; j < 2; j++)
+            if (ops[j]->kind == 2) {
+                if (w->mem[ops[j]->mem].nalt <= 0) return false;
+                saw_list = true;
+            }
+    }
+    return saw_list;
+}
+
 /* Is this item action about to use a machine (a takefrom or pickup at a
  * printer, a giveto at a shredder)?  The machine event shapes and the
  * one-customer busy gate apply exactly when it is.  A machine bound by a
@@ -3019,6 +3369,7 @@ static void trace_board(Sim *S, int round) {
                 case T_HOLE: ch = 'O'; break;
                 case T_SHREDDER: ch = 'S'; break;
                 case T_PRINTER: ch = 'P'; break;
+                case T_BOSS: ch = 'D'; break;
                 default: ch = S->grid[y][x].has_cube ? 'c' : '.'; break;
             }
             row[p++] = ch;
@@ -3090,8 +3441,8 @@ static void exec_action(Sim *S, Program *P, int i) {
                 w->drop_id = w->held_id;
                 S->drops++;
                 if (g_trace)
-                    fprintf(stderr, "DROP w%d @(%d,%d) parity %d\n",
-                            i, w->x, w->y, (w->x + w->y) & 1);
+                    fprintf(stderr, "DROP t%d w%d @(%d,%d) parity %d\n",
+                            S->beat, i, w->x, w->y, (w->x + w->y) & 1);
             }
             break;
         }
@@ -3304,6 +3655,8 @@ static void cont_land(Sim *S, int i) {
     Worker *w = &S->w[i];
     if (!w->wowned) { w->x = w->wtx; w->y = w->wty; }   /* else already taken */
     w->fx = w->x; w->fy = w->y;
+    w->woffcenter = w->wcurve;
+    w->wcurve = false;
     w->wtx = w->wty = -1;
     w->wintx = w->winty = -1;
     w->wowned = false;
@@ -3314,6 +3667,8 @@ static void cont_land(Sim *S, int i) {
 /* begin a one-tile glide toward (tx,ty) */
 static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     Worker *w = &S->w[i];
+    bool snap = w->woffcenter;
+    w->woffcenter = false;
     w->wtx = tx; w->wty = ty; w->wsingle = single; w->wflex = flex;
     w->wsettle = false;            /* each walk decides afresh how it lands */
     w->wintx = w->winty = -1;      /* an actual walk supersedes any intent */
@@ -3327,6 +3682,18 @@ static void cont_walk(Sim *S, int i, int tx, int ty, bool single, bool flex) {
     int diag = (tx != w->x && ty != w->y);
     int base = MS_STEP > 0 ? MS_STEP : 1;
     w->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    /* A floor cube does not make its square impassable.  The mover bends its
+     * path around the cube, though: a cardinal stride uses the seven-point
+     * sidestep and finishes five frames later than the straight 21-frame
+     * walk.  This is decided at set-off from the same board image that built
+     * the route; if the cube is lifted while the body is moving, the already
+     * chosen path does not straighten itself. */
+    w->wcurve = !diag && !w->holding && ty < w->y
+        && tx >= 0 && ty >= 0 && tx < S->L->w && ty < S->L->h
+        && S->grid[ty][tx].has_cube;
+    if (w->wcurve)
+        w->wtot += 5;
+    if (snap) w->wtot++;
     if (w->wtot < 1) w->wtot = 1;
     w->wprog = 0;
 }
@@ -3362,6 +3729,8 @@ static void mover_goal(const Worker *o, int *tx, int *ty) {
 static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
     Worker *m = &S->w[k];
     int diag = (tx != m->x && ty != m->y);
+    bool snap = m->woffcenter;
+    m->woffcenter = false; m->wcurve = false;
     m->fsx = m->fx; m->fsy = m->fy;
     m->x = tx; m->y = ty;                   /* the claim flips at set-off */
     m->wtx = tx; m->wty = ty;
@@ -3369,6 +3738,7 @@ static void cont_glide_owned(Sim *S, int k, int tx, int ty, bool single) {
     m->wintx = m->winty = -1;
     int base = MS_STEP > 0 ? MS_STEP : 1;
     m->wtot = diag ? (int)(base * 1.41421356 + 0.5) : base;
+    if (snap) m->wtot++;
     if (m->wtot < 1) m->wtot = 1;
     m->wprog = 0;
     (void)S;
@@ -3496,7 +3866,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
              * instead of walking over the line it was helping to build. */
             if (w->wsingle && S->grid[o->y][o->x].has_cube
                 && w->pc + 1 < P->n && P->instr[w->pc + 1].op == OP_JUMP) {
-                w->wtx = w->wty = -1; w->wowned = false;
+                w->wtx = w->wty = -1; w->wowned = false; w->wcurve = false;
                 w->fx = w->x; w->fy = w->y;
                 w->pc++;
                 return true;
@@ -3511,7 +3881,7 @@ static bool cont_glide(Sim *S, Program *P, int i) {
          * between routes still count as links in it. */
         if (!w->wsingle) {
             w->wintx = tx; w->winty = ty;
-            w->wtx = w->wty = -1;
+            w->wtx = w->wty = -1; w->wcurve = false;
             /* the walk never happened, so the body belongs back on the tile it
              * never left: a smooth position abandoned part-way through rounds
              * to the tile ahead, and the worker would go on blocking a tile it
@@ -3550,7 +3920,13 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
              * even where the path itself would happily cut the corner. */
             bool person = (w->mem[ins->mem_target].wref >= 0);
             int tx, ty;
-            if (!mem_tile(S, w, ins->mem_target, &tx, &ty)
+            bool have = mem_tile(S, w, ins->mem_target, &tx, &ty);
+            /* A remembered machine is approached at its working face, just
+             * like an item errand.  Asking the pathfinder to enter the
+             * machine's own blocked tile makes `step mem` disappear instead
+             * of marching down to the labelled shredder row. */
+            if (have && !person) (void)machine_front(S, &tx, &ty);
+            if (!have
                 || (person ? (abs(w->x - tx) <= 1 && abs(w->y - ty) <= 1)
                            : (w->x == tx && w->y == ty))) {
                 if (getenv("EMU_CMDLOG"))
@@ -3613,10 +3989,10 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             if (!walkable(S, nx, ny)) continue;
             cand[nc++] = d;
             if (g_snap_n >= 0) {
-                /* the picker judges a square by the bodies on it, not by
-                 * claims: a tile someone has merely set off toward is still
-                 * picked (the walk itself then sorts out the right of way) */
-                bool occ = false;
+                /* The tile's claimant is already there for movement
+                 * arbitration even while its body is still gliding in; the
+                 * frame-start body list is the second occupancy gate. */
+                bool occ = cont_reserved(S, nx, ny, i);
                 for (int j = 0; j < S->nw; j++)
                     if (j != i && S->w[j].alive
                         && seen_tx(S, j) == nx && seen_ty(S, j) == ny)
@@ -3633,20 +4009,27 @@ static void step_dispatch(Sim *S, Program *P, int i, bool *progressed) {
             *progressed = true; return;
         }
         /* A step that names one direction has nothing to choose.  One that
-         * names several draws over ALL of them, in the order written, and
-         * simply draws again when the pick is unwalkable or a body stands
-         * there -- uniform over the free squares, but the dice are rolled
-         * for the rejected picks too.  With every named square occupied
-         * there is nothing acceptable to draw: settle on any one of them
-         * and queue there. */
+         * names several draws from the candidates still in its little bag.
+         * A pick occupied by a body is REMOVED before drawing again: this is
+         * still uniform over the free squares, but unlike plain rejection
+         * sampling it consumes at most one roll per named square and the next
+         * draw has a smaller range.  The distinction is observable because
+         * every worker shares one RNG stream.  With every named square
+         * occupied there is nothing acceptable to draw: settle on any one of
+         * them and queue there. */
         int d;
         if (ins->ndirs == 1) d = pool[0];
         else if (fnc > 0) {
+            int left[8], nl = ins->ndirs;
+            for (int k = 0; k < nl; k++) left[k] = ins->dirs[k];
             for (;;) {
-                int cd = ins->dirs[game_rnd(S) % (unsigned)ins->ndirs];
+                int pick = (int)(game_rnd(S) % (unsigned)nl);
+                int cd = left[pick];
                 bool ok = false;
                 for (int k = 0; k < fnc; k++) if (freec[k] == cd) ok = true;
                 if (ok) { d = cd; break; }
+                for (int k = pick + 1; k < nl; k++) left[k - 1] = left[k];
+                nl--;
             }
         } else d = cand[game_rnd(S) % (unsigned)nc];
         /* a plain stride is bound for the square it drew, however many
@@ -3671,11 +4054,10 @@ static int FQ_ITEM_PRE = 16, FQ_ITEM_TAIL = 16;
  * counting-house choreography finding its caller or freezing forever. */
 static int FQ_IF_WAIT = 16;
 static int FQ_IF_HOLD = 17;
-static int MS_CALC = 122;             /* the calc arithmetic animation, plus
-                                         the half-second thought that follows
-                                         it before the hands move again; a
-                                         direction operand adds one whole
-                                         look on top (see the dispatch) */
+static int MS_CALC = 122;             /* the complete calc command: the long
+                                         finger-arithmetic animation and its
+                                         trailing thought both fit in this
+                                         one measured window */
 static int MS_SHRED_HOLD = 38;        /* one full shredder cycle per customer */
 static int FQ_FOREACH_BASE = 333;     /* ms of one standard command per sweep */
 #define MS_TICK 16                    /* milliseconds in a tick */
@@ -3822,6 +4204,63 @@ static bool fq_pump(Sim *S, Program *P, int i, bool *tail_step) {
     return true;
 }
 
+static void foreach_order(Worker *w, Instr *ins) {
+    static const int rank[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
+    unsigned char *ord = w->fe_ord[ins->fe_slot];
+    for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
+    for (int k = 1; k < ins->ndirs; k++)
+        for (int j = k; j > 0
+             && rank[ins->dirs[ord[j]]] < rank[ins->dirs[ord[j-1]]]; j--) {
+            unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
+        }
+}
+
+static bool foreach_next(Sim *S, Worker *w, Instr *ins) {
+    int *fi = &w->fe_idx[ins->fe_slot];
+    if (*fi == 0) foreach_order(w, ins);
+    if (*fi >= ins->ndirs) return false;
+    Dir d = ins->dirs[w->fe_ord[ins->fe_slot][(*fi)++]];
+    int x = w->x + DX[d], y = w->y + DY[d];
+    int cube = (x >= 0 && y >= 0 && x < S->L->w && y < S->L->h)
+        ? g_snap_cube_id[y][x] : 0;
+    int who = -1;
+    for (int i = 0; i < S->nw; i++)
+        if (&S->w[i] != w && S->w[i].alive
+            && seen_tx(S, i) == x && seen_ty(S, i) == y) {
+            who = i;
+            break;
+        }
+    if (cube)
+        w->mem[ins->slot] = (MemVal){ .k = MV_CUBEREF, .num = cube,
+            .x = x, .y = y, .ntype = -1, .wref = -1, .fedir = true };
+    else if (who >= 0)
+        w->mem[ins->slot] = (MemVal){ .k = MV_TILE,
+            .x = x, .y = y, .ntype = -1, .wref = who, .fedir = true };
+    else
+        w->mem[ins->slot] = (MemVal){ .k = MV_TILE,
+            .x = x, .y = y, .ntype = -1, .wref = -1, .fedir = true };
+    return true;
+}
+
+/* A jump to a label nested inside foreachdir blocks enters the compiled
+ * graph with those loop contexts already selected.  In particular, the
+ * Local Maximums speed program uses one-direction foreach blocks as free
+ * directional memory reads and jumps straight to their inner labels. */
+static void foreach_jump_context(Sim *S, Program *P, Worker *w, int from, int to) {
+    for (int pc = 0; pc < P->n; pc++) {
+        Instr *fe = &P->instr[pc];
+        if (fe->op != OP_FOREACH) continue;
+        bool was_inside = pc < from && from <= fe->target;
+        bool now_inside = pc < to && to <= fe->target;
+        if (!now_inside) {
+            w->fe_idx[fe->fe_slot] = 0;
+        } else if (!was_inside || w->fe_idx[fe->fe_slot] == 0) {
+            w->fe_idx[fe->fe_slot] = 0;
+            (void)foreach_next(S, w, fe);
+        }
+    }
+}
+
 /* dispatch the instruction at pc: control nodes take their frame, a step
  * starts the walk, everything else queues its timeline */
 static void fq_dispatch(Sim *S, Program *P, int i, int now,
@@ -3838,13 +4277,19 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         w->cmd_walked = false;
     }
     if (w->spr_pc != w->pc) w->spr_pc = -1;
+    if (w->calc_pc != w->pc) w->calc_pc = -1;
     /* EMU_CMDLOG prints when each worker takes up each command -- the way to
      * see one worker's loop length against another's */
     if (getenv("EMU_CMDLOG"))
-        fprintf(stderr, "[cmd] t%d w%d pc%d op%d\n", now, i, w->pc, ins->op);
+        fprintf(stderr, "[cmd] t%d w%d @%d,%d pc%d op%d [%s]\n",
+                now, i, w->x, w->y, w->pc, ins->op, ins->raw);
     switch (ins->op) {
         case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; return;
-        case OP_JUMP:  w->pc = ins->target; *progressed = true; return;
+        case OP_JUMP:
+            foreach_jump_context(S, P, w, w->pc, ins->target);
+            w->pc = ins->target;
+            *progressed = true;
+            return;
         case OP_ELSE:  w->pc = ins->target; *progressed = true; return;
         case OP_ENDIF: w->pc++; *progressed = true; return;
         case OP_ENDFOR:
@@ -3853,25 +4298,8 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             else w->pc = ins->target;
             *progressed = true; return;
         case OP_FOREACH: {
-            static const int FE_RANK[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
             int *fi = &w->fe_idx[ins->fe_slot];
-            unsigned char *ord = w->fe_ord[ins->fe_slot];
-            if (*fi == 0) {
-                for (int k = 0; k < ins->ndirs; k++) ord[k] = (unsigned char)k;
-                for (int k = 1; k < ins->ndirs; k++)
-                    for (int j = k; j > 0
-                         && FE_RANK[ins->dirs[ord[j]]] < FE_RANK[ins->dirs[ord[j-1]]]; j--) {
-                        unsigned char t = ord[j]; ord[j] = ord[j-1]; ord[j-1] = t;
-                    }
-            }
-            if (*fi < ins->ndirs) {
-                Dir d = ins->dirs[ord[(*fi)++]];
-                w->mem[ins->slot].k = MV_TILE;
-                w->mem[ins->slot].x = w->x + DX[d];
-                w->mem[ins->slot].y = w->y + DY[d];
-                w->mem[ins->slot].ntype = -1;
-                w->mem[ins->slot].wref = -1;
-                w->mem[ins->slot].fedir = true;
+            if (foreach_next(S, w, ins)) {
                 w->pc++;
             } else { *fi = 0; w->pc = ins->target + 1; }
             if (ins->ndirs > 0) {
@@ -3985,8 +4413,15 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         bool onto = (ins->op == OP_PICKUP);
         int tx, ty;
         bool have = false, bound = false;
-        if (ins->mem_target >= 0)
+        if (ins->mem_target >= 0) {
             have = mem_tile(S, w, ins->mem_target, &tx, &ty);
+            /* Once a journey has genuinely begun, losing its selected
+             * nearest entity is the cue to choose the next one and keep
+             * walking.  At command start the stale-target check above still
+             * errors instead, so this cannot revive an already-dead order. */
+            if (!have && w->enroute_pc == w->pc)
+                have = mem_tile_fresh(S, w, ins->mem_target, &tx, &ty);
+        }
         else if (!onto)
             have = bound = dir_machine_lock(S, w, ins, now, &tx, &ty);
         if (have) {
@@ -4125,7 +4560,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
                 if (if_true(S, ins, w)) w->pc++;
                 else w->pc = ins->target +
                          (P->instr[ins->target].op == OP_ELSE ? 1 : 0);
-                w->busy = 1;
+                if (!if_inline_multimem_numeric(w, ins)) w->busy = 1;
                 *progressed = true; return;
             }
             /* the think bubble: the condition is SAMPLED at the half-way
@@ -4145,20 +4580,22 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             }
             if (ins->akind == 2) {
                 /* calc runs the long finger-arithmetic; the slot takes the
-                 * result only once the sums are done.  The frame spent
-                 * taking the command up is part of its length.  An operand
-                 * naming a DIRECTION costs one whole look on top -- the same
-                 * look an if or a set pays for turning to a neighbouring
-                 * square, and like theirs it is paid once, not per operand.
-                 * Sums over blanks, numbers, memory and the own hands skip
-                 * the look and run a whole look shorter. */
-                int ms = MS_CALC + ((ins->op1.kind == 1 || ins->op2.kind == 1)
-                                        ? FQ_IF_WAIT + FQ_IF_HOLD - 1 : 0);
-                fq_push(w, FQ_WAIT, (float)(ms - 1));
+                 * result only once the sums are done, but its operands are
+                 * sampled when the command starts.  Neighbours can therefore
+                 * move or rewrite their cubes during the animation without
+                 * changing the pending answer.  The frame spent taking the
+                 * command up is part of its length.  Directional operands do
+                 * not add a separate look command. */
+                w->calc_pc = w->pc;
+                w->calc_a = calc_snapshot(S, w, &ins->op1);
+                w->calc_b = calc_snapshot(S, w, &ins->op2);
+                int scan = (ins->op1.kind == 1 || ins->op2.kind == 1)
+                    ? FQ_IF_WAIT + FQ_IF_HOLD - 1 : 0;
+                fq_push(w, FQ_WAIT, (float)(MS_CALC - 1 + scan));
                 fq_push(w, FQ_EFFECT, 0);
                 break;
             }
-            /* set of a DIRECTION is a look: the worker turns to see what is
+            /* Set of a DIRECTION is a look: the worker turns to see what is
              * there before remembering it, and the looking is a whole think
              * bubble.  Setting from a number, a memory or the own hands
              * touches nothing out in the world, writes the slot the moment
@@ -4166,7 +4603,7 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
              * short enough to vanish inside an ordinary program, long
              * enough to be a beat, which is what the scripted speed runs
              * use a row of them for */
-            if (ins->akind == 1 && ins->op1.kind == 1) {
+            if ((ins->akind == 1 && ins->op1.kind == 1) || ins->akind == 3) {
                 fq_push_look(w);
                 break;
             }
@@ -4354,7 +4791,13 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
         for (int i = 0; i < S->nw; i++) {
             g_snap_x[i] = body_tx(&S->w[i]);
             g_snap_y[i] = body_ty(&S->w[i]);
+            g_snap_holding[i] = S->w[i].alive && S->w[i].holding;
+            g_snap_held_id[i] = S->w[i].held_id;
+            g_snap_held_value[i] = S->w[i].held;
         }
+        for (int y = 0; y < S->L->h; y++)
+            for (int x = 0; x < S->L->w; x++)
+                g_snap_cube_id[y][x] = S->cube_id[y][x];
         g_snap_n = S->nw;
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
@@ -4493,6 +4936,22 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
                     w->pc, w->evcur, w->evn, w->animms,
                     w->fsusp ? " susp" : "", w->fready ? "" : " !rdy",
                     w->pc < P->n ? P->instr[w->pc].raw : "end");
+            if (w->evcur < w->evn)
+                fprintf(stderr, "       next event id=%u t=%g\n",
+                        (unsigned)w->evq[w->evcur].id, w->evq[w->evcur].t);
+            if (w->holding)
+                fprintf(stderr, "       held value=%d id=%d%s%s\n", w->held, w->held_id,
+                        w->done ? " done" : "", w->alive ? "" : " dead");
+            fprintf(stderr, "       mem");
+            for (int m = 0; m < NMEM; m++) {
+                Operand o = { .kind = 2, .mem = m };
+                int v;
+                if (operand_value(S, w, &o, &v))
+                    fprintf(stderr, " %d=k%d/v%d", m + 1, w->mem[m].k, v);
+                else
+                    fprintf(stderr, " %d=k%d/-", m + 1, w->mem[m].k);
+            }
+            fprintf(stderr, "\n");
         }
         /* say WHY the goal was not met, not just that it wasn't: the goal
          * checks explain themselves when asked, and a run that ends short is

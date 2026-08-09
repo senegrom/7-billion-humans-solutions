@@ -1,0 +1,4 @@
+mem1 = set ne,se
+if mem1 == wall:
+	pickup ne
+endif

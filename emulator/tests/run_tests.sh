@@ -68,8 +68,15 @@ expect_win  levels/finished_intent.lvl  tests/finished_intent.txt 4 119
 expect_win  levels/shred_min_held.lvl   tests/shred_min_held.txt 5 56
 expect_win  levels/checkerboard_mask.lvl tests/checkerboard_mask.txt 5
 expect_win  levels/randu_uniform.lvl tests/randu_uniform.txt 1 "" 1
+expect_win  levels/random_step_bag.lvl tests/random_step_bag.txt 4 "" 1
+expect_win  levels/random_step_claim.lvl tests/random_step_claim.txt 5 "" 1
 expect_win  levels/missing_mem_zero.lvl tests/missing_mem_zero.txt 6
 expect_win  levels/inflight_nearest.lvl tests/nearest_retarget.txt 4
+expect_win  levels/nearest_frame_snapshot.lvl tests/nearest_frame_snapshot.txt 5
+expect_win  levels/step_nearest_machine.lvl tests/step_nearest_machine.txt 4
+expect_win  levels/jump_into_foreach.lvl tests/jump_into_foreach.txt 4
+expect_win  levels/foreach_object_memory.lvl tests/foreach_object_memory.txt 7
+expect_win  levels/multi_set_type.lvl tests/multi_set_type.txt 3
 
 # Holding unrelated cubes is allowed, but the first shred must still be the
 # room minimum.  Feeding the 2 instead of the 1 must never complete the goal.

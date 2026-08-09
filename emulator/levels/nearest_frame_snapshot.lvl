@@ -1,0 +1,11 @@
+# Both workers query nearest in the same frame.  The earlier worker then
+# lifts the northern cube before the later worker takes its turn, but that
+# cannot rewrite the later worker's already-built nearest-object registry.
+name Nearest Frame Snapshot
+dim 5 5
+commands nearest pickup if
+ent worker 1 1
+ent worker 2 2
+ent cube 2 1 6
+ent cube 2 3 5
+goal all_cubes_held
