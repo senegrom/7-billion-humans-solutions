@@ -4402,9 +4402,10 @@ static bool run_frame(Sim *S, Program *P, int *out_rounds) {
         trace_board(S, now);
         for (int i = 0; i < S->nw; i++) {
             Worker *w = &S->w[i];
-            fprintf(stderr, "  w%d (%d,%d)->(%d,%d)%s%s pc=%d ev=%d/%d anim=%.0f%s%s [%s]\n",
+            fprintf(stderr, "  w%d (%d,%d)->(%d,%d)%s%s%s%s pc=%d ev=%d/%d anim=%.0f%s%s [%s]\n",
                     i, w->x, w->y, w->wtx, w->wty,
                     w->holding ? " hold" : "", w->done ? " done" : "",
+                    w->alive ? "" : " dead", w->exited ? " exited" : "",
                     w->pc, w->evcur, w->evn, w->animms,
                     w->fsusp ? " susp" : "", w->fready ? "" : " !rdy",
                     w->pc < P->n ? P->instr[w->pc].raw : "end");
