@@ -1,0 +1,6 @@
+if w == wall:
+	step n,s
+else:
+	step n,e,s
+endif
+end

@@ -1,0 +1,11 @@
+# Once the first remembered cube has been shredded, a later pickup of that
+# stale memory must error in place.  Retargeting the remaining cube would let
+# the following give shred it and incorrectly clear the room.
+name Stale Nearest Does Not Retarget
+dim 8 8
+commands nearest pickup giveto end
+ent worker 3 5
+ent cube 3 2 1
+ent cube 5 2 2
+ent shredder 3 6
+goal shred_all

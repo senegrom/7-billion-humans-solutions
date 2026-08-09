@@ -1,0 +1,7 @@
+mem1 = nearest datacube
+pickup e
+if myitem == nothing:
+	if mem1 == 6:
+		pickup s
+	endif
+endif

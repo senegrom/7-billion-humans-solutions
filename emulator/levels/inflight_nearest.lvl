@@ -1,0 +1,12 @@
+# Both workers initially choose the same nearest cube.  The loser of that
+# race must re-aim while its pickup errand is already in flight and collect
+# the other cube, rather than ending empty-handed.
+name In-Flight Nearest Retarget
+dim 9 8
+commands nearest pickup giveto end
+ent worker 3 5
+ent worker 4 5
+ent cube 3 2 1
+ent cube 5 2 2
+ent shredder 4 6
+goal shred_all

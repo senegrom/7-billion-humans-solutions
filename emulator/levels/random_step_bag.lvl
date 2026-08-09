@@ -1,0 +1,14 @@
+# A rejected direction leaves a multi-direction step's random-choice bag.
+# With the game's power-on seed, the west worker rejects NORTH twice under
+# plain rejection sampling but only once under the game's shrinking bag.  The
+# resulting RNG position sends the east worker into the east hole only when
+# rejected choices are removed before the next draw.
+name Random Step Shrinking Bag
+dim 7 5
+ent wall 0 1
+ent wall 1 0
+ent hole 1 2
+ent hole 5 2
+ent worker 1 1
+ent worker 4 2
+goal all_exited

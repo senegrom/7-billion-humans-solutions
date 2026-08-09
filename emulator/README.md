@@ -62,7 +62,7 @@ randmax <n>                  # max random cube value (default 99)
 commands <name...>           # the level's command palette (enforced)
 rule <name>                  # special rule, e.g. nowalk, unique_shredder_use
 ent wall|hole|shredder|printer|worker|door|sign <x> <y>
-ent cube <x> <y> <value|rand|randu>   # rand = uniform, randu = distinct draws
+ent cube <x> <y> <value|rand|randu>   # rand = blank, randu = independently rerolled
 goal <predicate [args]>
 ```
 

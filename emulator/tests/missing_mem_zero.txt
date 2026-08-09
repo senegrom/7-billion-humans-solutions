@@ -1,0 +1,7 @@
+if e == mem1:
+	step e
+	pickup c
+	step e
+	drop
+endif
+end

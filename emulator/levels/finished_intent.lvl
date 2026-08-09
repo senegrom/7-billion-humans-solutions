@@ -1,0 +1,25 @@
+# Three customers reach one shredder together.  The middle customer first
+# queues for the occupied front square, then feeds from the side when the
+# machine clears.  Finishing must discard that obsolete front-square intent
+# so the final customer can push past rather than wait forever.
+name Finished Intent
+dim 6 5
+ent wall 0 2
+ent wall 1 2
+ent wall 2 2
+ent wall 3 2
+ent wall 0 3
+ent wall 0 4
+ent wall 1 4
+ent wall 2 4
+ent wall 3 4
+ent wall 4 4
+ent wall 5 4
+ent cube 4 2 3
+ent cube 3 3 2
+ent cube 1 3 1
+ent worker 4 2
+ent worker 3 3
+ent worker 1 3
+ent shredder 4 3
+goal shredded 3

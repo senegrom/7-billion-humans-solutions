@@ -1,0 +1,12 @@
+# The first worker claims (2,2) before the second worker draws its random step.
+# A claimed destination is already occupied for the picker even while the
+# claimant's body is still gliding in.  Excluding it sends the second worker
+# east into its hole; choosing it leaves that worker stranded on (2,2).
+name Random Step Claimed Destination
+dim 5 5
+ent wall 0 2
+ent hole 3 2
+ent hole 3 3
+ent worker 1 2
+ent worker 2 3
+goal all_exited

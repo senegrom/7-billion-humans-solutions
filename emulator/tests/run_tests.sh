@@ -9,7 +9,10 @@ cd "$(dirname "$0")/.."
 if [ -n "${EMU_BIN:-}" ]; then
   emu=$EMU_BIN
 else
-  bash build.sh
+  if ! bash build.sh; then
+    echo "FAIL build"
+    exit 1
+  fi
   emu=./emu.exe
   # a fresh build can be briefly locked by scanners -- wait until runnable
   for _ in 1 2 3 4 5 6 7 8 9 10; do
@@ -21,21 +24,36 @@ fi
 
 pass=0; fail=0
 
-# expect_win <level> <solution> <expected_size>
+# expect_win <level> <solution> <expected_size> [expected_rounds] [trials]
 expect_win() {
-  out=$("$emu" "$1" "$2" 2>&1); rc=$?
-  size=$(printf '%s\n' "$out" | sed -n 's/^size *: *\([0-9]*\).*/\1/p')
-  if [ "$rc" -eq 0 ] && [ "$size" = "$3" ]; then
-    echo "PASS win  $(basename "$2") -> size $size"; pass=$((pass+1))
+  if [ -n "${5:-}" ]; then
+    out=$("$emu" "$1" "$2" "$5" 2>&1); rc=$?
   else
-    echo "FAIL win  $(basename "$2") (rc=$rc size=$size want $3)"; echo "$out"; fail=$((fail+1))
+    out=$("$emu" "$1" "$2" 2>&1); rc=$?
+  fi
+  size=$(printf '%s\n' "$out" | sed -n 's/^size *: *\([0-9]*\).*/\1/p')
+  rounds=$(printf '%s\n' "$out" | sed -n 's/^rounds *: *\([0-9]*\)\.\..*/\1/p')
+  if [ "$rc" -eq 0 ] && [ "$size" = "$3" ] \
+      && { [ -z "${4:-}" ] || [ "$rounds" = "$4" ]; }; then
+    detail="size $size"
+    [ -n "${4:-}" ] && detail="$detail, rounds $rounds"
+    echo "PASS win  $(basename "$2") -> $detail"; pass=$((pass+1))
+  else
+    echo "FAIL win  $(basename "$2") (rc=$rc size=$size/$3 rounds=$rounds/${4:--})"
+    echo "$out"; fail=$((fail+1))
   fi
 }
 
-# expect_fail <level> <solution>: a broken program must not win
+# expect_fail <level> <solution> [frame-cap]: a broken program must not win.
+# A capped check also fixes trials at one so deliberate live-lock controls stay
+# quick; each emulator invocation is a fresh process, so EMU_CAP cannot leak.
 expect_fail() {
-  "$emu" "$1" "$2" >/dev/null 2>&1
-  if [ $? -ne 0 ]; then echo "PASS lose $(basename "$2")"; pass=$((pass+1))
+  if [ -n "${3:-}" ]; then
+    EMU_CAP="$3" "$emu" "$1" "$2" 1 >/dev/null 2>&1; rc=$?
+  else
+    "$emu" "$1" "$2" >/dev/null 2>&1; rc=$?
+  fi
+  if [ "$rc" -ne 0 ]; then echo "PASS lose $(basename "$2")"; pass=$((pass+1))
   else echo "FAIL lose $(basename "$2") (unexpected win)"; fail=$((fail+1)); fi
 }
 
@@ -45,6 +63,46 @@ expect_win  levels/decision_demo.lvl    tests/decision.txt 5
 expect_win  levels/else_colon.lvl       tests/else_colon.txt 5
 expect_win  levels/swap_sort.lvl        tests/swap_sort.txt  6
 expect_win  levels/printer_take.lvl     tests/printer_take.txt 6
+expect_win  levels/printer_queue.lvl    tests/printer_queue.txt 4 154
+expect_win  levels/finished_intent.lvl  tests/finished_intent.txt 4 119
+expect_win  levels/shred_min_held.lvl   tests/shred_min_held.txt 5 56
+expect_win  levels/checkerboard_mask.lvl tests/checkerboard_mask.txt 5
+expect_win  levels/randu_uniform.lvl tests/randu_uniform.txt 1 "" 1
+expect_win  levels/random_step_bag.lvl tests/random_step_bag.txt 4 "" 1
+expect_win  levels/random_step_claim.lvl tests/random_step_claim.txt 5 "" 1
+expect_win  levels/missing_mem_zero.lvl tests/missing_mem_zero.txt 6
+expect_win  levels/inflight_nearest.lvl tests/nearest_retarget.txt 4
+expect_win  levels/nearest_frame_snapshot.lvl tests/nearest_frame_snapshot.txt 5
+expect_win  levels/step_nearest_machine.lvl tests/step_nearest_machine.txt 4
+expect_win  levels/jump_into_foreach.lvl tests/jump_into_foreach.txt 4
+expect_win  levels/foreach_object_memory.lvl tests/foreach_object_memory.txt 7
+expect_win  levels/multi_set_type.lvl tests/multi_set_type.txt 3
+
+# Holding unrelated cubes is allowed, but the first shred must still be the
+# room minimum.  Feeding the 2 instead of the 1 must never complete the goal.
+expect_fail levels/shred_min_held.lvl tests/shred_min_wrong.txt 1000
+
+# Checkerboards use the level's marked target squares, not an arbitrary cube
+# quota.  Leaving even one marked square empty must not complete the level.
+expect_fail levels/checkerboard_mask.lvl tests/checkerboard_mask_wrong.txt 1000
+
+# Untouched memory is numeric zero, not a wildcard: it matches a displayed 0
+# but the same branch must stay closed for a displayed 1.
+expect_fail levels/missing_mem_nonzero.lvl tests/missing_mem_zero.txt 1000
+
+# A nearest target may be reselected if it disappears while an errand is
+# already under way, but a command which starts with a stale target errors in
+# place.  Otherwise an empty Y36 column steals from its neighbour.
+expect_fail levels/stale_nearest.lvl tests/stale_nearest.txt 1000
+
+# A customer whose next step points into the printer stays at the front.  It
+# must not become transparent merely because the next opcode says "step".
+expect_fail levels/printer_queue.lvl tests/printer_queue_blocked.txt 1000
+
+# A customer which did step out is solid on its newly claimed tile.  If the
+# machine handoff makes the whole body transparent, the follower overlaps it
+# and wrongly feeds a second cube to the shredder.
+expect_fail levels/printer_queue_solid.lvl tests/printer_queue_solid.txt 1000
 
 # Negative control: drop the delivery step -> cube never reaches the pad.
 printf 'step s\npickup c\nstep s\n' > tests/_broken.txt
