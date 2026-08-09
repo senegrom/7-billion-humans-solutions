@@ -1,4 +1,0 @@
-mem1 = nearest printer
-takefrom mem1
-step n
-end

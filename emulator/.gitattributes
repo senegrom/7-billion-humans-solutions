@@ -1,5 +1,0 @@
-# Keep LF endings so the shell scripts run after checkout on any platform.
-*.sh   text eol=lf
-*.py   text eol=lf
-*.c    text eol=lf
-*.lvl  text eol=lf

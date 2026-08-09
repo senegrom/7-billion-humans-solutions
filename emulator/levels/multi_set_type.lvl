@@ -1,9 +1,0 @@
-# Type predicates search the complete object list remembered by a
-# multi-direction set.  The cube is primary, but the wall must still match.
-name Multi Set Type
-dim 5 5
-commands set if pickup
-ent worker 2 2
-ent cube 3 1 7
-ent wall 3 3
-goal all_cubes_held

@@ -1,8 +1,0 @@
-a:
-takefrom s
-if myitem < 50:
-	step w
-	giveto s
-	step e
-endif
-jump a

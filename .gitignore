@@ -1,1 +1,4 @@
 .idea
+
+# The emulator lives in its own private repository
+emulator/

@@ -1,4 +1,0 @@
-mem1 = nearest datacube
-pickup mem1
-mem2 = nearest shredder
-giveto mem2

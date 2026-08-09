@@ -1,6 +1,0 @@
-# Negative control for missing_mem_zero.lvl: untouched memory is not a
-# wildcard and therefore must not compare equal to this 1-cube.
-name Missing Memory Is Not One
-dim 3 1
-row @1G
-goal cubes_on_goals

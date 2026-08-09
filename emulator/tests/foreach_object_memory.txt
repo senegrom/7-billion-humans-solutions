@@ -1,9 +1,0 @@
-jump inside
-mem1 = foreachdir e:
-	inside:
-	pickup e
-	step s
-	if mem1 == 7:
-		drop
-	endif
-endfor

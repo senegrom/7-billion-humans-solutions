@@ -1,9 +1,0 @@
-# Jumping to a label inside a foreachdir block enters with that directional
-# memory context selected.  The game compiles labels within the loop graph;
-# treating the jump as a flat source-line transfer leaves mem1 unset.
-name Jump Into Foreach
-dim 5 5
-commands jump foreachdir pickup
-ent worker 1 2
-ent cube 2 2 7
-goal all_cubes_held
