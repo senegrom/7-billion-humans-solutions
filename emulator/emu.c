@@ -3921,6 +3921,21 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
             }
             if (!found) err = true;
         }
+        /* A nearest-derived memory target is resolved when the item command
+         * begins.  If that entity is already gone, the command errors in
+         * place; it does not walk to the stale square and select a different
+         * entity on arrival.  An errand which began while the target existed
+         * may still re-aim if somebody takes it while the worker is en route
+         * (Neural Pathways relies on that distinction). */
+        else if ((ins->op == OP_PICKUP || ins->op == OP_TAKEFROM)
+                 && ins->mem_target >= 0 && w->enroute_pc != w->pc) {
+            int tx, ty;
+            MemVal *m = &w->mem[ins->mem_target];
+            if (!mem_tile(S, w, ins->mem_target, &tx, &ty)
+                || (m->ntype >= 0
+                    && !nearest_matches(S, w, (CmpKind)m->ntype, tx, ty)))
+                err = true;
+        }
         else if (ins->op == OP_GIVETO && !w->holding)
             err = true;
         /* and so does writing with nothing in hand -- there must be a cube

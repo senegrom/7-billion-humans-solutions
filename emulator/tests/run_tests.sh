@@ -69,6 +69,7 @@ expect_win  levels/shred_min_held.lvl   tests/shred_min_held.txt 5 56
 expect_win  levels/checkerboard_mask.lvl tests/checkerboard_mask.txt 5
 expect_win  levels/randu_uniform.lvl tests/randu_uniform.txt 1 "" 1
 expect_win  levels/missing_mem_zero.lvl tests/missing_mem_zero.txt 6
+expect_win  levels/inflight_nearest.lvl tests/nearest_retarget.txt 4
 
 # Holding unrelated cubes is allowed, but the first shred must still be the
 # room minimum.  Feeding the 2 instead of the 1 must never complete the goal.
@@ -81,6 +82,11 @@ expect_fail levels/checkerboard_mask.lvl tests/checkerboard_mask_wrong.txt 1000
 # Untouched memory is numeric zero, not a wildcard: it matches a displayed 0
 # but the same branch must stay closed for a displayed 1.
 expect_fail levels/missing_mem_nonzero.lvl tests/missing_mem_zero.txt 1000
+
+# A nearest target may be reselected if it disappears while an errand is
+# already under way, but a command which starts with a stale target errors in
+# place.  Otherwise an empty Y36 column steals from its neighbour.
+expect_fail levels/stale_nearest.lvl tests/stale_nearest.txt 1000
 
 # A customer whose next step points into the printer stays at the front.  It
 # must not become transparent merely because the next opcode says "step".
