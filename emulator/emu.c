@@ -249,6 +249,7 @@ typedef struct {
     Operand op1, op2;
     int  calcop;         /* '+', '-', '*', '/' */
     int  fe_slot;        /* which fe_idx[] this foreach uses */
+    int  fe_encl;        /* innermost foreach this instruction sits in (-1) */
     /* OP_TELL / OP_LISTEN */
     char word[WORDLEN];
     int  tt_kind;        /* tell target: 0 none, 1 everyone, 2 dir, 3 mem */
@@ -836,11 +837,17 @@ static void link_program(Program *P) {
         }
     }
     if (sp) die("unclosed if/foreachdir");
-    /* endfor -> its foreach: recover by rescanning pairs */
+    /* endfor -> its foreach: recover by rescanning pairs, and stamp every
+     * instruction with the innermost sweep it sits inside (a jump into a
+     * sweep's body needs to know whose square to sample) */
     int fst[256], fsp = 0;
     for (int i = 0; i < P->n; i++) {
+        P->instr[i].fe_encl = (fsp > 0) ? fst[fsp - 1] : -1;
         if (P->instr[i].op == OP_FOREACH) fst[fsp++] = i;
-        else if (P->instr[i].op == OP_ENDFOR) P->instr[i].target = fst[--fsp];
+        else if (P->instr[i].op == OP_ENDFOR) {
+            P->instr[i].target = fst[--fsp];
+            P->instr[i].fe_encl = (fsp > 0) ? fst[fsp - 1] : -1;
+        }
     }
     for (int i = 0; i < P->n; i++)
         if (P->instr[i].op == OP_JUMP) {
@@ -3816,7 +3823,33 @@ static void fq_dispatch(Sim *S, Program *P, int i, int now,
         fprintf(stderr, "[cmd] t%d w%d pc%d op%d\n", now, i, w->pc, ins->op);
     switch (ins->op) {
         case OP_NOP: case OP_LABEL: w->pc++; *progressed = true; return;
-        case OP_JUMP:  w->pc = ins->target; *progressed = true; return;
+        case OP_JUMP: {
+            /* Jumping into a sweep's body from outside samples the sweep's
+             * first square on the way in, exactly as entering through the
+             * header would -- the body's one pass then runs on a fresh
+             * reading, not on whatever the slot held before.  The sample
+             * itself is free; only real sweeps pay the sweep's time. */
+            int fe = P->instr[ins->target].fe_encl;
+            if (fe >= 0 && ins->fe_encl != fe
+                && w->fe_idx[P->instr[fe].fe_slot] == 0) {
+                static const int FE_RANK9[9] = { 1, 5, 3, 7, 2, 0, 4, 6, 8 };
+                Instr *f = &P->instr[fe];
+                if (f->ndirs > 0) {
+                    int best = 0;
+                    for (int k = 1; k < f->ndirs; k++)
+                        if (FE_RANK9[f->dirs[k]] < FE_RANK9[f->dirs[best]])
+                            best = k;
+                    Dir d = f->dirs[best];
+                    w->mem[f->slot].k = MV_TILE;
+                    w->mem[f->slot].x = w->x + DX[d];
+                    w->mem[f->slot].y = w->y + DY[d];
+                    w->mem[f->slot].ntype = -1;
+                    w->mem[f->slot].wref = -1;
+                    w->mem[f->slot].fedir = true;
+                }
+            }
+            w->pc = ins->target; *progressed = true; return;
+        }
         case OP_ELSE:  w->pc = ins->target; *progressed = true; return;
         case OP_ENDIF: w->pc++; *progressed = true; return;
         case OP_ENDFOR:
