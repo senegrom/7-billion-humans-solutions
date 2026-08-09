@@ -1,0 +1,9 @@
+# A -2/randomized cube is rerolled independently, so duplicates are possible.
+# With the game's power-on seed, these two range-0..1 cubes both reroll to 0.
+name Independent Random Cubes
+dim 3 1
+randmax 1
+ent worker 0 0
+ent cube 1 0 randu
+ent cube 2 0 randu
+goal all_cubes_value 0

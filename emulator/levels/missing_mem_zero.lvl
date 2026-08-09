@@ -1,0 +1,5 @@
+# An untouched memory slot is numeric zero when compared with a cube value.
+name Missing Memory Is Zero
+dim 3 1
+row @0G
+goal cubes_on_goals

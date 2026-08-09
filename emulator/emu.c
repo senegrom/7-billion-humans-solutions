@@ -34,6 +34,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1014,8 +1015,6 @@ typedef struct {
 static int MS_STEP = 21, MS_PRINTER = 72, MS_SHRED = 45,
            MS_TELL = 42, MS_WRITE = 57;
 
-static unsigned rnd(Sim *S) { S->rng = S->rng * 1664525u + 1013904223u; return S->rng >> 8; }
-
 /* The dice the game itself rolls -- for a step that names several
  * directions and for the value a printer prints.  It is the game's own
  * generator: xorshift over a 32-bit state that starts, on a fresh machine,
@@ -1041,24 +1040,27 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
             S->grid[y][x] =
                 (Tile){ L->terr[y][x], L->goalpad[y][x], false, 0, -1, 0, 0 };
 
-    /* per-game randomizer specials (the game rolls these from its seed):
-     * Terrain Leveler picks its value range per game -- half the games run
-     * 0..6, a sixth run 0..10, the rest use the level's full range; Seek
-     * and Destroy 3 lifts the whole range onto a random floor so the room
-     * minimum varies */
+    /* A -2 cube's constructor consumes two rolls: one for its visual phase
+     * and one for an initial value.  Starting the room then rerolls every
+     * marked cube independently.  This is not a shuffled distinct-value
+     * pool; duplicates are intentional. */
+    for (int i = 0; i < L->ncubes; i++)
+        if (L->cubes[i].mode == CB_RANDU) {
+            (void)game_rnd(S);             /* constructor visual phase */
+            (void)game_rnd(S);             /* constructor value */
+        }
+
+    /* per-game randomizer specials (the game rolls these from the state left
+     * by construction): Terrain Leveler uses 0..6 for even states, 0..10
+     * for states divisible by three, and the level's full range otherwise.
+     * Seek and Destroy 3's lifted floor is retained as its level rule. */
     int rmax = L->randmax, vfloor = 0;
     if (L->win == G_CUBES_AVG) {
-        if (seed % 2 == 0)      rmax = 6;
-        else if (seed % 3 == 0) rmax = 10;
+        int32_t roll = (int32_t)S->grng;
+        if (roll % 2 == 0)      rmax = 6;
+        else if (roll % 3 == 0) rmax = 10;
     }
     if (L->win == G_SHRED_MIN_ROOM) vfloor = (int)(seed % 30u);
-
-    /* distinct-value pool for CB_RANDU cubes */
-    int pool[10000]; int pn = rmax + 1;
-    if (pn > 10000) pn = 10000;
-    for (int i = 0; i < pn; i++) pool[i] = i;
-    for (int i = pn - 1; i > 0; i--) { int j = (int)(rnd(S) % (unsigned)(i+1)); int t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
-    int pi = 0;
 
     S->nic = 0;
     for (int i = 0; i < L->ncubes; i++) {
@@ -1077,8 +1079,9 @@ static void sim_reset(Sim *S, Level *L, unsigned seed) {
         }
         if (c->mode == CB_RANDU) {
             if (vfloor > 0)                      /* floor-lifted independent draw */
-                v = vfloor + (int)(rnd(S) % (unsigned)(rmax - vfloor + 1));
-            else { v = pool[pi]; pi = (pi + 1) % pn; }
+                v = vfloor + (int)(game_rnd(S) % (unsigned)(rmax - vfloor + 1));
+            else
+                v = (int)(game_rnd(S) % (unsigned)(rmax + 1));
         }
         S->grid[c->y][c->x].has_cube = true;
         S->grid[c->y][c->x].cube = v;
@@ -1485,13 +1488,14 @@ static bool cond_true(Sim *S, Cond *c, Worker *w) {
     int a, b;
     bool ha = operand_value(S, w, &c->lhs, &a);
     bool hb = operand_value(S, w, &c->rhs, &b);
-    /* an untouched mem slot reads as 0 against a number literal, matching
-     * calc's accumulator coercion (Printing Etiquette counts "mem2 < 5"
-     * before ever setting mem2) */
+    /* An untouched mem slot reads as numeric 0 when the other operand has a
+     * number, whether that number is a literal or displayed on a cube.
+     * Printing Etiquette exercises the literal form; Mode Code's first scan
+     * directly exercises `c == mem3` before mem3 has ever been assigned. */
     if (!ha && c->lhs.kind == 2 && w->mem[c->lhs.mem].k == MV_NOTHING
-        && hb && c->rhs.kind == 0) { a = 0; ha = true; }
+        && hb) { a = 0; ha = true; }
     if (!hb && c->rhs.kind == 2 && w->mem[c->rhs.mem].k == MV_NOTHING
-        && ha && c->lhs.kind == 0) { b = 0; hb = true; }
+        && ha) { b = 0; hb = true; }
     /* A worker asked to hold something up against ITSELF always agrees: the
      * same square, or its own hands, compared with the very same thing is a
      * match whether or not there is anything there to look at.  (Two DIFFERENT
@@ -2077,16 +2081,35 @@ static bool level_won(Sim *S) {
             return S->nshrev == ncols;
         }
         case G_SHRED_COLS_ASC: {
-            if (S->shredded < S->nic) return false;
+            if (S->shredded < S->nic) {
+                if (g_goal_dbg)
+                    fprintf(stderr, "shred_cols: only %d/%d cubes shredded\n",
+                            S->shredded, S->nic);
+                return false;
+            }
+            bool allok = true;
             for (int x = 0; x < L->w; x++) {
                 int prev = -1;
+                if (g_goal_dbg) {
+                    bool any = false;
+                    for (int e = 0; e < S->nshrev; e++)
+                        if (S->shrev[e].src_x == x) {
+                            if (!any) fprintf(stderr, "shred_cols x=%d:", x);
+                            fprintf(stderr, " %d", S->shrev[e].value);
+                            any = true;
+                        }
+                    if (any) fputc('\n', stderr);
+                }
                 for (int e = 0; e < S->nshrev; e++)
                     if (S->shrev[e].src_x == x) {
-                        if (S->shrev[e].value < prev) return false;
+                        if (S->shrev[e].value < prev) {
+                            if (!g_goal_dbg) return false;
+                            allok = false;
+                        }
                         prev = S->shrev[e].value;
                     }
             }
-            return true;
+            return allok;
         }
         case G_SHRED_MIN_ROOM: {
             if (S->nshrev != 1) return false;
@@ -2300,15 +2323,22 @@ static bool level_won(Sim *S) {
                 for (int j = i + 1; j < rn; j++)
                     if (S->icx[rx[j]] < S->icx[rx[i]]) { int t = rx[i]; rx[i] = rx[j]; rx[j] = t; }
             if (rn != L->goal_b - L->goal_a + 1) return false;
+            bool allok = true;
             for (int v = L->goal_a; v <= L->goal_b; v++) {
                 int count = 0;
                 for (int k = 0; k < S->nic; k++)
                     if (L->cubes[k].mode != CB_FIXED && S->icv[k] == v) count++;
                 int k = rx[v - L->goal_a];
                 Tile *t = &S->grid[S->icy[k]][S->icx[k]];
-                if (!t->has_cube || t->cube != count) return false;
+                if (g_goal_dbg)
+                    fprintf(stderr, "mode_counts value=%d expect=%d has=%d value=%d\n",
+                            v, count, t->has_cube, t->has_cube ? t->cube : -999);
+                if (!t->has_cube || t->cube != count) {
+                    if (!g_goal_dbg) return false;
+                    allok = false;
+                }
             }
-            return true;
+            return allok;
         }
         case G_ALL_VALUES_PRESENT: {
             bool seen[256] = { false };

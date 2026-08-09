@@ -24,9 +24,13 @@ fi
 
 pass=0; fail=0
 
-# expect_win <level> <solution> <expected_size> [expected_rounds]
+# expect_win <level> <solution> <expected_size> [expected_rounds] [trials]
 expect_win() {
-  out=$("$emu" "$1" "$2" 2>&1); rc=$?
+  if [ -n "${5:-}" ]; then
+    out=$("$emu" "$1" "$2" "$5" 2>&1); rc=$?
+  else
+    out=$("$emu" "$1" "$2" 2>&1); rc=$?
+  fi
   size=$(printf '%s\n' "$out" | sed -n 's/^size *: *\([0-9]*\).*/\1/p')
   rounds=$(printf '%s\n' "$out" | sed -n 's/^rounds *: *\([0-9]*\)\.\..*/\1/p')
   if [ "$rc" -eq 0 ] && [ "$size" = "$3" ] \
@@ -63,6 +67,8 @@ expect_win  levels/printer_queue.lvl    tests/printer_queue.txt 4 154
 expect_win  levels/finished_intent.lvl  tests/finished_intent.txt 4 119
 expect_win  levels/shred_min_held.lvl   tests/shred_min_held.txt 5 56
 expect_win  levels/checkerboard_mask.lvl tests/checkerboard_mask.txt 5
+expect_win  levels/randu_uniform.lvl tests/randu_uniform.txt 1 "" 1
+expect_win  levels/missing_mem_zero.lvl tests/missing_mem_zero.txt 6
 
 # Holding unrelated cubes is allowed, but the first shred must still be the
 # room minimum.  Feeding the 2 instead of the 1 must never complete the goal.
@@ -71,6 +77,10 @@ expect_fail levels/shred_min_held.lvl tests/shred_min_wrong.txt 1000
 # Checkerboards use the level's marked target squares, not an arbitrary cube
 # quota.  Leaving even one marked square empty must not complete the level.
 expect_fail levels/checkerboard_mask.lvl tests/checkerboard_mask_wrong.txt 1000
+
+# Untouched memory is numeric zero, not a wildcard: it matches a displayed 0
+# but the same branch must stay closed for a displayed 1.
+expect_fail levels/missing_mem_nonzero.lvl tests/missing_mem_zero.txt 1000
 
 # A customer whose next step points into the printer stays at the front.  It
 # must not become transparent merely because the next opcode says "step".
