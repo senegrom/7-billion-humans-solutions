@@ -1,8 +1,7 @@
 -- 7 Billion Humans (2145) --
 -- 48: Community Training Day --
--- n05ucc4u's solution without its opening "takefrom n": every worker's --
--- printer is to the south, and north of them is only wall, floor or a --
--- hole, so that command could never take anything. --
+-- n05ucc4u's solution without its opening takefrom n, which can never --
+-- take anything: every printer here is south of its worker. --
 
 takefrom s
 mem1 = nearest shredder
