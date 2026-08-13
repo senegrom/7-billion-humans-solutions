@@ -1,15 +1,16 @@
 -- 36: Seek and Destroy 2 --
+-- SIZE 7 --
 
 a:
-step n
+step n,s
 if c < mem1 or
  mem1 != datacube and
  c == datacube:
 	mem1 = nearest datacube
 endif
-if n == wall:
+if n == wall or
+ myitem == something:
 	pickup mem1
-	mem2 = nearest shredder
-	giveto mem2
+	giveto s
 endif
 jump a

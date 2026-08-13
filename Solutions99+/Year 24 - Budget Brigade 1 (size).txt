@@ -1,11 +1,8 @@
+-- 7 Billion Humans --
+-- 24: Budget Brigade 1 --
+-- SIZE 3 --
+
 a:
-if e == worker and
- myitem == nothing:
-	takefrom w,s
-endif
-if e == hole or
- se == shredder and
- myitem == something:
-	giveto s,e
-endif
+takefrom w,s
+giveto s,e
 jump a
