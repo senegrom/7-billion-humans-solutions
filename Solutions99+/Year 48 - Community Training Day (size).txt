@@ -1,8 +1,4 @@
--- 7 Billion Humans (2145) --
--- 48: Community Training Day --
--- n05ucc4u's solution without its opening takefrom n, which can never --
--- take anything: every printer here is south of its worker. --
-
+takefrom n
 takefrom s
 mem1 = nearest shredder
 giveto mem1
