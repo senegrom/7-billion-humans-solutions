@@ -41,6 +41,41 @@ endif
 jump a
 ```
 
+### [ ] Year 60 - Understaffed Sorting - ordered-pickup size 8
+
+- Goal: improve the current size record from 9 commands to 8.
+- Capped-emulator evidence: 300/300 wins over seeds 1-300, average speed 604.5,
+  range 264-1,224, and maximum 76,461 of 87,500 frames.  With zero failures
+  in 300 trials, the one-sided 95% lower confidence bound is just over 99%.
+- The reduction replaces the incumbent's consecutive `pickup w` / `pickup se`
+  with ordered `pickup w,se`.  Direction lists are tried left-to-right and
+  stop at the first successful pickup, preserving the intended choice while
+  removing one charged instruction; the shorter schedule still needs the live
+  game as its timing oracle.
+- Expected editor size: **8**.
+- Entry method: paste the text; multi-direction `pickup w,se` is not
+  constructible from Year 60's normal editor palette.
+- Suggested live test: five fresh runs initially.  Record every displayed
+  speed and allow each attempt to reach the game's own cutoff.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+if sw == datacube or
+ se == datacube and
+ w == datacube or
+ s > se and
+ w != worker:
+    pickup s
+    drop
+    pickup w,se
+endif
+step s
+drop
+step nw,n,ne
+jump a
+```
+
 ### [ ] Year 15 - Shred Lines - deterministic size 7
 
 - Goal: improve the current size record from 8 commands to 7.
@@ -108,6 +143,70 @@ jump a
 - Expected editor size: **33**; expected displayed speed: **6**.
 - Suggested live test: one run should suffice because the level and schedule
   are deterministic; capture the completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 39 - Printing Etiquette 1 - speed tie-break at size 172
+
+- Goal: retain the current displayed speed record of 35 while reducing the
+  secondary size from 173 commands to 172.
+- Deterministic emulator A/B evidence: the candidate and incumbent both
+  complete in exactly 2,581 frames with identical item counts (modelled speed
+  42; the known live-game score is 35).
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 39 - Printing Etiquette 1 (speed).txt>)
+  and delete branch `a`'s terminal `end`, immediately after its fifth and final
+  `drop`.
+- Why it should be safe: that fifth drop satisfies `printed_per_worker 5`, and
+  the level's goal is checked at the end of the same frame, before the deleted
+  instruction can dispatch.
+- Expected editor size: **172**; expected displayed speed: **35**.
+- Suggested live test: one deterministic A/B run should suffice; capture the
+  completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 29 - Biometric Access - speed tie-break at size 184
+
+- Goal: retain the current displayed speed record of 54 while reducing the
+  secondary size from 185 commands to 184.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 29 - Biometric Access (speed).txt>)
+  and delete the second of the consecutive `giveto mem3` commands near the end
+  of the `pickup ne` branch (currently line 149).
+- Deterministic emulator A/B evidence: candidate and incumbent both complete
+  in exactly 4,365 frames with 148 items and identical modelled speed 70.
+  Their canonical editor sizes are 184 and 185; the emulator prints three
+  fewer because its size counter treats `else` as free.
+- Why it should be safe: the first give does not complete until the worker has
+  fed its remembered personal shredder and emptied its hands.  The second give
+  can therefore only start an empty-hand error bubble and has no subsequent
+  item action.
+- Rule caveat: the emulator does not enforce `personal_shredders`, but the
+  deleted command is empty-handed and cannot change ownership or machine
+  selection; the live game remains authoritative.
+- Expected editor size: **184**; expected displayed speed: **54**.
+- Suggested live test: one deterministic A/B run should suffice; capture the
+  completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 68 - Goodbye, Humans! - static speed tie-break at size 171
+
+- Goal: retain the current displayed speed record of 16 while reducing the
+  secondary size from 172 commands to 171.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 68 - Goodbye Humans (speed).txt>)
+  and delete the second of the two consecutive top-level
+  `tell everyone hi` commands (currently line 196).
+- Static evidence: no worker listens for `hi`, so the deleted command is only a
+  42-frame timing pad and cannot directly change a value or greeting.  It can
+  still change crowd arbitration, which is why this remains a live-game lead.
+- Emulator caveat: the current model fails both the published incumbent and
+  this candidate on seed 1 and miscounts their editor sizes as 182 and 181, so
+  it cannot referee the deletion.
+- Expected editor size: **171**; expected displayed speed if successful:
+  **16**.
+- Suggested live test: run the incumbent once as a loading/control check, then
+  the candidate once; capture both completion panels or the candidate's final
+  failure state.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 44 - Unique Fashion Party - speed 1 at size 8
@@ -252,6 +351,56 @@ jump a
 pickup c
 step n,s
 drop
+```
+
+### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
+
+- Goal: establish a size-2 SolutionsLowPercent record below the existing
+  size-4 low-percent entry and the size-5 main entry.
+- Mechanism: each of the four workers performs an independent one-dimensional
+  random walk until it falls into one of the two row holes.  The level wins
+  only when every worker reaches its designated side; under unbiased choices
+  the exact success probability is `24 / 2,401`, or about 1.00%.
+- Capped-emulator evidence: 12/1,000 wins (1.2%), average winning speed 8.0,
+  range 5-14, and winning frames 253-862.  The observed rate agrees with the
+  static probability and no winning run approached the deadline.
+- Expected editor size: **2**.
+- Entry method: paste the text; random multi-direction `step w,e` is not
+  constructible from Year 05's normal editor palette.
+- Suggested live test: repeated fresh runs; roughly 300 attempts give about a
+  95% chance of seeing at least one win if the real game's direction choices
+  are unbiased.  Capture the first completion panel.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step w,e
+jump a
+```
+
+### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
+
+- Goal: establish a size-3 SolutionsLowPercent record below the existing
+  size-7 low-percent entry and the size-8 main entry.
+- Mechanism: the restricted random walk moves only southward/eastward through
+  the maze.  A small set of direction sequences reaches pickup range of the
+  target cube; other paths absorb into holes rather than wandering until the
+  game deadline.
+- Capped-emulator evidence: 2/10,000 wins (0.02%); the two wins completed in
+  755 and 862 frames with displayed speeds 13 and 14.
+- Expected editor size: **3**.
+- Entry method: paste the text; the four-direction random step and eight-target
+  pickup are not constructible from Year 06's normal editor controls.
+- Suggested live test: repeated quick resets only if pursuing a very rare
+  record.  The observed rate implies thousands of attempts per win, so this is
+  lower priority than the deterministic and main-tier candidates.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step s,sw,se,e
+pickup c,s,se,sw,e,w,n,ne
+jump a
 ```
 
 ### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
@@ -401,11 +550,18 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   the existing LowPercent size-4 program while being far slower, so it is
   dominated rather than a Solutions50+ candidate.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
+- Y30 speed first branch-terminal `end` deletion: 0/1 at the real cutoff;
+  without it that worker falls into the common-tail work before the exact fill
+  goal is complete.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
+- Y40 speed branch-`b` and branch-`c` terminal-`end` deletions: each failed
+  0/1 at the real cutoff, while the incumbent wins in 2,777 frames.  Both
+  workers fall through into later branches before the global goal is complete,
+  so neither `end` is post-goal dead code.
 - Y42 size-8 loop fusions: both the outer-delivery and unified random-walk
   variants failed 0/5; the separate search and delivery drifts are material.
 - Y48 four-command speed rewrite: emulator training-goal false positive; the
