@@ -14,17 +14,17 @@ attempt number and do not restart merely because a run looks slow.
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
 - Goal: improve the current size record from 8 commands to 5.
-- Current capped-emulator evidence: 300/300 wins, average speed 290.3,
-  range 85-756, maximum 47,214 of 87,500 frames.  With zero failures in 300
+- Current capped-emulator evidence: 300/300 wins, average speed 190.9,
+  range 85-378, maximum 23,590 of 87,500 frames.  With zero failures in 300
   trials, the one-sided 95% lower confidence bound is just over 99%.
 - The owned-game parser accepted the exact text and built its runtime graph.
   This confirms paste/parser legality, but not that the live level completes.
 - Expected editor size: **5**.
 - Entry method: paste the text; the random multi-direction `step n,s` is not
   constructible from Year 15's editor palette.
-- Why it is faster than the size-4 random walk: it only attempts item actions
-  when a cube is directly north or a shredder is directly south, avoiding most
-  of the game's 1.5-second error bubbles.
+- Why it is faster than the size-4 random walk: it only attempts a pickup when
+  a cube is directly north of an empty worker, or while a shredder is directly
+  south.  That avoids most of the game's 1.5-second error bubbles.
 - Suggested live test: five fresh runs initially; capture every completion
   screen and any timeout or unexpected error state.
 - Result: _not yet tested in the game_.
@@ -32,7 +32,8 @@ attempt number and do not restart merely because a run looks slow.
 ```text
 a:
 step n,s
-if n == datacube or
+if n == datacube and
+ myitem == nothing or
  s == shredder:
     pickup n
     giveto s
@@ -90,6 +91,24 @@ if ne != worker and
 endif
 jump a
 ```
+
+### [ ] Year 47 - Automated Pleasantries - speed tie-break at size 33
+
+- Goal: retain the current displayed speed record of 6 while reducing the
+  secondary size from 34 commands to 33.
+- Deterministic emulator A/B evidence: the candidate and incumbent complete on
+  the same frame, 281 (modelled speed 5; the known live-game score is 6).
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 47 - Automated Pleasantries (speed).txt>)
+  and delete the final standalone two-line `if myitem == myitem:` / `endif`
+  immediately before `tell w morning`.
+- Why it should be safe: that delay belongs only to the eastmost worker's
+  pre-greeting block, and the normal west-to-east chain completes before the
+  deleted instruction is reached.
+- Expected editor size: **33**; expected displayed speed: **6**.
+- Suggested live test: one run should suffice because the level and schedule
+  are deterministic; capture the completion panel and editor size.
+- Result: _not yet tested locally in the game_.
 
 ### [ ] Year 44 - Unique Fashion Party - speed 1 at size 8
 
@@ -214,6 +233,27 @@ drop
 jump a
 ```
 
+### [ ] Year 12 - Unzip - one-shot low-percent size 3
+
+- Goal: establish a size-3 SolutionsLowPercent record below the size-5 main
+  entry.
+- Mechanism: all 12 workers pick up their on-tile cubes, independently choose
+  north or south once, and drop.  Exactly one of the `2^12 = 4,096` direction
+  patterns is the required alternating zipper.
+- Capped-emulator evidence: 23/100,000 wins, close to the theoretical 1/4,096
+  rate; every win completed in exactly 56 frames with displayed speed 1.
+- Expected editor size: **3**; paste-only because of `step n,s`.
+- Suggested live test: use repeated fresh runs rather than waiting within one
+  run—the program finishes immediately.  A live win may take several thousand
+  attempts, so this is lower priority than the main-tier candidates.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup c
+step n,s
+drop
+```
+
 ## Recently imported community programs
 
 These already have public real-game evidence and are committed to `master`.
@@ -282,6 +322,16 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
 - Y24 size 3: emulator false positive; real handoff semantics do not sustain it.
 - Y15 public size 6: 96/100 capped emulator wins, but superseded in both size
   and reliability evidence by the novel size-5 candidate above.
+- Y15 size-5 give-first ordering: 300/300, but average and worst-case timing
+  were slightly worse than the retained pickup-first ordering on the same
+  seeds (191.4 vs 190.9 average; 387 vs 378 worst).
+- Y15 symmetric size-5 gate `(shredder and holding) or north-cube`: 300/300,
+  but much slower than the retained empty-worker gate (265.5 average, 727
+  worst).  This exhausts the only other non-dominated one-IF predicate family.
+- Y10 random-walk size 2: 0/100 capped emulator wins; any winning path is too
+  rare to justify live-game queue space without stronger evidence.
+- Y18 random-fan size 4: 0/100 capped emulator wins; the workers do not fan out
+  to ten unique shredders reliably enough to retain as a live candidate.
 - Y22 public size 4: its header says 86 failures out of 150, which is 42.7%
   success rather than the claimed 57.3%; current emulator is 48/100.  It ties
   the existing LowPercent size-4 program while being far slower, so it is
@@ -290,9 +340,13 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
+- Y42 size-8 loop fusions: both the outer-delivery and unified random-walk
+  variants failed 0/5; the separate search and delivery drifts are material.
 - Y48 four-command speed rewrite: emulator training-goal false positive; the
   instructor does not shred its demonstration cube.
 - Y60 alternate size 9: superseded by dmr's public 0/200-failure size-9 record.
 - Y63 size 9 rewrite: 0/10.
 - Y64 size 7 rewrite: 0/5.
 - Y65 size 13 rewrite: 0/52.
+- Y68 unconditional size 5: 0/20; removing the side-hole guard did not produce
+  an observable low-percent win.
