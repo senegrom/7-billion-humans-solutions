@@ -1,5 +1,5 @@
--- 7 Billion Humans (2059) --
--- 20: Reverse Line --
+-- 7 Billion Humans (2235) --
+-- 20: Reverse Line by @landfillbaby, @ansvonwa and @abfipes12 --
 
 if sw == hole or
  se == hole:
@@ -7,61 +7,50 @@ if sw == hole or
 	if sw == hole:
 		step se
 		step e
+		a:
 		step e
 		step e
+		b:
 		step e
 		step e
 		step e
 	else:
 		step sw
 		step w
+		c:
 		step w
 		step w
+		d:
 		step w
 		step w
 		step w
 	endif
-else:
-	if sw == nothing or
-	 se == nothing:
-		pickup s
-		if w != worker:
-			step ne
-			step e
-			step e
-			step se
-			step se
-		else:
-			step nw
-			step w
-			step w
-			step sw
-			step sw
-		endif
-	else:
-		if sw == nothing or
-		 se == nothing:
-			pickup s
-			if w != worker:
-				step e
-				step e
-				step se
-			else:
-				step w
-				step w
-				step sw
-			endif
-		else:
-			if sw == nothing:
-				pickup se
-			else:
-				pickup sw
-			endif
-			step s
-		endif
-	endif
+	drop
 endif
+if sw != datacube or
+ se != datacube:
+	pickup s
+	if e >= 0:
+		step s
+		jump a
+	endif
+	step s
+	jump c
+endif
+if sw != datacube or
+ se != datacube:
+	pickup s
+	if e != worker:
+		step s
+		jump d
+	endif
+	step s
+	jump b
+endif
+if sw == datacube:
+	pickup sw
+endif
+pickup se
+step s
 drop
-
-
 
