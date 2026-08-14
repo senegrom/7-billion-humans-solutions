@@ -14,6 +14,30 @@ Rejected and superseded experiments are archived in
 
 ## Priority queue
 
+### [ ] Year 21 - Big Data - one-step reach-merge of the imported record
+
+- Goal: improve the imported speed record's typical value (recorded 16-22)
+  by the same program, one walk lighter.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 21 - Big Data (speed).txt>)
+  and, at the one place where a `step e` line is immediately followed by
+  `takefrom s` (deep in the nested branch), delete the `step e` and change
+  that `takefrom s` to `takefrom se`.  Editor size drops 38 to 37.
+- Why the claim survives simulator uncertainty: this is a PAIRED delta
+  against the record program itself.  The edit removes one walk; walk
+  cadences are simulator-exact (verified against the game's own runs on
+  the ferry level), and machine-serve timing — the part the simulator
+  still gets wrong on this level — is identical between the two programs.
+  Paired 400-trial runs: base average 1524.5 frames, merged 1432.0
+  (about 1.5 s), same item counts, 400/400 wins both, worst tail 3270
+  to 2970.  The delta is unchanged under the new front-serve model.
+- Known risk: the merged take reaches the printer diagonally from rest;
+  the published Year 19 entry does that in-game already.  A refusal would
+  itself be the target-acceptance finding under investigation.
+- Suggested live test: a few runs against what the unedited program
+  clocks for you; the row records a typical value.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
 - Goal: improve the current size record from 8 commands to 5.
