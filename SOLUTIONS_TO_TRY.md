@@ -164,26 +164,50 @@ jump a
   completion panel and editor size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 29 - Biometric Access - speed tie-break at size 184
+### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 214
+
+- Goal: retain the current displayed speed record of 46-47 while reducing the
+  secondary size from 215 commands to 214.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 36 - Seek and Destroy 2 (speed).txt>)
+  and delete `mem1 = set myitem` immediately after the early `pickup n` and
+  `mem2 = set mem1` sequence (currently line 90).
+- Why it should be safe: after `mem2` captures the selected cube identity,
+  `mem1` is not read again before a later unconditional `mem1 = set n`
+  overwrites it.  The deleted assignment therefore changes only timing, not
+  a value, target, or sort decision.
+- Same-world emulator A/B evidence: at winning seed 23, incumbent and candidate
+  both completed in exactly 2,987 frames with 212 item actions and modelled
+  speed 48.  Their model sizes differ by exactly one command.
+- Expected editor size: **214**; expected displayed speed: **46-47**.
+- Suggested live test: run the incumbent and candidate on fresh worlds until
+  each completes, then confirm the candidate's editor size and displayed speed.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 29 - Biometric Access - speed tie-break at size 183
 
 - Goal: retain the current displayed speed record of 54 while reducing the
-  secondary size from 185 commands to 184.
+  secondary size from 185 commands to 183.
 - Exact edit: start from
   [the current speed program](<Solutions99+/Year 29 - Biometric Access (speed).txt>)
-  and delete the second of the consecutive `giveto mem3` commands near the end
-  of the `pickup ne` branch (currently line 149).
+  and make both independent deletions:
+  - delete the second of the consecutive `giveto mem3` commands near the end
+    of the `pickup ne` branch (currently line 149); and
+  - delete `mem1 = nearest datacube` immediately after the later
+    `pickup mem1` (currently line 171).
 - Deterministic emulator A/B evidence: candidate and incumbent both complete
   in exactly 4,365 frames with 148 items and identical modelled speed 70.
-  Their canonical editor sizes are 184 and 185; the emulator prints three
+  Their canonical editor sizes are 183 and 185; the emulator prints three
   fewer because its size counter treats `else` as free.
 - Why it should be safe: the first give does not complete until the worker has
   fed its remembered personal shredder and emptied its hands.  The second give
-  can therefore only start an empty-hand error bubble and has no subsequent
-  item action.
+  can therefore only start an empty-hand error bubble.  The later nearest
+  assignment is never read before `mem1` is overwritten with `nearest worker`,
+  so it contributes only an otherwise-unneeded delay.
 - Rule caveat: the emulator does not enforce `personal_shredders`, but the
   deleted command is empty-handed and cannot change ownership or machine
   selection; the live game remains authoritative.
-- Expected editor size: **184**; expected displayed speed: **54**.
+- Expected editor size: **183**; expected displayed speed: **54**.
 - Suggested live test: one deterministic A/B run should suffice; capture the
   completion panel and editor size.
 - Result: _not yet tested locally in the game_.
@@ -403,6 +427,170 @@ pickup c,s,se,sw,e,w,n,ne
 jump a
 ```
 
+### [ ] Year 13 - Injection Sites 2 - recoverable low-percent size 5
+
+- Goal: improve the existing size-6 SolutionsLowPercent entry to size 5.
+- Provenance: this is H-J-Granger's public low-percent program with only its
+  initial `step se` removed; retain that attribution if it is promoted.
+- Mechanism: all six workers first take their cubes, then use the same
+  recoverable six-direction walk and exact gap predicate as the public
+  program.  Removing the initializer creates additional hole-loss paths but
+  leaves collision-free successful routes reachable.
+- Capped-emulator evidence: 14/100 wins; winning speed averaged 365.9, ranged
+  from 59 to 1,223, and used 3,635-76,436 frames.
+- Expected editor size: **5**.
+- Entry method: paste the text because the six-direction random step is not
+  constructible from the normal editor controls.
+- Suggested live test: repeated fresh runs; capture a completion panel and
+  confirm editor size 5.  The emulator sample suggests this should be much
+  more practical than the rarer one-shot entries below.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+a:
+step w,sw,n,s,e,se
+if c == nothing and
+ w == datacube:
+    drop
+endif
+jump a
+```
+
+### [ ] Year 22 - Number Royale - survivor low-percent size 3
+
+- Goal: improve the existing size-4 SolutionsLowPercent entry to size 3.
+- Mechanism: every worker takes its own cube, then performs an independent
+  north/south random walk until falling through the disposal hole.  The level
+  wins when all non-maximum holders have died while at least one maximum holder
+  remains alive; otherwise the run absorbs as a loss.
+- Capped-emulator evidence: 8/100 wins; winning speed averaged 14.0, ranged
+  from 8 to 21, and used 475-1,273 frames.  Every win completed far before the
+  deadline.
+- Expected editor size: **3**.
+- Entry method: paste the text because `step n,s` is a random multi-direction
+  command unavailable from the normal editor controls.
+- Suggested live test: repeated quick runs; verify that the completion panel
+  appears while at least one maximum-valued worker is still alive and capture
+  editor size 3.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+a:
+step n,s
+jump a
+```
+
+### [ ] Year 52 - The Mode Code - one-shot low-percent size 6
+
+- Goal: establish a size-6 SolutionsLowPercent record below the size-15 main
+  entry.
+- Mechanism: each worker binds its own result cube, samples the input cube two
+  rows north, and writes that sample plus 8.  The level wins exactly when the
+  six sampled values happen to equal the six true frequency counts minus 8.
+- Exact probability: conditioning on the six sampled cubes and the remaining
+  58 independent uniform draws gives `2.90709234823e-6`, or about one win in
+  343,986 worlds.
+- RNG/emulator witness: an independent exact RNG search predicted the first
+  winning world at seed 69,510 with counts `[13,9,11,11,12,8]` and samples
+  `[5,1,3,3,4,0]`.  The capped emulator then found exactly 1/69,510 wins, at
+  that final seed, completing in 342 frames with displayed speed 6.
+- Expected editor size: **6**; every command is available in Year 52.
+- Suggested live test: this is mathematically sound but far too rare for a
+  practical manual campaign.  Preserve it for a lucky natural run or a future
+  reproducible live-game RNG harness; capture the completion panel if tested.
+- Result: _not yet tested locally in the game_.
+
+```text
+mem2 = set s
+step n
+mem1 = calc n + 8
+pickup mem2
+write mem1
+drop
+```
+
+### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
+
+- Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
+  entry.
+- Mechanism: the five workers march north through their flower centers, move
+  one south petal into each center, and write the constant 36.  The level wins
+  exactly when every independent eight-value flower ring originally sums to
+  36; moving a petal does not change the stored target sum.
+- Exact probability: one eight-value ring sums to 36 with probability
+  `4,816,030 / 10^8`; all five do so with probability
+  `2.5908717630610564e-7`, or about one in 3,859,705.
+- RNG/emulator witness: an independent xorshift search found seed 3,868,438.
+  All five eight-value groups sum to 36, and the isolated seed-offset emulator
+  won in 2,099 frames with displayed speed 34 and 172 item actions.
+- Expected editor size: **5**; all commands are available in Year 55.
+- Suggested live test: natural manual verification is impractical without a
+  reproducible RNG-start method.  Capture the completion panel if the matching
+  world can be reproduced.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step n
+pickup c,s
+write 36
+drop
+jump a
+```
+
+### [ ] Year 56 - Local Maximums - one-shot low-percent size 3
+
+- Goal: improve the existing size-4 SolutionsLowPercent entry and size-7 main
+  entry to size 3.
+- Mechanism: each worker takes the northwest cube from its own eight-cube
+  group and feeds its nearest shredder.  The level wins exactly when all seven
+  selected cubes are already weak maxima of their groups, so the omitted
+  `write 99` is unnecessary in that world.
+- Exact probability: each selected value is maximal with probability
+  `sum(k^7, k=1..100) / 100^8`; across seven independent groups the win rate
+  is `6.2945867338e-7`, or about one in 1,588,667.
+- RNG/emulator witness: an independent xorshift search found seed 3,281,406.
+  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
+  group.  An isolated seed-offset emulator run then won in 310 frames with
+  displayed speed 5 and 14 item actions.
+- Expected editor size: **3**; all commands are available in Year 56.
+- Suggested live test: preserve this as a mathematically witnessed rare record;
+  natural manual verification is impractical without a reproducible RNG-start
+  method.  Capture the completion panel if the matching world occurs.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup nw
+mem1 = nearest shredder
+giveto mem1
+```
+
+### [ ] Year 62 - The Sorting Floor - initially sorted size 0
+
+- Goal: establish a zero-command SolutionsLowPercent record below the size-10
+  Solutions50+ and size-12 main entries.
+- Mechanism: do nothing.  The nine independent random cubes occasionally
+  spawn in weakly increasing row-major order, satisfying the goal before the
+  first frame is processed.
+- Exact probability: `C(108, 9) / 100^9 = 3.9113958819e-6`, or about one win
+  in 255,663 worlds.
+- RNG/emulator witness: an independent xorshift search found seed 239,189.
+  Its constructor values become row-major
+  `[10,14,18,41,62,69,80,88,95]`; the isolated seed-offset emulator accepted
+  the label-only program at frame 0 with size 0 and displayed speed 0.
+- Expected editor size: **0**; the free label is present only to make the text
+  pasteable and does not count as a command.
+- Suggested live test: natural manual verification is impractical.  If a
+  reproducible live-game RNG-start method becomes available, paste the free
+  label, run the matching world, and capture the immediate completion panel.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+```
+
 ### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
 
 - Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
@@ -566,6 +754,10 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   variants failed 0/5; the separate search and delivery drifts are material.
 - Y48 four-command speed rewrite: emulator training-goal false positive; the
   instructor does not shred its demonstration cube.
+- Y48 size-3 `takefrom n,s` fusion: behaviorally collapses to the previously
+  reverted direct-south size-3 program and removes the incumbent's
+  role-dependent opening look/error timing.  The aggregate emulator accepts
+  that shortcut, but the live game already rejected it; retain size 4.
 - Y60 alternate size 9: superseded by dmr's public 0/200-failure size-9 record.
 - Y63 size 9 rewrite: 0/10.
 - Y64 size 7 rewrite: 0/5.
