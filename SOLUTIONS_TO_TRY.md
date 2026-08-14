@@ -14,6 +14,33 @@ Rejected and superseded experiments are archived in
 
 ## Priority queue
 
+### [ ] Year 21 - Big Data - four-site reach-merge, speed row (~19)
+
+- Goal: improve the speed row's typical value (recorded ~19).
+- Transform: the published Year 6 trick (an item command reaches its whole
+  3x3, so `step s` + `takefrom e` collapses into `takefrom se`), applied at
+  every eligible site in every published file; Year 21's speed file has four
+  sites that each survive 200/200 alone, and they compound.  The four
+  `giveto`-side sites FAIL individually and are excluded.
+- Paired evidence on the same simulator build, 400 trials each: published
+  average 24.9 s (range 12..53), candidate average 23.4 s (range 12..48),
+  identical win rate (400/400) and item counts — the whole distribution
+  shifts left about 1.5 s, four commands lighter.
+- Known risk: the merged takes serve the printer diagonally from rest.
+  The published Year 19 entry already does that in-game, so it should be
+  legal; if the game refuses, that refusal is itself the next simulator
+  finding (the target-acceptance hole under investigation).
+- Suggested live test: several runs; the row records a typical value, so
+  compare against what the published program clocks for you.
+- Result: _not yet tested in the game_.
+
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 21 - Big Data (speed).txt>)
+  and, at each of the four places where a `step s` line is immediately
+  followed by `takefrom e`, delete the `step s` and change that `takefrom e`
+  to `takefrom se`.  (Exactly four such pairs exist; the similar
+  `step s` + `giveto w` pairs stay untouched.)
+
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
 - Goal: improve the current size record from 8 commands to 5.
