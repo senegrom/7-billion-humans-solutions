@@ -164,6 +164,26 @@ jump a
   completion panel and editor size.
 - Result: _not yet tested locally in the game_.
 
+### [ ] Year 40 - Printing Etiquette 2 - historical speed 36 at size 176
+
+- Goal: improve the current size-177 / speed-37 record to size 176 / speed 36.
+- Source provenance: [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
+  by commonnickname reports 36 seconds.  The author closed it because another
+  contemporary solution appeared better, not because this edit failed; the
+  one-line reduction is absent from the current record.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 40 - Printing Etiquette 2 (speed).txt>)
+  and delete the `step w` between the final `takefrom mem1` and `step n` in the
+  branch that writes and drops its fifth sheet.
+- Deterministic emulator A/B evidence: the candidate wins in 2,754 frames and
+  the untouched incumbent in 2,777 frames, with the same 102 item actions.
+  Both round to modelled speed 45; canonical sizes are 176 and 177.
+- Expected editor size: **176**; expected displayed speed: **36** based on the
+  original real-game submission.
+- Suggested live test: run the incumbent once as a control, delete that one
+  step, and capture the candidate completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
 ### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 211
 
 - Goal: retain the current displayed speed record of 46-47 while reducing the
@@ -200,9 +220,11 @@ jump a
   otherwise falls back to the east item.  Ordered multi-target `set c,e` makes
   the same first-success choice, and this state only reads the resulting value
   numerically; it never uses the saved location as an action target.
-- Timing caveat: the fusion removes one frame when center is numeric and about
-  34 frames on the east-fallback path.  The value/control result is equivalent,
-  but live choreography and counter timing still need an A/B run.
+- Deterministic emulator A/B evidence: candidate and incumbent both win in
+  exactly 747 frames with modelled speed 12.  The candidate uses 68 modelled
+  item actions versus 70 and canonical counting confirms 244 versus 246.
+- Timing caveat: the fusion contracts the fallback path, so live choreography
+  and counter timing still need an A/B run despite the exact emulator result.
 - Expected editor size: **244**; expected displayed speed: **10-11**.
 - Suggested live test: run the current speed program as a control, then the
   candidate; capture both completion panels and candidate editor size.
@@ -220,9 +242,9 @@ jump a
   `mem1` before any read; on failure, the recovery path now reads the original
   `mem2` directly and a later state overwrites `mem1`.  The edit therefore
   preserves every target/value while removing two copied memory values.
-- Emulator caveat: both candidate and incumbent fail the current model on
-  seed 1, so the model cannot referee timing on this level.  Canonical counting
-  independently confirms 143 versus 145.
+- Emulator caveat: the incumbent fails 0/20 in the current model (and the
+  candidate also failed the initial seed), so the model cannot referee timing
+  on this level.  Canonical counting independently confirms 143 versus 145.
 - Expected editor size: **143**; expected displayed speed: **72-74**.
 - Suggested live test: run the incumbent as a loading/control check, then the
   candidate; capture either completion panel or the exact failure state.
@@ -289,11 +311,11 @@ jump a
   cannot transmit a value, alter control flow, or satisfy the level goal.  It
   is only a 42-frame cadence pad.
 - Timing caveat: removing that pad can still change counter/crowd arbitration.
-  Unlike Year 68, the current emulator normally reproduces the Year 67 speed
-  program, so a same-world A/B is the next validation gate.
+  Candidate and incumbent both fail the current extracted-level model on
+  seed 1, so the emulator cannot referee this edit; it remains live-only.
 - Expected editor size: **209**; expected displayed speed: **41**.
-- Suggested live test: only after a same-world emulator win, run incumbent and
-  candidate in the game and capture both completion panels.
+- Suggested live test: run incumbent and candidate in the game and capture both
+  completion panels, treating any difference as timing evidence.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 68 - Goodbye, Humans! - static speed tie-break at size 171
@@ -730,6 +752,36 @@ giveto mem1
 a:
 ```
 
+### [ ] Year 26 - Budget Brigade 2 - all-left low-percent size 3
+
+- Goal: establish a size-3 SolutionsLowPercent record below the size-7 main
+  entry.
+- Mechanism: the vertical printer chain relays every sheet north, the top
+  worker turns it west, and the horizontal chain relays it to the left-hand
+  low-value shredder.  The strict split goal wins exactly when the first 20
+  sheets all have values below 50.
+- Exact probability: the first printer sheet is always 0, leaving 19 uniform
+  binary threshold outcomes, so success is `2^-19 = 1 / 524,288`.
+- RNG/emulator witness: seed 945,093 wins the strict extracted goal in 10,574
+  frames with modelled speed 170 and 1,932 item actions.  Canonical counting
+  confirms size 3.
+- Minimality: a loop is necessary to request at least 20 sheets from the single
+  printer, and separate take/give actions are necessary to relay and shred
+  them.  Thus no size-2 program can satisfy this no-walking level.
+- Expected editor size: **3**; the multi-target take/give lists are legal in
+  Year 26 and do not require a paste-only marker.
+- Suggested live test: natural manual verification is impractical without a
+  reproducible RNG-start method; capture the completion panel if the witness
+  world can be reproduced.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+takefrom s,e
+giveto n,w,s
+jump a
+```
+
 ### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
 
 - Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
@@ -781,7 +833,8 @@ drop
   cube; the level wins only when those choices are the minimum cube in every
   column.  Cross-column nearest ties make the exact probability layout-dependent.
 - Capped-emulator evidence: 5/10,000 wins (0.05%); every win completed in 187
-  frames with displayed speed 3.
+  frames with displayed speed 3.  Seed 3,769 was independently isolated as a
+  reproducible winning world with 8 item actions.
 - Expected editor size: **4**; all commands are available in Year 34.
 - Suggested live test: this may require thousands of quick resets.  Confirm
   that each successful run reports all four per-column minima before promotion.
@@ -893,9 +946,14 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   goal is complete.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
+- Y33 ordered-pickup size 4: 0/1,000.  Directional `pickup w,e` does not move
+  the worker onto the source tile, so terminal `drop` restores the copy on the
+  center square; the extra restore step in the queued size-5 form is essential.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
+- Y39 unguarded-printer size 5: 0/100 at a 20,000-frame diagnostic cap; random
+  requeueing did not produce the required exactly-five-sheets-per-worker state.
 - Y40 speed branch-`b` and branch-`c` terminal-`end` deletions: each failed
   0/1 at the real cutoff, while the incumbent wins in 2,777 frames.  Both
   workers fall through into later branches before the global goal is complete,
