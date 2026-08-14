@@ -254,6 +254,70 @@ step n,s
 drop
 ```
 
+### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
+
+- Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
+  and size-8 Solutions50+ entries.
+- Mechanism: each worker selects and shreds one nearest cube.  The level wins
+  only when the first shredded cube happens to be the room's global minimum;
+  routing and selection do not inspect values.
+- Capped-emulator evidence: 23/1,000 wins (2.3%); every win completed in 133
+  frames with displayed speed 3.
+- Expected editor size: **4**; all commands are available in Year 38.
+- Suggested live test: 50-100 fresh runs; each attempt ends within a few
+  seconds, so reset immediately after an explicit failure.
+- Result: _not yet tested locally in the game_.
+
+```text
+mem1 = nearest datacube
+pickup mem1
+mem1 = nearest shredder
+giveto mem1
+```
+
+### [ ] Year 33 - Data Backup Day - one-shot low-percent size 5
+
+- Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
+  entry.
+- Mechanism: every worker remembers its east value, selects one of its two
+  equidistant cubes, and overwrites the selected cube.  The correct nearest
+  tie choice in all eight pairs has probability close to `1/2^8`.
+- Capped-emulator evidence: 44/10,000 wins (0.44%); every win completed in 146
+  frames with displayed speed 3.
+- Expected editor size: **5**; all commands are available in Year 33.
+- Suggested live test: repeated quick runs; roughly a few hundred attempts per
+  observed win is plausible, but record the actual tie behavior.
+- Result: _not yet tested locally in the game_.
+
+```text
+mem1 = set e
+mem2 = nearest datacube
+pickup mem2
+write mem1
+drop
+```
+
+### [ ] Year 34 - Seek and Destroy 1 - one-shot low-percent size 4
+
+- Goal: establish a size-4 SolutionsLowPercent record below the size-7 main
+  entry.
+- Mechanism: each of four workers independently selects and shreds one nearest
+  cube; the level wins only when those choices are the minimum cube in every
+  column.  Cross-column nearest ties make the exact probability layout-dependent.
+- Capped-emulator evidence: 5/10,000 wins (0.05%); every win completed in 187
+  frames with displayed speed 3.
+- Expected editor size: **4**; all commands are available in Year 34.
+- Suggested live test: this may require thousands of quick resets.  Confirm
+  that each successful run reports all four per-column minima before promotion.
+- Result: _not yet tested locally in the game_.
+
+```text
+mem1 = nearest datacube
+pickup mem1
+mem1 = nearest shredder
+giveto mem1
+```
+
 ## Recently imported community programs
 
 These already have public real-game evidence and are committed to `master`.
@@ -337,6 +401,8 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   the existing LowPercent size-4 program while being far slower, so it is
   dominated rather than a Solutions50+ candidate.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
+- Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
+  irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
