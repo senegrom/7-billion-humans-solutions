@@ -105,3 +105,13 @@ for records.  Candidates that still need live-game verification remain in
   boundary.
 - Y68 unconditional size 5: 0/20; removing the side-hole guard did not produce
   an observable low-percent win.
+- Y21 speed four-site reach-merge (step s + takefrom e -> takefrom se at four
+  sites of the pre-import program): each site 200/200 alone, combined average
+  23.4 s vs 24.9 s over 400 paired trials.  Superseded before live testing:
+  the imported community program (@commonnickname + @abfipes12, recorded
+  16-22) replaced the base file, and the two programs measure identically in
+  the simulator (avg 24.9, same distribution) — the community's real-game
+  gain lives in machine-serve timing the simulator does not yet model, so a
+  simulator-relative -1.5 s no longer supports an improvement claim against
+  the new record.  Re-running the merge transform on the imported bases
+  instead.
