@@ -83,17 +83,20 @@ jump a
   frame-identical A/B cancels any simulator-vs-game calibration.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 40 - Printing Etiquette 2 - seven-corner diagonal stack, size 170
+### [ ] Year 40 - Printing Etiquette 2 - PR-92 edit + six diagonals, speed 36 at size 170
 
-- Goal: improve the speed row's secondary size 177 to 170, with the run
-  slightly faster (22 frames, ~0.35 s — the displayed second may or may
-  not move).
-- Exact edit: collapse the seven safe corner pairs found by the sweep in
-  [the current speed program](<Solutions99+/Year 40 - Printing Etiquette 2 (speed).txt>)
-  (sites at parse units 99, 111, 119, 146, 159, 174, 182: each a
-  perpendicular cardinal pair into its diagonal; the eighth corner at
-  unit 138 measures 144 frames SLOWER and must stay).
-- Evidence: 200/200, paired average 2777.0 → 2755.0 frames, walk-only edit.
+- Goal: take the row from 177 / 37 to **170 / 36**.
+- Base: [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
+  (@commonnickname) deletes the `step w` between `takefrom mem1` and
+  `step n / write 5` — the author recorded **36 s in the game** for that
+  edit alone, so the speed side is already live-verified upstream.
+- My addition: on that base, collapse the six perpendicular corner pairs
+  that measure timing-neutral (the seventh, an `e`+`s` corner mid-file,
+  runs 145 frames slower and must stay).  Composed program: size **170**,
+  400/400 wins, frame-for-frame identical to the PR variant (2754.0 flat)
+  — so the displayed 36 cannot regress from the size trim.
+- This supersedes the earlier seven-corner entry built on the pre-PR
+  file (same size, one frame slower, no upstream provenance).
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - two diagonals, size 133
