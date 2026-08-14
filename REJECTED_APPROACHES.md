@@ -37,6 +37,17 @@ for records.  Candidates that still need live-game verification remain in
   success rather than the claimed 57.3%; current emulator is 48/100.  It ties
   the existing LowPercent size-4 program while being far slower, so it is
   dominated rather than a Solutions50+ candidate.
+- Y22 synthesized size-3 `step all; pickup c,w; jump` program: 29/1,200 wins
+  (2.4%) at 116 seconds average.  It ties the retained survivor program's size
+  3 but is dominated by that candidate's 84/1,000 wins and 14.4-second average.
+- Y23 speed size-8 deletion of the west branch's immediate `jump a`: 100/100
+  wins, but average completion worsens from 1,059.0 to 1,382.3 frames and from
+  modelled speed 17.5 to 22.7.  It is also larger than the current size-6
+  endpoint, so it improves neither record.
+- Y25 external persistent-loop reduction: the source program is 32 commands at
+  129 seconds and the proposed unconditional-tail form is about 30 commands at
+  the same speed.  Both are dominated by the local size-9/live-129 endpoint and
+  the retained size-8 candidate.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
 - Y26 size-5 ordered take/give fusion: three distinct routing predicates each
   failed 0/100 at the 1,400-second cap; the mechanism stalls the feeder chain.
@@ -61,11 +72,18 @@ for records.  Candidates that still need live-game verification remain in
   23 still fails because removing the repeated `calc` changes worker timing.
   The related size-5 random walk has a finite abstract route but no seed shown
   to realize both the required values and movement schedule.
+- Y37 larger state-machine normalizations: canonical size 238 still wins, but
+  regresses from 747 frames/modelled speed 12/68 items to 905/15/75.  The
+  independently tested size-235 normalization fails 0/1 at the full cap, so
+  the combined size-230 form was not attempted.
 - Y38 speed deletion of one, two, or all three consecutive `pickup c` retries:
   94/100, 93/100, and 91/100 respectively, versus 100/100 for the incumbent.
   The actions are reliability choreography rather than removable dead code.
 - Y39 unguarded-printer size 5: 0/100 at a 20,000-frame diagnostic cap; random
   requeueing did not produce the required exactly-five-sheets-per-worker state.
+- Y39 end-only speed size 172: superseded by the retained size-167 composition,
+  which includes the same terminal-`end` deletion plus five neutral diagonals
+  and remains exactly 2,581 frames.
 - Y40 speed branch-`b` and branch-`c` terminal-`end` deletions: each failed
   0/1 at the real cutoff, while the incumbent wins in 2,777 frames.  Both
   workers fall through into later branches before the global goal is complete,
