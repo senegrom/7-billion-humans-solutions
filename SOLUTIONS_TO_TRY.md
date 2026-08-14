@@ -38,6 +38,33 @@ Rejected and superseded experiments are archived in
   clocks for you; the row records a typical value.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 22 - Number Royale - three-command low-percent size record
+
+- Goal: take the low-percent tier's size row from 4 commands to **3**.
+- Program (paste; three commands):
+
+```text
+a:
+step n,s,e,w,ne,nw,se,sw
+pickup c,w
+jump a
+```
+
+- How it wins: everyone tumbles randomly; each pickup clears a cube from
+  the floor into somebody's hands.  On the lucky runs the last cube
+  standing is the 99 (or the current maximum ends unique in one pair of
+  hands) at the moment the floor goes bare.
+- Evidence: exhaustive synthesis over the full 3-command list-grammar
+  space (704,460 programs) found the shape; measuring every one of the
+  45 target choices at 400 trials, then the top two at 1,200 trials,
+  puts the best variant (`pickup c,w`) at **29/1200 ≈ 2.4%**, average
+  win 116 s (range 55..238).  Expect roughly 40 attempts (~1.5 h of
+  restarts) for one witnessed completion — a one-shot record in the
+  established low-percent tradition.
+- No 3-command program wins Year 14 in the same grammar (0 of 866,400),
+  so this is the only floor the list grammar breaks at this size.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing
 
 - Goal: retain the displayed speed record while cutting the secondary size
