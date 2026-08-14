@@ -38,6 +38,56 @@ Rejected and superseded experiments are archived in
   clocks for you; the row records a typical value.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing
+
+- Goal: retain the displayed speed record while cutting the secondary size
+  from 173 to 167.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 39 - Printing Etiquette 1 (speed).txt>),
+  collapse each of the five places where two adjacent perpendicular cardinal
+  steps form a corner (`step e`+`step s`→`step se`, `step e`+`step n`→`step ne`,
+  `step n`+`step w`→`step nw`, `step w`+`step n`→`step nw`, `step w`+`step s`→`step sw`
+  — the sweep found exactly these five safe corners; a sixth corner near
+  branch `a`'s tail measures 5 frames slower and is NOT included), and also
+  delete branch `a`'s terminal `end` after its fifth `drop` (the end-drop
+  already queued above).
+- Evidence: composed program wins 200/200 with the run frame-identical to
+  the incumbent (2581.0 flat) — same timeline, six commands lighter.  A
+  frame-identical A/B cancels any simulator-vs-game calibration.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 40 - Printing Etiquette 2 - seven-corner diagonal stack, size 170
+
+- Goal: improve the speed row's secondary size 177 to 170, with the run
+  slightly faster (22 frames, ~0.35 s — the displayed second may or may
+  not move).
+- Exact edit: collapse the seven safe corner pairs found by the sweep in
+  [the current speed program](<Solutions99+/Year 40 - Printing Etiquette 2 (speed).txt>)
+  (sites at parse units 99, 111, 119, 146, 159, 174, 182: each a
+  perpendicular cardinal pair into its diagonal; the eighth corner at
+  unit 138 measures 144 frames SLOWER and must stay).
+- Evidence: 200/200, paired average 2777.0 → 2755.0 frames, walk-only edit.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 38 - Seek and Destroy 3 - two diagonals, size 133
+
+- Exact edit: in
+  [the current speed program](<Solutions99+/Year 38 - Seek and Destroy 3 (speed).txt>)
+  collapse the two corner pairs (`step n`+`step e`→`step ne`,
+  `step e`+`step s`→`step se`).  200/200, paired average 614.2 → 609.4
+  frames, size 135 → 133.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 59 - Glory Hole - three diagonals, size 131
+
+- Exact edit: in
+  [the current speed program](<Solutions99+/Year 59 - Glory Hole (speed).txt>)
+  collapse the three corner pairs at parse units 99, 121, 178 (each
+  `step`-pair into its diagonal; the other four corners in the file
+  measure up to 10 frames slower and stay).  200/200, paired average
+  447.0 → 446.0, size 134 → 131.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
 - Goal: improve the current size record from 8 commands to 5.
