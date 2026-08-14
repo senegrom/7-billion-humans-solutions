@@ -164,52 +164,136 @@ jump a
   completion panel and editor size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 214
+### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 211
 
 - Goal: retain the current displayed speed record of 46-47 while reducing the
-  secondary size from 215 commands to 214.
+  secondary size from 215 commands to 211.
 - Exact edit: start from
   [the current speed program](<Solutions99+/Year 36 - Seek and Destroy 2 (speed).txt>)
-  and delete `mem1 = set myitem` immediately after the early `pickup n` and
-  `mem2 = set mem1` sequence (currently line 90).
+  and make four reductions: remove `mem1 = set myitem` immediately after the
+  early `pickup n` / `mem2 = set mem1` sequence (baseline line 90); remove the
+  one-time `mem4 = set nothing` initialization (line 110); and replace each of
+  the two `mem1 = set c` followed by `if mem1 ==/!= datacube` pairs (lines
+  16-17 and 119-120) with a direct `if c ==/!= datacube`.
 - Why it should be safe: after `mem2` captures the selected cube identity,
-  `mem1` is not read again before a later unconditional `mem1 = set n`
-  overwrites it.  The deleted assignment therefore changes only timing, not
-  a value, target, or sort decision.
+  `mem1` is not read before a later unconditional overwrite.  `mem4` is already
+  initialized to `nothing`, the setup branch is entered only once, and its
+  next read therefore has the same result.  Each folded pair samples the same
+  center cube at the same effect frame, and `mem1` is overwritten before its
+  discarded copy could be read.
 - Same-world emulator A/B evidence: at winning seed 23, incumbent and candidate
   both completed in exactly 2,987 frames with 212 item actions and modelled
-  speed 48.  Their model sizes differ by exactly one command.
-- Expected editor size: **214**; expected displayed speed: **46-47**.
+  speed 48.  Canonical counting independently confirms sizes 215 and 211.
+- Expected editor size: **211**; expected displayed speed: **46-47**.
 - Suggested live test: run the incumbent and candidate on fresh worlds until
   each completes, then confirm the candidate's editor size and displayed speed.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 29 - Biometric Access - speed tie-break at size 183
+### [ ] Year 37 - Dangerous Spreadsheeting - ordered-set speed tie-break at size 244
+
+- Goal: retain the current displayed speed record of 10-11 while reducing the
+  secondary size from 246 commands to 244.
+- Exact edit: in the late state that currently does `mem1 = set c`, tests
+  `mem1 != datacube`, and conditionally does `mem1 = set e`, replace the whole
+  four-line block with the single ordered assignment `mem1 = set c,e`.
+- Why it should be safe: the old block retains the center item when numeric and
+  otherwise falls back to the east item.  Ordered multi-target `set c,e` makes
+  the same first-success choice, and this state only reads the resulting value
+  numerically; it never uses the saved location as an action target.
+- Timing caveat: the fusion removes one frame when center is numeric and about
+  34 frames on the east-fallback path.  The value/control result is equivalent,
+  but live choreography and counter timing still need an A/B run.
+- Expected editor size: **244**; expected displayed speed: **10-11**.
+- Suggested live test: run the current speed program as a control, then the
+  candidate; capture both completion panels and candidate editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 42 - Important Email Organization - speed tie-break at size 143
+
+- Goal: retain the current displayed speed record of 72-74 while reducing the
+  secondary size from 145 commands to 143.
+- Exact edit: delete both `mem1 = set mem2` copies at the entries to labels `g`
+  and `h`; retarget the shared `pickup mem1`, later `if mem1 > 9`, and
+  `step mem1` uses to `mem2`.
+- Why it should be safe: `mem2` is the nearest-cube reference selected by the
+  preceding branch on every entry.  On pickup success, the loop overwrites
+  `mem1` before any read; on failure, the recovery path now reads the original
+  `mem2` directly and a later state overwrites `mem1`.  The edit therefore
+  preserves every target/value while removing two copied memory values.
+- Emulator caveat: both candidate and incumbent fail the current model on
+  seed 1, so the model cannot referee timing on this level.  Canonical counting
+  independently confirms 143 versus 145.
+- Expected editor size: **143**; expected displayed speed: **72-74**.
+- Suggested live test: run the incumbent as a loading/control check, then the
+  candidate; capture either completion panel or the exact failure state.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 25 - My First Shredding Memory - speed tie-break at size 8
+
+- Goal: retain or improve the current displayed speed record of 129 while
+  reducing the secondary size from 9 commands to 8.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 25 - My First Shredding Memory (speed).txt>)
+  and remove only the `if myitem == datacube:` / `endif` guard around the first
+  `giveto mem1`, leaving that give unconditional after `pickup mem2`.
+- Why it should be safe: a successful pickup proceeds to the same remembered
+  shredder.  A pickup-race loser instead performs a harmless empty-hand give
+  error and rejoins the same loop; no cube identity or machine target changes.
+- Deterministic emulator A/B evidence: candidate and incumbent both win with
+  157 item actions; the candidate is 32,768 frames versus 32,839, and modelled
+  speed 525 versus 526.  The model's absolute timing differs sharply from the
+  known live score, so only the paired direction is evidence.
+- Expected editor size: **8**; expected displayed speed: at most **129**.
+- Suggested live test: run the incumbent once as a control and the candidate
+  once, capturing both completion panels and the candidate's editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 29 - Biometric Access - speed tie-break at size 182
 
 - Goal: retain the current displayed speed record of 54 while reducing the
-  secondary size from 185 commands to 183.
+  secondary size from 185 commands to 182.
 - Exact edit: start from
   [the current speed program](<Solutions99+/Year 29 - Biometric Access (speed).txt>)
-  and make both independent deletions:
+  and make three independent deletions:
+  - delete the earlier `mem1 = nearest datacube` immediately before `pickup c`
+    (baseline line 85); that branch does not read `mem1` before overwriting it;
   - delete the second of the consecutive `giveto mem3` commands near the end
     of the `pickup ne` branch (currently line 149); and
   - delete `mem1 = nearest datacube` immediately after the later
     `pickup mem1` (currently line 171).
 - Deterministic emulator A/B evidence: candidate and incumbent both complete
   in exactly 4,365 frames with 148 items and identical modelled speed 70.
-  Their canonical editor sizes are 183 and 185; the emulator prints three
+  Their canonical editor sizes are 182 and 185; the emulator prints three
   fewer because its size counter treats `else` as free.
 - Why it should be safe: the first give does not complete until the worker has
   fed its remembered personal shredder and emptied its hands.  The second give
   can therefore only start an empty-hand error bubble.  The later nearest
-  assignment is never read before `mem1` is overwritten with `nearest worker`,
-  so it contributes only an otherwise-unneeded delay.
+  assignment is never read before `mem1` is overwritten with `nearest worker`.
+  The earlier nearest assignment is likewise overwritten without a read.
+  Both contribute only otherwise-unneeded delays.
 - Rule caveat: the emulator does not enforce `personal_shredders`, but the
   deleted command is empty-handed and cannot change ownership or machine
   selection; the live game remains authoritative.
-- Expected editor size: **183**; expected displayed speed: **54**.
+- Expected editor size: **182**; expected displayed speed: **54**.
 - Suggested live test: one deterministic A/B run should suffice; capture the
   completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 67 - Decimal Doubler - unlistened-tell speed tie-break at size 209
+
+- Goal: retain the current displayed speed record of 41 while reducing the
+  secondary size from 210 commands to 209.
+- Exact edit: delete the second of the two consecutive `tell everyone hi`
+  commands in loop `j`, after `step mem3` and `step e`.
+- Why it may be safe: the program contains no `listenfor`, so the second tell
+  cannot transmit a value, alter control flow, or satisfy the level goal.  It
+  is only a 42-frame cadence pad.
+- Timing caveat: removing that pad can still change counter/crowd arbitration.
+  Unlike Year 68, the current emulator normally reproduces the Year 67 speed
+  program, so a same-world A/B is the next validation gate.
+- Expected editor size: **209**; expected displayed speed: **41**.
+- Suggested live test: only after a same-world emulator win, run incumbent and
+  candidate in the game and capture both completion panels.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 68 - Goodbye, Humans! - static speed tie-break at size 171
@@ -259,6 +343,33 @@ if nw >= 0 and
     pickup s
 endif
 mem1 = calc 0 / 0
+```
+
+### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
+
+- Goal: establish a size-3 SolutionsLowPercent record below the public size-4
+  low-percent entry and size-5 main entry.
+- Mechanism: all 45 workers take their cubes and walk toward the room's holes.
+  The goal is checked every frame, so the run wins during any transient frame
+  with exactly seven survivors whose held values are a permutation of 0-6;
+  the workers do not need to remain stable afterward.
+- Constructive evidence: 38 workers can follow finite routes into upper/bottom
+  holes within 13 strides while seven designated workers take longer cardinal
+  routes, leaving a nonempty exactly-seven window.  Conditional on a fixed
+  last-seven set, value uniqueness has probability `7! / 7^7`, about 0.612%.
+- Fidelity caveat: the current Year 44 emulator loses even the public size-4
+  program and is not a trustworthy large-crowd oracle.  This is a live-only
+  candidate with a positive finite schedule, not a measured success rate.
+- Expected editor size: **3**; paste-only because of `step s,e,se`.
+- Suggested live test: repeated fresh runs, capturing every exactly-seven
+  survivor pattern and the first completion panel.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+a:
+step s,e,se
+jump a
 ```
 
 ### [ ] Year 44 - Unique Fashion Party - low-percent size 4
@@ -464,9 +575,9 @@ jump a
   north/south random walk until falling through the disposal hole.  The level
   wins when all non-maximum holders have died while at least one maximum holder
   remains alive; otherwise the run absorbs as a loss.
-- Capped-emulator evidence: 8/100 wins; winning speed averaged 14.0, ranged
-  from 8 to 21, and used 475-1,273 frames.  Every win completed far before the
-  deadline.
+- Capped-emulator evidence: 84/1,000 wins; winning speed averaged 14.4, ranged
+  from 5 to 34, and used 307-2,071 frames (876 average).  Every win completed
+  far before the deadline.
 - Expected editor size: **3**.
 - Entry method: paste the text because `step n,s` is a random multi-direction
   command unavailable from the normal editor controls.
@@ -511,6 +622,32 @@ write mem1
 drop
 ```
 
+### [ ] Year 54 - Terrain Leveler - constant-average low-percent size 5
+
+- Goal: establish a size-5 SolutionsLowPercent record below the size-9 main
+  entry.
+- Mechanism: all seven workers sweep straight north through their columns,
+  rewriting every cube to 3.  The run wins exactly in worlds whose original
+  49-cube average rounds down to 3.
+- Probability analysis: accounting for the level's random 0-6, 0-10, and 0-20
+  range modes gives an intended-world probability about 0.259.  The 0-6 mode
+  alone has probability about 0.514 of averaging to 3.
+- Capped-emulator evidence: 20/100 wins; winning speed averaged 30.6, ranged
+  from 29 to 31, and used 1,786-1,936 frames.
+- Expected editor size: **5**; all commands are available in Year 54.
+- Suggested live test: repeated quick runs; record the random range and capture
+  the first completion panel with editor size 5.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step n
+pickup c
+write 3
+drop
+jump a
+```
+
 ### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
 
 - Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
@@ -525,7 +662,9 @@ drop
 - RNG/emulator witness: an independent xorshift search found seed 3,868,438.
   All five eight-value groups sum to 36, and the isolated seed-offset emulator
   won in 2,099 frames with displayed speed 34 and 172 item actions.
-- Expected editor size: **5**; all commands are available in Year 55.
+- Expected editor size: **5**.
+- Entry method: paste the text because the ordered multi-target `pickup c,s`
+  is not constructible from Year 55's normal editor controls.
 - Suggested live test: natural manual verification is impractical without a
   reproducible RNG-start method.  Capture the completion panel if the matching
   world can be reproduced.
@@ -731,6 +870,13 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   worst).  This exhausts the only other non-dominated one-IF predicate family.
 - Y10 random-walk size 2: 0/100 capped emulator wins; any winning path is too
   rare to justify live-game queue space without stronger evidence.
+- Y10 speed size-32 branch fusion: it still wins, but takes 867 model frames
+  versus the incumbent's 790 and is therefore not a speed-record tie-break.
+- Y14 pickup-first size 4: the existing live size-4 and this permutation both
+  retain the cube-less worker's failed pickup/give path.  Disassembly shows no
+  action-animation saving, and the corrected emulator makes them exactly tied
+  at 97 frames even though it misreports the incumbent's live timing.  It is
+  therefore expected to retain the live score of 4, not challenge speed 2.
 - Y18 random-fan size 4: 0/100 capped emulator wins; the workers do not fan out
   to ten unique shredders reliably enough to retain as a live candidate.
 - Y22 public size 4: its header says 86 failures out of 150, which is 42.7%
@@ -738,6 +884,10 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   the existing LowPercent size-4 program while being far slower, so it is
   dominated rather than a Solutions50+ candidate.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
+- Y26 size-5 ordered take/give fusion: three distinct routing predicates each
+  failed 0/100 at the 1,400-second cap; the mechanism stalls the feeder chain.
+- Y20 speed size-36 ordered-pickup fusion: 0/1 while the incumbent won; the
+  removed full-hands pickup error was a required synchronization delay.
 - Y30 speed first branch-terminal `end` deletion: 0/1 at the real cutoff;
   without it that worker falls into the common-tail work before the exact fill
   goal is complete.
@@ -758,6 +908,13 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
   reverted direct-south size-3 program and removes the incumbent's
   role-dependent opening look/error timing.  The aggregate emulator accepts
   that shortcut, but the live game already rejected it; retain size 4.
+- Y49 size-3 deletion of the final east clear step: 0/1 while the size-4
+  incumbent won in 530 frames; the post-feed clear is required for the later
+  shredder queue.
+- Y58 size-3 random, nearest, cardinal-pick, diagonal-pick, and one-shot
+  pruning families produced no witness across their bounded screens.  Exact
+  graph optimization shows a win must remove at least 12 interior cubes and
+  at most 8 perimeter cubes; the tested policies have the wrong removal bias.
 - Y60 alternate size 9: superseded by dmr's public 0/200-failure size-9 record.
 - Y63 size 9 rewrite: 0/10.
 - Y64 size 7 rewrite: 0/5.
