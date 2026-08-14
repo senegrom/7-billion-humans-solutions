@@ -301,6 +301,47 @@ jump a
   completion panel and editor size.
 - Result: _not yet tested locally in the game_.
 
+### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 215
+
+- Goal: retain the current displayed speed range of 9-12 while reducing the
+  secondary size from 216 commands to 215.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 62 - The Sorting Floor (speed).txt>)
+  and delete either one of the two consecutive `mem1 = set myitem` commands
+  immediately before `tell everyone hi` and the divide-by-zero exit.
+- Why it may be safe: the first saved value is overwritten by the identical
+  second store before any read; only its synchronization delay can matter.
+- Emulator A/B evidence: candidate and incumbent both win seed 1 in exactly
+  836 frames.  Across the same 100 model worlds each wins 36, with modelled
+  speed 12.3 and nearly identical average frames (734.9 versus 735.0).
+- Fidelity caveat: the current model badly under-reproduces the published
+  incumbent reliability, so those paired aggregates support equivalence but
+  cannot establish live reliability or timing.
+- Expected editor size: **215**; expected displayed speed: **9-12**.
+- Suggested live test: run the incumbent and one-store candidate in the game;
+  capture both completion panels and candidate editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 66 - Decimal Counter - duplicate-tell speed tie-break at size 253
+
+- Goal: retain the current displayed speed record of 24 while reducing the
+  secondary size from 254 commands to 253.
+- Exact edit: start from
+  [the current speed program](<Solutions99+/Year 66 - Decimal Counter (speed).txt>)
+  and delete either one of the two consecutive `tell everyone hi` commands
+  between `step ne` and the following `step s`.
+- Why it should be safe: no command in the program listens for `hi`, and one
+  identical tell remains as the original cadence pad.
+- Deterministic emulator A/B evidence: candidate and incumbent both win in
+  exactly 1,552 frames with modelled speed 25.  The candidate performs 128
+  modelled item actions versus 129; canonical sizes are 253 and 254.
+- Boundary check: deleting both tells still wins but slows the model to 1,565
+  frames, so only the single-command deletion is proposed.
+- Expected editor size: **253**; expected displayed speed: **24**.
+- Suggested live test: one deterministic incumbent/candidate A/B should
+  suffice; capture the completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
 ### [ ] Year 67 - Decimal Doubler - unlistened-tell speed tie-break at size 209
 
 - Goal: retain the current displayed speed record of 41 while reducing the
@@ -952,6 +993,13 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
+- Y37 constant-23 size 11: an exact RNG world with all seven row sums equal to
+  23 still fails because removing the repeated `calc` changes worker timing.
+  The related size-5 random walk has a finite abstract route but no seed shown
+  to realize both the required values and movement schedule.
+- Y38 speed deletion of one, two, or all three consecutive `pickup c` retries:
+  94/100, 93/100, and 91/100 respectively, versus 100/100 for the incumbent.
+  The actions are reliability choreography rather than removable dead code.
 - Y39 unguarded-printer size 5: 0/100 at a 20,000-frame diagnostic cap; random
   requeueing did not produce the required exactly-five-sheets-per-worker state.
 - Y40 speed branch-`b` and branch-`c` terminal-`end` deletions: each failed
@@ -969,6 +1017,9 @@ Keep failed ideas here so they are not rediscovered and mistaken for records.
 - Y49 size-3 deletion of the final east clear step: 0/1 while the size-4
   incumbent won in 530 frames; the post-feed clear is required for the later
   shredder queue.
+- Y54 deletion of either duplicated `mem2 = set c` before `tell everyone hi`:
+  0/1 while the incumbent won in 2,673 frames.  The overwritten value is dead,
+  but the store is a required tell/listen synchronization delay.
 - Y58 size-3 random, nearest, cardinal-pick, diagonal-pick, and one-shot
   pruning families produced no witness across their bounded screens.  Exact
   graph optimization shows a win must remove at least 12 interior cubes and
