@@ -38,37 +38,6 @@ file was derived and verified.
   load-bearing timing (see the rejected ledger).
 - File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
 
-### [ ] Year 15 - Shred Lines - event-gated size 5
-
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt>)
-- Goal: improve the current size record from 8 commands to 5.
-- Current capped-emulator evidence: 300/300 wins, average speed 190.9,
-  range 85-378, maximum 23,590 of 87,500 frames.  With zero failures in 300
-  trials, the one-sided 95% lower confidence bound is just over 99%.
-- The owned-game parser accepted the exact text and built its runtime graph.
-  This confirms paste/parser legality, but not that the live level completes.
-- Expected editor size: **5**.
-- Entry method: paste the text; the random multi-direction `step n,s` is not
-  constructible from Year 15's editor palette.
-- Why it is faster than the size-4 random walk: it only attempts a pickup when
-  a cube is directly north of an empty worker, or while a shredder is directly
-  south.  That avoids most of the game's 1.5-second error bubbles.
-- Suggested live test: five fresh runs initially; capture every completion
-  screen and any timeout or unexpected error state.
-- Result: _not yet tested in the game_.
-
-```text
-a:
-step n,s
-if n == datacube and
- myitem == nothing or
- s == shredder:
-    pickup n
-    giveto s
-endif
-jump a
-```
-
 ### [ ] Year 60 - Understaffed Sorting - ordered-pickup size 8
 
 - **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt>)
@@ -648,27 +617,6 @@ endif
 - Suggested live test: at least 10 runs.  A definitive frozen failure is all 20
   workers holding cubes while the level has not completed; capture the board.
 - Result: _not yet tested in the game_.
-
-### [ ] Year 15 - Shred Lines - stochastic size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - stochastic size 4.txt](<SolutionsToTry/Year 15 - Shred Lines - stochastic size 4.txt>)
-- Goal: a much smaller Solutions50+ or, with enough evidence, Solutions99+
-  record.
-- Corrected-emulator evidence: 99/100 wins at the 87,500-frame cutoff; winning
-  speed averaged 655 with range 320-1,183.  One run hit the real-game deadline.
-- Expected editor size: **4**.
-- Entry method: paste the text because it uses `step n,s`.
-- Suggested live test: 10 runs initially.  This is lower priority than the
-  deterministic size-7 program because it is already known to time out rarely.
-- Result: _not yet tested in the game_.
-
-```text
-a:
-step n,s
-pickup n
-giveto s
-jump a
-```
 
 ### [ ] Year 30 - Fill the Floor - probabilistic size 4
 

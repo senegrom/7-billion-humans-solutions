@@ -223,3 +223,27 @@ for records.  Candidates that still need live-game verification remain in
   a longer queue wait).  The live ladder protocol (test one edit at a
   time, keep the last non-regressing rung) is therefore mandatory for
   every speed-row size reduction; the simulator cannot pre-clear them.
+- Y15 event-gated size 5 (random `step n,s` + guarded pickup/give):
+  REFUTED LIVE by the maintainer -- "again all workers die".  The random
+  walk steps workers onto the shredder row, and STEPPING ONTO A SHREDDER
+  TILE IS DEATH in the game; the simulator had refused the move instead
+  (300/300 false).  The rule is now modelled (walkable shredders +
+  fatal arrival): the candidate measures 0/100 and the published size-8
+  stays 100/100.  Any candidate whose random step list can reach a
+  square adjacent to a shredder is in this class -- audit step lists
+  against machine adjacency before queueing.
+- Y15 stochastic size 4 (random `step n,s` walk family): retracted with
+  the event-gated size 5 -- the live report "again all workers die"
+  refutes the whole random-step-on-Shred-Lines class (the map's only
+  death is the shredder row, so the crew walked into the blades).  Under
+  EMU_STEPDEATH=1 screening both members measure 0/50; the published
+  size-8 stays 100/100 in either mode.  DISCRIMINATING EXPERIMENTS still
+  wanted from the live game: on Year 15, paste (a) `a:/step s/jump a`
+  and (b) `a:/step n,s/jump a` for one run each -- whether the crew dies
+  or fences against the shredder row under a SINGLE-direction step vs a
+  RANDOM step decides the true rule, because several verified solutions
+  elsewhere appear to lean on machine rows as fences.  The Y21 diagonal
+  give death and the Y24 printer-return death likewise await one-run
+  discriminators (their unconditional versions each break verified
+  community rows: Years 19/21-size feed diagonally; Years 16/18/42
+  deliver past machine squares in list order).

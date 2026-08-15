@@ -1,5 +1,0 @@
-a:
-step n,s
-pickup n
-giveto s
-jump a
