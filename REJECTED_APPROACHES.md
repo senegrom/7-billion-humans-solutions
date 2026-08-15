@@ -247,3 +247,16 @@ for records.  Candidates that still need live-game verification remain in
   discriminators (their unconditional versions each break verified
   community rows: Years 19/21-size feed diagonally; Years 16/18/42
   deliver past machine squares in list order).
+- Y60 ordered-pickup size 8: REFUTED LIVE by the maintainer -- the
+  leftmost field stays empty.  The merge dropped the leftmost worker's
+  per-lap 1.5 s bubble (its west is always the wall) or fell to the
+  game's true pickup-list choice rule; either way the merged form fails.
+  REPAIR SWEEP EXHAUSTED with a validated harness (the unmodified
+  control wins 30/30 from the same template): every single-command
+  deletion that keeps the incumbent's separate pickups loses 0/300, and
+  the reordered list `pickup se,w` also loses 0/300 even under the
+  simulator's own first-found semantics.  No size-8 exists in this
+  neighborhood; the size-9 record stands.  Optional live diagnostic if
+  ever curious: run the `pickup se,w` variant once -- identical leftmost
+  starvation would indicate the game picks randomly among listed squares,
+  while a totally different failure supports ordered first-found.

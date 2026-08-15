@@ -38,46 +38,6 @@ file was derived and verified.
   load-bearing timing (see the rejected ledger).
 - File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
 
-### [ ] Year 60 - Understaffed Sorting - ordered-pickup size 8
-
-- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt>)
-- Goal: improve the current size record from 9 commands to 8.
-- Capped-emulator evidence: 300/300 wins over seeds 1-300, average speed 604.5,
-  range 264-1,224, and maximum 76,461 of 87,500 frames.  With zero failures
-  in 300 trials, the one-sided 95% lower confidence bound is just over 99%.
-- The reduction replaces the incumbent's consecutive `pickup w` / `pickup se`
-  with ordered `pickup w,se`.  Direction lists are tried left-to-right and
-  stop at the first successful pickup, preserving the intended choice while
-  removing one charged instruction; the shorter schedule still needs the live
-  game as its timing oracle.
-- Expected editor size: **8**.
-- Entry method: paste the text; multi-direction `pickup w,se` is not
-  constructible from Year 60's normal editor palette.
-- Suggested live test: five fresh runs initially.  Record every displayed
-  speed and allow each attempt to reach the game's own cutoff.
-- Result: _LIVE (maintainer): the leftmost field stays empty — the merged
-  list either forfeits the leftmost worker's load-bearing 1.5 s error
-  bubble or the game's pickup-list choice is not first-found.  Repair
-  sweep (separate pickups, other reductions) in progress; treat this
-  form as refuted._
-
-```text
-a:
-if sw == datacube or
- se == datacube and
- w == datacube or
- s > se and
- w != worker:
-    pickup s
-    drop
-    pickup w,se
-endif
-step s
-drop
-step nw,n,ne
-jump a
-```
-
 ### [ ] Year 15 - Shred Lines - deterministic size 7
 
 - **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt](<SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt>)
