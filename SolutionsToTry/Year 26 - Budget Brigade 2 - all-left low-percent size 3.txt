@@ -1,0 +1,4 @@
+a:
+takefrom s,e
+giveto n,w,s
+jump a

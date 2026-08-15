@@ -1,0 +1,6 @@
+pickup s
+if w != wall:
+    a:
+    step s,e,se
+    jump a
+endif

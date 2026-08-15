@@ -1,0 +1,16 @@
+-- 7 Billion Humans --
+-- 7: Collation Station --
+
+step s
+step s
+step s
+if w != datacube:
+	pickup n,c,s
+endif
+step s
+if myitem == nothing:
+	pickup s
+endif
+step s
+step s
+drop

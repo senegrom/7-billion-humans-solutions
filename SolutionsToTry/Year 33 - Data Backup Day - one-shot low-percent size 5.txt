@@ -1,0 +1,5 @@
+mem1 = set e
+mem2 = nearest datacube
+pickup mem2
+write mem1
+drop

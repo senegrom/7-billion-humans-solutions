@@ -1,0 +1,17 @@
+-- 7 Billion Humans --
+-- 58: Good Neighbors --
+-- SIZE 4 --
+
+a:
+step nw,w,sw,n,s,ne,e,se
+if sw == nothing and
+ e == nothing and
+ se == nothing or
+ n == 5 or
+ s == 5 or
+ e == 5 or
+ w == 5 and
+ c == 8:
+	pickup c
+endif
+jump a

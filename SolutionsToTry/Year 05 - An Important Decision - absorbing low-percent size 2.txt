@@ -1,0 +1,3 @@
+a:
+step w,e
+jump a

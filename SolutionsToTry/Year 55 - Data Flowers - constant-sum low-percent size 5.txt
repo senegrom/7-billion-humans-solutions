@@ -1,0 +1,6 @@
+a:
+step n
+pickup c,s
+write 36
+drop
+jump a

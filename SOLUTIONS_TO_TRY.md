@@ -12,10 +12,16 @@ attempt number and do not restart merely because a run looks slow.
 Rejected and superseded experiments are archived in
 [REJECTED_APPROACHES.md](REJECTED_APPROACHES.md).
 
+Every entry links a **paste-ready program file** in
+[SolutionsToTry/](SolutionsToTry/) — open it, select all, copy, and paste
+into the level's editor.  Recipes and evidence below describe how each
+file was derived and verified.
+
 ## Priority queue
 
 ### [ ] Year 21 - Big Data - position-preserving reach merge at size 39
 
+- **Paste-ready program:** [SolutionsToTry/Year 21 - Big Data - position-preserving reach merge at size 39.txt](<SolutionsToTry/Year 21 - Big Data - position-preserving reach merge at size 39.txt>)
 - Goal: improve the imported speed record's typical value (recorded 16-22)
   while reducing its secondary editor size from 41 commands to 39.
 - Exact edit: start from
@@ -39,6 +45,7 @@ Rejected and superseded experiments are archived in
 
 ### [ ] Year 24 - Code For Sale - one-sided relay at size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 24 - Code For Sale - one-sided relay at size 4.txt](<SolutionsToTry/Year 24 - Code For Sale - one-sided relay at size 4.txt>)
 - Goal: improve the current size record from 5 commands to **4** without the
   rejected size-3 program's two-sided handoff race.
 - Program:
@@ -68,6 +75,7 @@ jump a
 
 ### [ ] Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing
 
+- **Paste-ready program:** [SolutionsToTry/Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing.txt](<SolutionsToTry/Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing.txt>)
 - Goal: retain the displayed speed record while cutting the secondary size
   from 173 to 167.
 - Exact edit: start from
@@ -86,6 +94,7 @@ jump a
 
 ### [ ] Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169
 
+- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169.txt>)
 - Goal: take the row from 177 / 37 to **169 / 36**.
 - Base: [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
   (@commonnickname) deletes the `step w` between `takefrom mem1` and
@@ -106,27 +115,32 @@ jump a
   capture displayed speed and editor size.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 38 - Seek and Destroy 3 - two diagonals, size 133
+### [ ] Year 38 - Seek and Destroy 3 - two diagonals, size 140
 
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - two diagonals, size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - two diagonals, size 140.txt>)
 - Exact edit: in
   [the current speed program](<Solutions99+/Year 38 - Seek and Destroy 3 (speed).txt>)
   collapse the two corner pairs (`step n`+`step e`→`step ne`,
   `step e`+`step s`→`step se`).  200/200, paired average 614.2 → 609.4
-  frames, size 135 → 133.
+  frames; canonical editor size 142 → **140**.  (A third corner,
+  `w`+`n` near the top, measures 26 frames faster alone but drops to
+  50/60 wins and is NOT included.)
 - Result: _not yet tested in the game_.
 
-### [ ] Year 59 - Glory Hole - three diagonals, size 131
+### [ ] Year 59 - Glory Hole - three diagonals, size 141
 
+- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - three diagonals, size 141.txt](<SolutionsToTry/Year 59 - Glory Hole - three diagonals, size 141.txt>)
 - Exact edit: in
   [the current speed program](<Solutions99+/Year 59 - Glory Hole (speed).txt>)
   collapse the three corner pairs at parse units 99, 121, 178 (each
   `step`-pair into its diagonal; the other four corners in the file
   measure up to 10 frames slower and stay).  200/200, paired average
-  447.0 → 446.0, size 134 → 131.
+  447.0 → 446.0; canonical editor size 144 → **141**.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt>)
 - Goal: improve the current size record from 8 commands to 5.
 - Current capped-emulator evidence: 300/300 wins, average speed 190.9,
   range 85-378, maximum 23,590 of 87,500 frames.  With zero failures in 300
@@ -157,6 +171,7 @@ jump a
 
 ### [ ] Year 60 - Understaffed Sorting - ordered-pickup size 8
 
+- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - ordered-pickup size 8.txt>)
 - Goal: improve the current size record from 9 commands to 8.
 - Capped-emulator evidence: 300/300 wins over seeds 1-300, average speed 604.5,
   range 264-1,224, and maximum 76,461 of 87,500 frames.  With zero failures
@@ -192,6 +207,7 @@ jump a
 
 ### [ ] Year 15 - Shred Lines - deterministic size 7
 
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt](<SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt>)
 - Goal: improve the current size record from 8 commands to 7.
 - Emulator evidence: deterministic win in 2,167 frames; displayed emulator
   speed 35 after correcting invalid `giveto` timing.
@@ -215,6 +231,7 @@ jump a
 
 ### [ ] Year 44 - Unique Fashion Party - size 5 speed tie-break
 
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - size 5 speed tie-break.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - size 5 speed tie-break.txt>)
 - Goal: retain size 5 while improving the current typical speed from about 62
   to the community source's reported 10.
 - Source: dmr's public glitchless program.  The source repository classifies
@@ -243,6 +260,7 @@ jump a
 
 ### [ ] Year 47 - Automated Pleasantries - speed tie-break at size 33
 
+- **Paste-ready program:** [SolutionsToTry/Year 47 - Automated Pleasantries - speed tie-break at size 33.txt](<SolutionsToTry/Year 47 - Automated Pleasantries - speed tie-break at size 33.txt>)
 - Goal: retain the current displayed speed record of 6 while reducing the
   secondary size from 34 commands to 33.
 - Deterministic emulator A/B evidence: the candidate and incumbent complete on
@@ -261,6 +279,7 @@ jump a
 
 ### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 211
 
+- **Paste-ready program:** [SolutionsToTry/Year 36 - Seek and Destroy 2 - speed tie-break at size 211.txt](<SolutionsToTry/Year 36 - Seek and Destroy 2 - speed tie-break at size 211.txt>)
 - Goal: retain the current displayed speed record of 46-47 while reducing the
   secondary size from 215 commands to 211.
 - Exact edit: start from
@@ -287,6 +306,7 @@ jump a
 
 ### [ ] Year 37 - Dangerous Spreadsheeting - ordered-set speed tie-break at size 243
 
+- **Paste-ready program:** [SolutionsToTry/Year 37 - Dangerous Spreadsheeting - ordered-set speed tie-break at size 243.txt](<SolutionsToTry/Year 37 - Dangerous Spreadsheeting - ordered-set speed tie-break at size 243.txt>)
 - Goal: retain the current displayed speed record of 10-11 while reducing the
   secondary size from 246 commands to 243.
 - Exact edits: in the late state that currently does `mem1 = set c`, tests
@@ -312,6 +332,7 @@ jump a
 
 ### [ ] Year 07 - Collation Station - speed tie-break at size 11
 
+- **Paste-ready program:** [SolutionsToTry/Year 07 - Collation Station - speed tie-break at size 11.txt](<SolutionsToTry/Year 07 - Collation Station - speed tie-break at size 11.txt>)
 - Goal: retain the current displayed speed record of 3 while reducing the
   secondary size from 12 commands to 11.
 - Exact edit: replace the incumbent's `if w == datacube` / `else` pickup branch
@@ -332,6 +353,7 @@ jump a
 
 ### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
 
+- **Paste-ready program:** [SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt](<SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt>)
 - Goal: establish a low-percent size-13 program that retains or improves the
   reliable incumbent's displayed speed of 5 and is smaller than its size 16.
 - Exact edit: in the current speed program, replace the final five-line
@@ -347,6 +369,7 @@ jump a
 
 ### [ ] Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17 📋
 
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt>)
 - Goal: establish a low-percent speed-5 program at size 17 versus the reliable
   incumbent's size 20.
 - Exact edit: retain the outer guard, but replace its inner
@@ -363,6 +386,7 @@ jump a
 
 ### [ ] Year 15 - Shred Lines - speed tie-break at size 42 📋
 
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt](<SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt>)
 - Goal: retain the current displayed speed record of 11 while reducing the
   secondary size from 46 commands to 42.
 - Source: [n05ucc4u and abfipes12's cross-block program](https://github.com/abfipes12/7-Billion-Humans-Solutions/blob/6663ed04d735d92525f6ee1fbb9263461889faa2/WithGliches/Speed/Year%2015%20-%20Shred%20Lines).
@@ -381,6 +405,7 @@ jump a
 
 ### [ ] Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83
 
+- **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt>)
 - Goal: retain the current low-percent speed record of about 6 while reducing
   its secondary size from 84 commands to 83.
 - Exact edit: start from
@@ -400,6 +425,7 @@ jump a
 
 ### [ ] Year 42 - Important Email Organization - speed tie-break at size 143
 
+- **Paste-ready program:** [SolutionsToTry/Year 42 - Important Email Organization - speed tie-break at size 143.txt](<SolutionsToTry/Year 42 - Important Email Organization - speed tie-break at size 143.txt>)
 - Goal: retain the current displayed speed record of 72-74 while reducing the
   secondary size from 145 commands to 143.
 - Exact edit: delete both `mem1 = set mem2` copies at the entries to labels `g`
@@ -420,6 +446,7 @@ jump a
 
 ### [ ] Year 25 - My First Shredding Memory - guarded-loop speed candidate at size 6
 
+- **Paste-ready program:** [SolutionsToTry/Year 25 - My First Shredding Memory - guarded-loop speed candidate at size 6.txt](<SolutionsToTry/Year 25 - My First Shredding Memory - guarded-loop speed candidate at size 6.txt>)
 - Goal: retain or improve the current displayed speed record of 129 while
   reducing the secondary size from 9 commands to **6**.
 - Program:
@@ -452,6 +479,7 @@ jump a
 
 ### [ ] Year 29 - Biometric Access - speed tie-break at size 182
 
+- **Paste-ready program:** [SolutionsToTry/Year 29 - Biometric Access - speed tie-break at size 182.txt](<SolutionsToTry/Year 29 - Biometric Access - speed tie-break at size 182.txt>)
 - Goal: retain the current displayed speed record of 54 while reducing the
   secondary size from 185 commands to 182.
 - Exact edit: start from
@@ -483,6 +511,8 @@ jump a
 
 ### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214 (fallback 215)
 
+- **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt](<SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt>)
+- **Fallback (size 215):** [SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store fallback size 215.txt](<SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store fallback size 215.txt>)
 - Goal: retain the current displayed speed range of 9-12 while reducing the
   secondary size from 216 commands to 214, with the tested one-store deletion
   at size 215 as the fallback.
@@ -513,6 +543,8 @@ jump a
 
 ### [ ] Year 66 - Decimal Counter - padding reduction at size 239 (safe fallback 240)
 
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - padding reduction at size 239.txt](<SolutionsToTry/Year 66 - Decimal Counter - padding reduction at size 239.txt>)
+- **Fallback (size 240):** [SolutionsToTry/Year 66 - Decimal Counter - safe fallback size 240.txt](<SolutionsToTry/Year 66 - Decimal Counter - safe fallback size 240.txt>)
 - Goal: retain the current displayed speed record of 24 while reducing the
   secondary size from 254 commands to 239, with a frame-identical size-240
   fallback if the live score is sensitive to the final eight-frame shift.
@@ -540,6 +572,7 @@ jump a
 
 ### [ ] Year 65 - Defrag Ordered - live-only speed tie-break at size 120
 
+- **Paste-ready program:** [SolutionsToTry/Year 65 - Defrag Ordered - live-only speed tie-break at size 120.txt](<SolutionsToTry/Year 65 - Defrag Ordered - live-only speed tie-break at size 120.txt>)
 - Goal: retain the current displayed speed record of 12 while reducing the
   secondary size from 121 commands to 120.
 - Exact edit: in the inner `else` branch, delete the empty
@@ -555,6 +588,9 @@ jump a
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 208/209)
 
+- **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt](<SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt>)
+- **Fallback (size 208):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt>)
+- **Fallback (size 209):** [SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt](<SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt>)
 - Goal: retain the current displayed speed record of 41 while reducing the
   secondary size from 210 commands to 205.
 - Exact edits: after opening `pickup ne; step n`, delete all three consecutive
@@ -574,6 +610,7 @@ jump a
 
 ### [ ] Year 68 - Goodbye, Humans! - bypassed-wrapper speed tie-break at size 164
 
+- **Paste-ready program:** [SolutionsToTry/Year 68 - Goodbye, Humans! - bypassed-wrapper speed tie-break at size 164.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - bypassed-wrapper speed tie-break at size 164.txt>)
 - Goal: retain the current displayed speed record of 16 while reducing the
   secondary size from 172 commands to **164** without changing the executed
   instruction sequence.
@@ -607,6 +644,7 @@ jump a
 
 ### [ ] Year 44 - Unique Fashion Party - speed 1 at size 8
 
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - speed 1 at size 8.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - speed 1 at size 8.txt>)
 - Goal: tie the current speed record of 1 while reducing its secondary size
   from 17 commands to 8.
 - Source: abfipes12's public main-speed program, covered by that repository's
@@ -635,6 +673,7 @@ mem1 = calc 0 / 0
 
 ### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the public size-4
   low-percent entry and size-5 main entry.
 - Mechanism: all 45 workers take their cubes and walk toward the room's holes.
@@ -662,6 +701,7 @@ jump a
 
 ### [ ] Year 44 - Unique Fashion Party - low-percent size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
 - Goal: live-confirm the new size-4 SolutionsLowPercent entry below the
   size-5 main record.
 - Public evidence: abfipes12 reports positive real-game wins, but its header is
@@ -685,6 +725,7 @@ endif
 
 ### [ ] Year 58 - Good Neighbors - size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
 - Goal: live-validate the existing
   [Solutions50+ entry](<Solutions50+/Year 58 - Good Neighbors (size).txt>).
 - Current capped-emulator evidence: 195/200 wins at the real 87,500-frame
@@ -696,6 +737,7 @@ endif
 
 ### [ ] Year 15 - Shred Lines - stochastic size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - stochastic size 4.txt](<SolutionsToTry/Year 15 - Shred Lines - stochastic size 4.txt>)
 - Goal: a much smaller Solutions50+ or, with enough evidence, Solutions99+
   record.
 - Corrected-emulator evidence: 99/100 wins at the 87,500-frame cutoff; winning
@@ -716,6 +758,7 @@ jump a
 
 ### [ ] Year 30 - Fill the Floor - probabilistic size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: add a size-4 Solutions50+ record below the size-5 main entry.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
 - Current capped-emulator evidence: 64/100 wins, average winning speed
@@ -737,6 +780,7 @@ jump a
 
 ### [ ] Year 30 - Fill the Floor - alternate size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - alternate size 5.txt](<SolutionsToTry/Year 30 - Fill the Floor - alternate size 5.txt>)
 - Goal: tie the size-5 record with a faster typical run.
 - Emulator A/B evidence over the same 100 seeds: candidate 100/100, average
   602.7 seconds, range 372-1,277; incumbent 100/100, average 635.1 seconds.
@@ -757,6 +801,7 @@ jump a
 
 ### [ ] Year 12 - Unzip - one-shot low-percent size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt](<SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the size-5 main
   entry.
 - Mechanism: all 12 workers pick up their on-tile cubes, independently choose
@@ -778,6 +823,7 @@ drop
 
 ### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
 
+- **Paste-ready program:** [SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt](<SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt>)
 - Goal: establish a size-2 SolutionsLowPercent record below the existing
   size-4 low-percent entry and the size-5 main entry.
 - Mechanism: each of the four workers performs an independent one-dimensional
@@ -803,6 +849,7 @@ jump a
 
 ### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the existing
   size-7 low-percent entry and the size-8 main entry.
 - Mechanism: the restricted random walk moves only southward/eastward through
@@ -828,6 +875,7 @@ jump a
 
 ### [ ] Year 13 - Injection Sites 2 - recoverable low-percent size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt>)
 - Goal: improve the existing size-6 SolutionsLowPercent entry to size 5.
 - Provenance: this is H-J-Granger's public low-percent program with only its
   initial `step se` removed; retain that attribution if it is promoted.
@@ -858,6 +906,7 @@ jump a
 
 ### [ ] Year 22 - Number Royale - survivor low-percent size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt](<SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt>)
 - Goal: improve the existing size-4 SolutionsLowPercent entry to size 3.
 - Mechanism: every worker takes its own cube, then performs an independent
   north/south random walk until falling through the disposal hole.  The level
@@ -883,6 +932,7 @@ jump a
 
 ### [ ] Year 52 - The Mode Code - one-shot low-percent size 6
 
+- **Paste-ready program:** [SolutionsToTry/Year 52 - The Mode Code - one-shot low-percent size 6.txt](<SolutionsToTry/Year 52 - The Mode Code - one-shot low-percent size 6.txt>)
 - Goal: establish a size-6 SolutionsLowPercent record below the size-15 main
   entry.
 - Mechanism: each worker binds its own result cube, samples the input cube two
@@ -912,6 +962,7 @@ drop
 
 ### [ ] Year 54 - Terrain Leveler - constant-average low-percent size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt>)
 - Goal: establish a size-5 SolutionsLowPercent record below the size-9 main
   entry.
 - Mechanism: all seven workers sweep straight north through their columns,
@@ -938,6 +989,7 @@ jump a
 
 ### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 55 - Data Flowers - constant-sum low-percent size 5.txt](<SolutionsToTry/Year 55 - Data Flowers - constant-sum low-percent size 5.txt>)
 - Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
   entry.
 - Mechanism: the five workers march north through their flower centers, move
@@ -969,6 +1021,7 @@ jump a
 
 ### [ ] Year 56 - Local Maximums - one-shot low-percent size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 56 - Local Maximums - one-shot low-percent size 3.txt](<SolutionsToTry/Year 56 - Local Maximums - one-shot low-percent size 3.txt>)
 - Goal: improve the existing size-4 SolutionsLowPercent entry and size-7 main
   entry to size 3.
 - Mechanism: each worker takes the northwest cube from its own eight-cube
@@ -996,6 +1049,7 @@ giveto mem1
 
 ### [ ] Year 62 - The Sorting Floor - initially sorted size 0
 
+- **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - initially sorted size 0.txt](<SolutionsToTry/Year 62 - The Sorting Floor - initially sorted size 0.txt>)
 - Goal: establish a zero-command SolutionsLowPercent record below the size-10
   Solutions50+ and size-12 main entries.
 - Mechanism: do nothing.  The nine independent random cubes occasionally
@@ -1020,6 +1074,7 @@ a:
 
 ### [ ] Year 26 - Budget Brigade 2 - all-left low-percent size 3
 
+- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - all-left low-percent size 3.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - all-left low-percent size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the size-7 main
   entry.
 - Mechanism: the vertical printer chain relays every sheet north, the top
@@ -1050,6 +1105,7 @@ jump a
 
 ### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt>)
 - Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
   and size-8 Solutions50+ entries.
 - Mechanism: each worker selects and shreds one nearest cube.  The level wins
@@ -1071,6 +1127,7 @@ giveto mem1
 
 ### [ ] Year 33 - Data Backup Day - one-shot low-percent size 5
 
+- **Paste-ready program:** [SolutionsToTry/Year 33 - Data Backup Day - one-shot low-percent size 5.txt](<SolutionsToTry/Year 33 - Data Backup Day - one-shot low-percent size 5.txt>)
 - Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
   entry.
 - Mechanism: every worker remembers its east value, selects one of its two
@@ -1093,6 +1150,7 @@ drop
 
 ### [ ] Year 34 - Seek and Destroy 1 - one-shot low-percent size 4
 
+- **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt>)
 - Goal: establish a size-4 SolutionsLowPercent record below the size-7 main
   entry.
 - Mechanism: each of four workers independently selects and shreds one nearest

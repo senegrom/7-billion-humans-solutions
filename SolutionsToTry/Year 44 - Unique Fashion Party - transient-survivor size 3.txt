@@ -1,0 +1,4 @@
+pickup s
+a:
+step s,e,se
+jump a
