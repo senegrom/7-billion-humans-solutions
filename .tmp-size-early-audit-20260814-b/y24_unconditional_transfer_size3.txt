@@ -1,0 +1,6 @@
+-- Year 24: Budget Brigade 1, hand-derived unconditional transfer loop
+
+a:
+takefrom w,s
+giveto s,e
+jump a

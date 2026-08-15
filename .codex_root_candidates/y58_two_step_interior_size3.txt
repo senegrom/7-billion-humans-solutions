@@ -1,0 +1,3 @@
+step nw,w,sw,n,s,ne,e,se
+step nw,w,sw,n,s,ne,e,se
+pickup sw,se,nw,ne

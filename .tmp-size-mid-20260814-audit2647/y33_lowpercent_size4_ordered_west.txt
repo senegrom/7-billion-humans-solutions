@@ -1,0 +1,4 @@
+mem1 = set e
+pickup w,e
+write mem1
+drop

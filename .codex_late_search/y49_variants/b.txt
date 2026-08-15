@@ -1,0 +1,4 @@
+﻿mem1 = nearest shredder
+pickup s
+step e
+giveto mem1

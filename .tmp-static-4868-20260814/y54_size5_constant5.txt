@@ -1,0 +1,9 @@
+-- 7 Billion Humans (static candidate) --
+-- 54: Terrain Leveler --
+
+a:
+step n
+pickup c
+write 5
+drop
+jump a

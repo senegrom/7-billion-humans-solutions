@@ -1,0 +1,4 @@
+a:
+step s,se
+pickup n,ne,e,se,s,sw,w,nw
+jump a

@@ -1,0 +1,14 @@
+-- isolated candidate: drop immediately after reaching the sensor
+a:
+if w == worker and
+ c != switch or
+ se == worker:
+	pickup c
+	step s
+	drop
+endif
+if n == switch or
+ c == button:
+	step n
+endif
+jump a

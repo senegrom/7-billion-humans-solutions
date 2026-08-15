@@ -1,0 +1,13 @@
+-- Y15 canonical size 5: suppress the root program's costly pickup/give pair
+-- when a carrying worker wanders below the next uncollected cube.
+-- Left-to-right fold: (north cube AND empty hands) OR south shredder.
+
+a:
+step n,s
+if n == datacube and
+ myitem == nothing or
+ s == shredder:
+	pickup n
+	giveto s
+endif
+jump a

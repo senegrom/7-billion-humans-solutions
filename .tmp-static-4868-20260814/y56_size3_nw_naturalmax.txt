@@ -1,0 +1,3 @@
+pickup nw
+mem1 = nearest shredder
+giveto mem1

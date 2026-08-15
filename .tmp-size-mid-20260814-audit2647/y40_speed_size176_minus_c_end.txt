@@ -1,0 +1,187 @@
+-- Novel Year 40 terminal-delay deletion candidate
+
+mem1 = nearest printer
+takefrom mem1
+step w
+step w
+write 1
+if nw == nothing:
+	jump a
+endif
+step n
+if c == nothing:
+	jump b
+endif
+step e
+if c == nothing:
+	jump c
+endif
+step ne
+if c == nothing:
+	jump d
+endif
+step e
+jump e
+a:
+step nw
+drop
+step e
+step e
+step e
+takefrom mem1
+step e
+write 2
+drop
+takefrom mem1
+step e
+step e
+write 3
+step ne
+drop
+takefrom mem1
+step w
+step w
+step w
+step w
+write 4
+drop
+pickup e
+step w
+drop
+takefrom mem1
+step w
+step w
+step sw
+write 5
+drop
+end
+b:
+drop
+step e
+step e
+takefrom mem1
+step w
+step w
+write 2
+step w
+drop
+takefrom mem1
+step w
+step w
+step w
+write 3
+step nw
+drop
+step e
+step e
+step e
+step e
+takefrom mem1
+step n
+step nw
+write 4
+drop
+pickup e
+step w
+drop
+step e
+mem2 = calc [blank] + [blank]
+takefrom mem1
+step n
+step n
+write 5
+drop
+end
+c:
+drop
+step e
+takefrom mem1
+step w
+step s
+write 2
+drop
+step nw
+pickup ne
+step se
+step s
+drop
+step n
+step n
+takefrom mem1
+step w
+step s
+step sw
+step w
+write 3
+drop
+step ne
+step ne
+step n
+step e
+takefrom mem1
+step e
+step e
+step e
+write 4
+drop
+step w
+pickup w
+drop
+takefrom mem1
+write 5
+drop
+d:
+drop
+takefrom mem1
+step e
+step s
+write 2
+step sw
+drop
+step ne
+step n
+takefrom mem1
+step e
+step s
+step s
+write 3
+drop
+step n
+step n
+takefrom mem1
+step w
+step w
+write 4
+drop
+takefrom mem1
+step w
+step n
+write 5
+drop
+end
+e:
+drop
+takefrom mem1
+step w
+step sw
+write 2
+drop
+step ne
+takefrom mem1
+step w
+step s
+step sw
+write 3
+drop
+step n
+step n
+takefrom mem1
+step n
+step e
+write 4
+drop
+step w
+takefrom mem1
+step w
+write 5
+drop

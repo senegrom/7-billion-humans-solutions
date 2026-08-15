@@ -1,0 +1,12 @@
+-- Year 15: Shred Lines, hand-derived pasted size candidate
+-- Each worker scans north while empty and returns south while carrying.
+
+a:
+if myitem == nothing:
+	step n
+	pickup n
+else:
+	step s
+	giveto s
+endif
+jump a

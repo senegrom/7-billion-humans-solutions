@@ -1,0 +1,7 @@
+-- 7 Billion Humans (static candidate) --
+-- 44: Unique Fashion Party --
+
+pickup s
+a:
+step s,e,se
+jump a

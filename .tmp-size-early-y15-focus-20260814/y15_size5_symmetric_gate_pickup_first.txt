@@ -1,0 +1,12 @@
+-- Y15 canonical size 5: the symmetric minimal left-fold gate.
+-- Fold: (south shredder AND holding a cube) OR north cube.
+
+a:
+step n,s
+if s == shredder and
+ myitem == datacube or
+ n == datacube:
+	pickup n
+	giveto s
+endif
+jump a

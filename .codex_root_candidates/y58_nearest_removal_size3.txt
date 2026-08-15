@@ -1,0 +1,4 @@
+a:
+mem1 = nearest datacube
+pickup mem1
+jump a

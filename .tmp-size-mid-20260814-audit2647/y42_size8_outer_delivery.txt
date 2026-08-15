@@ -1,0 +1,18 @@
+-- Novel Year 42 size-8 outer-loop delivery
+
+a:
+step nw,sw,n,ne,se
+if n == datacube or
+ c == datacube and
+ s != shredder and
+ n != worker:
+	pickup n,c
+	mem1 = calc myitem / 10
+endif
+if myitem == nothing or
+ mem1 != c or
+ s != shredder:
+	jump a
+endif
+giveto s
+jump a

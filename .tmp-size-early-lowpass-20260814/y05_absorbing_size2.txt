@@ -1,0 +1,6 @@
+-- Y05 canonical size 2 LowPercent candidate.
+-- Each worker independently walks west/east until it exits through a hole.
+
+a:
+step w,e
+jump a

@@ -1,0 +1,15 @@
+a:
+step nw,w,sw,n,s,ne,e,se
+if n == datacube and
+ s != shredder and
+ n != worker and
+ myitem == nothing:
+    pickup n
+    mem1 = calc myitem / 10
+endif
+if mem1 != c or
+ s != shredder:
+    jump a
+endif
+giveto s
+jump a

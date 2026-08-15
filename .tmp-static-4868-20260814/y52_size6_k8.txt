@@ -1,0 +1,6 @@
+mem2 = set s
+step n
+mem1 = calc n + 8
+pickup mem2
+write mem1
+drop

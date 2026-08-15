@@ -1,0 +1,6 @@
+mem1 = nearest printer
+a:
+takefrom mem1
+step sw,n,e
+drop
+jump a

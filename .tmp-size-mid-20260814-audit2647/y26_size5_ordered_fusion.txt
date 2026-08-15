@@ -1,0 +1,21 @@
+-- 7 Billion Humans --
+-- 26: Budget Brigade 2 --
+-- Novel ordered-target fusion candidate; unverified in the real game. --
+
+a:
+if myitem == datacube and
+ myitem < 50 and
+ s != shredder or
+ myitem == datacube and
+ s == shredder:
+	giveto w,s
+endif
+if myitem == nothing and
+ s == worker or
+ myitem == nothing and
+ s == printer or
+ myitem == nothing and
+ w >= 50:
+	takefrom s,w
+endif
+jump a

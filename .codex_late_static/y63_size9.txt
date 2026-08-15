@@ -1,0 +1,14 @@
+-- isolated candidate: fold the southeast displacement into sweep vectors
+a:
+mem1 = foreachdir nw,n,ne,e:
+	step mem1
+	pickup c,e
+endfor
+mem1 = foreachdir nw,n,ne:
+	step n
+	drop
+endfor
+mem1 = foreachdir nw,n,s,ne,e,se:
+	step s
+endfor
+jump a

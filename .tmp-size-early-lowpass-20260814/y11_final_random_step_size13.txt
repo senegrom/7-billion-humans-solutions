@@ -1,0 +1,15 @@
+pickup s
+step s
+step s
+step s
+step s
+step s
+if n != nothing and
+ s != nothing:
+	step s
+	step s
+	step s
+	step s
+endif
+step n,s
+drop

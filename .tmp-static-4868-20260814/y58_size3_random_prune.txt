@@ -1,0 +1,7 @@
+-- 7 Billion Humans (static candidate) --
+-- 58: Good Neighbors --
+
+a:
+step nw,w,sw,n,s,ne,e,se
+pickup c
+jump a

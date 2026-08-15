@@ -1,0 +1,13 @@
+-- Y15 canonical size 5: tested empty-state gate with action order reversed.
+-- On delivery, shred before the trailing failed pickup; the final win can
+-- therefore occur before that otherwise unavoidable error bubble.
+
+a:
+step n,s
+if n == datacube and
+ myitem == nothing or
+ s == shredder:
+	giveto s
+	pickup n
+endif
+jump a

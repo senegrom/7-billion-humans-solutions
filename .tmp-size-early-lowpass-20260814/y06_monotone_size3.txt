@@ -1,0 +1,7 @@
+-- Y06 canonical size 3 LowPercent candidate.
+-- A monotone random walk; pickup succeeds from the cube or its approaches.
+
+a:
+step s,sw,se,e
+pickup c,s,se,sw,e,w,n,ne
+jump a

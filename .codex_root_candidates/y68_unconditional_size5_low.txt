@@ -1,0 +1,11 @@
+a:
+step w,sw,s
+step se
+if nw != worker and
+ n != worker and
+ ne != worker and
+ e == wall and
+ s == hole:
+    tell everyone goodbye
+endif
+jump a

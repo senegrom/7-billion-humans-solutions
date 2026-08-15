@@ -1,0 +1,4 @@
+mem1 = nearest datacube
+pickup mem1
+step sw
+giveto sw

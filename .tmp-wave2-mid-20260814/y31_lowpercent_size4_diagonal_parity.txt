@@ -1,0 +1,5 @@
+a:
+takefrom nw,sw,ne,se
+step nw,sw,ne,se
+drop
+jump a

@@ -1,0 +1,17 @@
+-- Novel Year 38 size-9 exact-tile sampler
+
+a:
+step nw,w,sw,n,s,ne,e,se
+if c == datacube and
+ c < mem1 or
+ mem1 != datacube:
+	mem1 = set c
+endif
+mem3 = nearest worker
+if mem3 == worker and
+ mem1 != 0:
+	jump a
+endif
+pickup mem1
+mem3 = nearest shredder
+giveto mem3

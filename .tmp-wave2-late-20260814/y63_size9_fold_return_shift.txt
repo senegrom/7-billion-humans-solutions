@@ -1,0 +1,16 @@
+-- isolated candidate: fold the charged southeast return shift into the free
+-- foreach direction list while preserving six south steps and one southeast
+
+a:
+mem1 = foreachdir nw,n,ne,e:
+	step n
+	pickup c,e
+endfor
+mem1 = foreachdir nw,n,ne:
+	step n
+	drop
+endfor
+mem1 = foreachdir s,s,s,s,s,s,se:
+	step mem1
+endfor
+jump a

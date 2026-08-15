@@ -1,0 +1,15 @@
+-- Y15 canonical size 5: empty-hand-gated adjacent-column cube sharing.
+-- Left-to-right fold: (((c OR n OR nw OR ne) AND empty) OR shredder).
+
+a:
+step n,s
+if c == datacube or
+ n == datacube or
+ nw == datacube or
+ ne == datacube and
+ myitem == nothing or
+ s == shredder:
+	pickup c,n,nw,ne
+	giveto s
+endif
+jump a
