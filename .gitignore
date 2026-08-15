@@ -1,4 +1,8 @@
 .idea
+.tmp*
+_tmp*
+tmp_*
+.codex*
 
 # The emulator lives in its own private repository
 emulator/
