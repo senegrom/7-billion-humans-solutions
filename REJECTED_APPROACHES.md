@@ -141,3 +141,12 @@ for records.  Candidates that still need live-game verification remain in
   wins land in 5-34 s and its losses self-terminate, so expected
   wall-clock per witnessed completion is far lower.  KEPT AS FALLBACK if
   the hole-dive's live rate disappoints.
+- Y58 size-4 top-tier promotion: the 50+ entry measures 384/400 = 96.0%
+  at the real 1,400-second clock, losses all clock-outs (slowest win
+  1,379 s).  Both improvement axes are exhausted: eleven step-list
+  variants (the published nw,w,sw,n,s,ne,e,se order is best, 146/150;
+  canonical order 140, cardinals-only 136) and twelve pick-guard
+  variants (the published sw/e/se nothing-triple is best, 146/150; every
+  relaxation fires wrong picks and lowers the rate).  The program is
+  locally optimal at ~96% -- correctly tiered in Solutions50+; no 99+
+  claim exists in this neighborhood.
