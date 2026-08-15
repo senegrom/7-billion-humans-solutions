@@ -171,3 +171,31 @@ for records.  Candidates that still need live-game verification remain in
   relaxation fires wrong picks and lowers the rate).  The program is
   locally optimal at ~96% -- correctly tiered in Solutions50+; no 99+
   claim exists in this neighborhood.
+- Y21 speed position-preserving reach merge (final inner-loop `step w;
+  giveto s; step e; takefrom s` -> `giveto sw; takefrom s`, size 41 -> 39):
+  REFUTED LIVE by the maintainer -- "most of the times the humans get
+  shredded; if they don't get shredded it works but very rarely; < 10%".
+  The simulator endorsed it 100/100 with the giver never moving, because
+  its model lets a give that BEGINS within diagonal reach toss from where
+  it stands.  The game instead walks the giver in to deliver and the
+  shredder destroys the worker; the rare clean runs fit a frame race.
+  RULE CORRECTION this refutation establishes: diagonal reach is fine for
+  worker-to-worker gives (the published Year 19 relay does exactly that),
+  but a SHREDDER give serves cardinally/at the machine front -- a diagonal
+  shredder give is a walk-in death.  Do not propose diagonal machine-give
+  merges again; audit any future merge for machine-adjacent geometry.
+  The step the merge removed exists precisely to make the give cardinal,
+  so no smaller variant of this loop survives the rule.
+- Y24 size-4 one-sided relay (`if myitem == something or w == hole:
+  takefrom s; giveto e,s`): REFUTED LIVE by the maintainer -- "immediately
+  throws the cube back in the printer and then dies (not allowed)".  The
+  simulator's ordered give-list treats the south printer square as a
+  non-recipient and falls through cleanly (100/100); the game ACCEPTS the
+  printer as a give target, returns the sheet into it, and rules the run
+  illegal.  Same defect family as the Y21 diagonal-shredder-give death
+  and the long-standing Y24 3-command false win: DIRECTIONAL-GIVE TARGET
+  SEMANTICS AT MACHINES are wrong in the simulator (it politely skips
+  targets the game happily mis-serves, and vice versa).  Until that
+  subsystem is read out of a live witness, no candidate whose safety
+  argument depends on a give-list falling through a machine square, or on
+  any non-cardinal machine give, should be queued.
