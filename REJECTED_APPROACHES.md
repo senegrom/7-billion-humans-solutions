@@ -48,6 +48,10 @@ for records.  Candidates that still need live-game verification remain in
   129 seconds and the proposed unconditional-tail form is about 30 commands at
   the same speed.  Both are dominated by the local size-9/live-129 endpoint and
   the retained size-8 candidate.
+- Y25 size-8 unconditional-give candidate: it wins and is one modelled second
+  faster than the incumbent, but is superseded by the retained guarded-loop
+  size-6 candidate, which is two commands smaller (three below the incumbent)
+  and 22,919 frames faster.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
 - Y26 size-5 ordered take/give fusion: three distinct routing predicates each
   failed 0/100 at the 1,400-second cap; the mechanism stalls the feeder chain.
@@ -68,6 +72,9 @@ for records.  Candidates that still need live-game verification remain in
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
+- Y36 deletion of `comment 1` from the size-211 speed candidate: runtime-neutral
+  in the model, but `comment N` commands are free in the editor counter, so the
+  candidate remains size 211 rather than 210.
 - Y37 constant-23 size 11: an exact RNG world with all seven row sums equal to
   23 still fails because removing the repeated `calc` changes worker timing.
   The related size-5 random walk has a finite abstract route but no seed shown
@@ -76,6 +83,9 @@ for records.  Candidates that still need live-game verification remain in
   regresses from 747 frames/modelled speed 12/68 items to 905/15/75.  The
   independently tested size-235 normalization fails 0/1 at the full cap, so
   the combined size-230 form was not attempted.
+- Y37 shared 12/14-state increment at size 242: it wins, but moving the state
+  update out of the branch changes coordination and regresses from 747
+  frames/modelled speed 12/68 items to 930/15/74.  Retain size 243.
 - Y38 speed deletion of one, two, or all three consecutive `pickup c` retries:
   94/100, 93/100, and 91/100 respectively, versus 100/100 for the incumbent.
   The actions are reliability choreography rather than removable dead code.
@@ -88,6 +98,9 @@ for records.  Candidates that still need live-game verification remain in
   0/1 at the real cutoff, while the incumbent wins in 2,777 frames.  Both
   workers fall through into later branches before the global goal is complete,
   so neither `end` is post-goal dead code.
+- Y40 size-170 PR/diagonal and size-175 PR/dead-calc candidates: both are
+  superseded by the retained size-169 composition, which combines every safe
+  edit and remains exactly 2,697 frames/100 item actions like size 175.
 - Y41 random-exit size 6: a finite all-west-while-carrying then north-to-hole
   route exists, but even the relaxed geometry estimate is only about 1e-88;
   there is no practical witness search or live test.
@@ -123,6 +136,10 @@ for records.  Candidates that still need live-game verification remain in
   boundary.
 - Y68 unconditional size 5: 0/20; removing the side-hole guard did not produce
   an observable low-percent win.
+- Y68 tell-only speed sizes 171/170: superseded as primary candidates by the
+  size-164 bypassed-wrapper core, which removes eight charged but statically
+  unreachable wrapper commands without changing executed cadence.  The tell
+  cuts remain optional size-163/162 follow-ups only after the core works live.
 - Y21 speed four-site reach-merge (step s + takefrom e -> takefrom se at four
   sites of the pre-import program): each site 200/200 alone, combined average
   23.4 s vs 24.9 s over 400 paired trials.  Superseded before live testing:
@@ -133,6 +150,10 @@ for records.  Candidates that still need live-game verification remain in
   simulator-relative -1.5 s no longer supports an improvement claim against
   the new record.  Re-running the merge transform on the imported bases
   instead.
+- Y21 one-walk imported-record reach merge at editor size 40: 400/400 and faster
+  than the size-41 base, but superseded by the retained position-preserving size-39
+  fusion, which removes both walks and wins 100/100 with a better full timing
+  range.
 - Y22 size-3 scatter-tumble family (`a: step <list> / pickup <targets> /
   jump a`): rate-optimized across 45 pickup-target and 50 step-list
   variants; the best, `step n,s / pickup c,s`, measures 120/1,200 = 10.0%
