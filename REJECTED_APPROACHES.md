@@ -133,3 +133,11 @@ for records.  Candidates that still need live-game verification remain in
   simulator-relative -1.5 s no longer supports an improvement claim against
   the new record.  Re-running the merge transform on the imported bases
   instead.
+- Y22 size-3 scatter-tumble family (`a: step <list> / pickup <targets> /
+  jump a`): rate-optimized across 45 pickup-target and 50 step-list
+  variants; the best, `step n,s / pickup c,s`, measures 120/1,200 = 10.0%
+  with winning runs averaging 94.5 s (fastest 32 s).  Superseded by the
+  hole-dive size 3 in the live queue: despite the lower 8.4% rate, its
+  wins land in 5-34 s and its losses self-terminate, so expected
+  wall-clock per witnessed completion is far lower.  KEPT AS FALLBACK if
+  the hole-dive's live rate disappoints.
