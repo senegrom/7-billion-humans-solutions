@@ -55,7 +55,11 @@ file was derived and verified.
   constructible from Year 60's normal editor palette.
 - Suggested live test: five fresh runs initially.  Record every displayed
   speed and allow each attempt to reach the game's own cutoff.
-- Result: _not yet tested locally in the game_.
+- Result: _LIVE (maintainer): the leftmost field stays empty — the merged
+  list either forfeits the leftmost worker's load-bearing 1.5 s error
+  bubble or the game's pickup-list choice is not first-found.  Repair
+  sweep (separate pickups, other reductions) in progress; treat this
+  form as refuted._
 
 ```text
 a:
