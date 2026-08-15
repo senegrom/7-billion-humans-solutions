@@ -679,6 +679,12 @@ jump a
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
   ~1211) below the size-5 main entry.
+- Machine-reach caution (added after the Year 21/24 live refutations):
+  this program takes from printers DIAGONALLY (`takefrom nw,sw,ne`).
+  Diagonal SHREDDER gives proved fatal live (the giver walks in); if the
+  diagonal printer take behaves the same way, workers will die at the
+  printers and this row must be retracted.  Watch for exactly that on
+  the confirmation run.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
 - Current capped-emulator evidence: 64/100 wins, average winning speed
   1,210.8, range 813-1,397.  The close agreement supports the 50+ tier, but
