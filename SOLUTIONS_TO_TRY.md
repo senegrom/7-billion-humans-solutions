@@ -12,6 +12,14 @@ attempt number and do not restart merely because a run looks slow.
 Rejected and superseded experiments are archived in
 [REJECTED_APPROACHES.md](REJECTED_APPROACHES.md).
 
+**Speed-evidence downgrade (2026-08-15):** two live A/Bs (Years 39 and
+40) proved the game's displayed speed is asynchronous wall-time —
+frame-identical simulator evidence does NOT establish it, and diagonal
+step substitutions regressed 36 to 41 in both tests.  Every speed
+tie-break below therefore requires a live incumbent control run first;
+discard the candidate on any displayed-speed regression.  Win/loss and
+size evidence is unaffected.
+
 Every entry links a **paste-ready program file** in
 [SolutionsToTry/](SolutionsToTry/) — open it, select all, copy, and paste
 into the level's editor.  Recipes and evidence below describe how each
@@ -19,70 +27,25 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing
+### [ ] Year 40 - Printing Etiquette 2 - PR-92 ladder (size 176 verified-speed, then 175)
 
-- **Paste-ready program:** [SolutionsToTry/Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing.txt](<SolutionsToTry/Year 39 - Printing Etiquette 1 - diagonal stack + end drop, size 167 at identical timing.txt>)
-- Goal: retain the displayed speed record while cutting the secondary size
-  from 173 to 167.
-- Exact edit: start from
-  [the current speed program](<Solutions99+/Year 39 - Printing Etiquette 1 (speed).txt>),
-  collapse each of the five places where two adjacent perpendicular cardinal
-  steps form a corner (`step e`+`step s`→`step se`, `step e`+`step n`→`step ne`,
-  `step n`+`step w`→`step nw`, `step w`+`step n`→`step nw`, `step w`+`step s`→`step sw`
-  — the sweep found exactly these five safe corners; a sixth corner near
-  branch `a`'s tail measures 5 frames slower and is NOT included), and also
-  delete branch `a`'s terminal `end` after its fifth `drop` (the end-drop
-  already queued above).
-- Evidence: composed program wins 200/200 with the run frame-identical to
-  the incumbent (2581.0 flat) — same timeline, six commands lighter.  A
-  frame-identical A/B cancels any simulator-vs-game calibration.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169
-
-- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92, six diagonals, and dead calc at size 169.txt>)
-- Goal: take the row from 177 / 37 to **169 / 36**.
-- Base: [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
-  (@commonnickname) deletes the `step w` between `takefrom mem1` and
-  `step n / write 5` — the author recorded **36 s in the game** for that
-  edit alone, so the speed side is already live-verified upstream.
-- Additional edits: delete branch `b`'s data-dead
-  `mem2 = calc [blank] + [blank]` immediately before its fifth
-  `takefrom mem1`, then collapse the six perpendicular corner pairs
-  that measure timing-neutral (the seventh, an `e`+`s` corner mid-file,
-  runs 145 frames slower and must stay).  The safe sites are three pairs in
-  branch `c`, the second east/south pair in branch `d`, and two pairs in branch
-  `e`.
-- Deterministic emulator evidence: the size-169 composition wins in exactly
-  2,697 frames with 100 item actions and modelled speed 44.  It is frame- and
-  item-identical to the prior size-175 PR/dead-calc form, proving that all six
-  diagonal fusions remain neutral under composition.
-- Suggested live test: run the incumbent once, then the size-169 candidate;
-  capture displayed speed and editor size.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 38 - Seek and Destroy 3 - two diagonals, size 140
-
-- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - two diagonals, size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - two diagonals, size 140.txt>)
-- Exact edit: in
-  [the current speed program](<Solutions99+/Year 38 - Seek and Destroy 3 (speed).txt>)
-  collapse the two corner pairs (`step n`+`step e`→`step ne`,
-  `step e`+`step s`→`step se`).  200/200, paired average 614.2 → 609.4
-  frames; canonical editor size 142 → **140**.  (A third corner,
-  `w`+`n` near the top, measures 26 frames faster alone but drops to
-  50/60 wins and is NOT included.)
-- Result: _not yet tested in the game_.
-
-### [ ] Year 59 - Glory Hole - three diagonals, size 141
-
-- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - three diagonals, size 141.txt](<SolutionsToTry/Year 59 - Glory Hole - three diagonals, size 141.txt>)
-- Exact edit: in
-  [the current speed program](<Solutions99+/Year 59 - Glory Hole (speed).txt>)
-  collapse the three corner pairs at parse units 99, 121, 178 (each
-  `step`-pair into its diagonal; the other four corners in the file
-  measure up to 10 frames slower and stay).  200/200, paired average
-  447.0 → 446.0; canonical editor size 144 → **141**.
-- Result: _not yet tested in the game_.
+- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
+- **Next rung (size 175):** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 and dead calc at size 175.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 and dead calc at size 175.txt>)
+- Goal: take the row from 177 / 37 to **176 / 36** (already live-verified by
+  the PR author), then try 175.
+- Rung 1 (size 176): exactly [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
+  — @commonnickname recorded **36 s in the game** for this one-line step
+  deletion.  Strictly better than the current 177/37 row on both axes;
+  the only question is reproducing the author's own result.
+- Rung 2 (size 175): rung 1 plus the data-dead
+  `mem2 = calc [blank] + [blank]` deletion.  Frame-identical to rung 1 in
+  the simulator, but after the Year 39/40 live results frame-identity does
+  NOT establish displayed speed — run rung 1 first, and accept rung 2 only
+  if its displayed speed does not regress.
+- History: the six-diagonal composition at size 169 was REFUTED LIVE
+  (41 s vs 36 — see the rejected ledger); diagonal substitutions cost
+  asynchronous wall-time the frame model cannot see.
+- Result: _size-169 form refuted live at 41 s; rungs 176/175 not yet tested_.
 
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 
@@ -221,6 +184,9 @@ jump a
 - Expected editor size: **33**; expected displayed speed: **6**.
 - Suggested live test: one run should suffice because the level and schedule
   are deterministic; capture the completion panel and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 36 - Seek and Destroy 2 - speed tie-break at size 211
@@ -248,6 +214,9 @@ jump a
 - Expected editor size: **211**; expected displayed speed: **46-47**.
 - Suggested live test: run the incumbent and candidate on fresh worlds until
   each completes, then confirm the candidate's editor size and displayed speed.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 37 - Dangerous Spreadsheeting - ordered-set speed tie-break at size 243
@@ -274,6 +243,9 @@ jump a
 - Expected editor size: **243**; expected displayed speed: **10-11**.
 - Suggested live test: run the current speed program as a control, then the
   candidate; capture both completion panels and candidate editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 07 - Collation Station - speed tie-break at size 11
@@ -295,6 +267,9 @@ jump a
 - Expected editor size: **11**; expected displayed speed: **3**.
 - Suggested live test: one incumbent/candidate A/B should suffice; capture the
   completion panel and editor size.  All commands are editor-constructible.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
@@ -347,6 +322,9 @@ jump a
   clipboard/glitch solution and must retain the marker.
 - Suggested live test: one deterministic A/B should suffice; capture the
   completion panel and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83
@@ -367,6 +345,9 @@ jump a
 - Expected editor size: **83**; expected displayed speed: **about 6**.
 - Suggested live test: run repeated candidate attempts until it wins, then
   capture the completion panel and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 42 - Important Email Organization - speed tie-break at size 143
@@ -388,6 +369,9 @@ jump a
 - Expected editor size: **143**; expected displayed speed: **72-74**.
 - Suggested live test: run the incumbent as a loading/control check, then the
   candidate; capture either completion panel or the exact failure state.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 25 - My First Shredding Memory - guarded-loop speed candidate at size 6
@@ -421,6 +405,9 @@ jump a
 - Expected editor size: **6**; expected displayed speed: at most **129**.
 - Suggested live test: run the incumbent once as a control and the candidate
   once, capturing both completion panels and the candidate's editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 29 - Biometric Access - speed tie-break at size 182
@@ -453,6 +440,9 @@ jump a
 - Expected editor size: **182**; expected displayed speed: **54**.
 - Suggested live test: one deterministic A/B run should suffice; capture the
   completion panel and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214 (fallback 215)
@@ -485,6 +475,9 @@ jump a
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
   stop at the first regression and capture each completion panel and editor
   size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 66 - Decimal Counter - padding reduction at size 239 (safe fallback 240)
@@ -514,6 +507,9 @@ jump a
   proven **240** fallback.
 - Suggested live test: try size 239 first.  If its displayed speed regresses,
   restore that final singleton and capture the size-240 completion panel.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 65 - Defrag Ordered - live-only speed tie-break at size 120
@@ -530,6 +526,9 @@ jump a
   incumbent, so this timing edit is live-only and has no emulator verdict.
 - Suggested live test: run the incumbent as a loading/control check, then the
   candidate; capture both completion panels and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 208/209)
@@ -552,6 +551,9 @@ jump a
 - Suggested live test: run the incumbent, size 209, size 208, and finally size
   205.  Stop the ladder at the first failure or displayed-speed regression and
   retain the last successful form.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 68 - Goodbye, Humans! - bypassed-wrapper speed tie-break at size 164
@@ -586,6 +588,9 @@ jump a
 - Expected editor size: **164**; expected displayed speed: **16**.
 - Suggested live test: one incumbent loading/control run, then size 164.  Only
   after that succeeds should you try the optional size-163/162 tell ladder.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 44 - Unique Fashion Party - speed 1 at size 8

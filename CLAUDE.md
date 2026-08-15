@@ -23,3 +23,17 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
 - Sizes quoted anywhere must be canonical editor sizes
   (`check_readme.solution_size`), not the emulator's counter.
 - Run `python check_readme.py` before pushing README or solution changes.
+
+## Speed-evidence rules (learned live, 2026-08-15)
+
+- The game's displayed speed is **asynchronous wall-time**, not a function
+  of the simulator's frame timeline. Frame-identical A/B evidence does NOT
+  establish displayed speed; only a live incumbent-vs-candidate A/B does.
+- **Diagonal step substitutions are dead as a speed tool**: collapsing two
+  cardinal steps into one diagonal regressed 36 to 41 live on two levels.
+- Machine reach differs from the simulator: worker-to-worker gives reach
+  diagonally, but machine gives serve cardinally/at the front. A diagonal
+  shredder give walks the giver in (death); a give-list falling through a
+  machine square can be accepted by the game and ruled illegal. Never
+  queue candidates whose safety depends on either.
+- Simulator frame evidence remains valid for WIN/FAIL and for size.

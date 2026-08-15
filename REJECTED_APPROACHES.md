@@ -199,3 +199,17 @@ for records.  Candidates that still need live-game verification remain in
   subsystem is read out of a live witness, no candidate whose safety
   argument depends on a give-list falling through a machine square, or on
   any non-cardinal machine give, should be queued.
+- THE FRAME-IDENTICAL CLAIM CLASS AND THE DIAGONAL TRANSFORM, refuted
+  live on Years 39 and 40 (maintainer A/Bs, same machine, same session):
+  Y39 diagonal-stack+end-drop (size 167) ran 41 s against the incumbent's
+  36; Y40 PR+dead-calc+six-diagonals (size 169) ran 41 s against the PR
+  author's 36.  Both candidates were frame-for-frame identical (or
+  faster) in the simulator over hundreds-to-1,000 trials.  Conclusion:
+  the displayed speed is ASYNCHRONOUS WALL-TIME — frame identity does not
+  establish it, and collapsing two cardinal steps into one diagonal costs
+  live wall-time (~1 s per site per pass; machine-queue phase alignment
+  suspected).  Diagonalization is dead as a speed/tie-break transform;
+  Y38 (140) and Y59 (141) diagonal stacks withdrawn untested as the same
+  class.  Y40 falls back to the PR-92 ladder (176 live-verified 36, then
+  175).  Frame-based speed evidence anywhere in the queue is downgraded
+  to "requires live incumbent control first".

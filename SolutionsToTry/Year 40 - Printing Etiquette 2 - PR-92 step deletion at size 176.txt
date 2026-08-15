@@ -1,3 +1,6 @@
+-- 7 Billion Humans (2145) --
+-- 40: Printing Etiquette 2 --
+
 mem1 = nearest printer
 takefrom mem1
 step w
@@ -85,6 +88,7 @@ pickup e
 step w
 drop
 step e
+mem2 = calc [blank] + [blank]
 takefrom mem1
 step n
 step n
@@ -96,7 +100,8 @@ c:
 drop
 step e
 takefrom mem1
-step sw
+step w
+step s
 write 2
 drop
 step nw
@@ -107,14 +112,16 @@ drop
 step n
 step n
 takefrom mem1
-step sw
+step w
+step s
 step sw
 step w
 write 3
 drop
 step ne
 step ne
-step ne
+step n
+step e
 takefrom mem1
 step e
 step e
@@ -140,7 +147,8 @@ drop
 step ne
 step n
 takefrom mem1
-step se
+step e
+step s
 step s
 write 3
 drop
@@ -166,14 +174,16 @@ write 2
 drop
 step ne
 takefrom mem1
-step sw
+step w
+step s
 step sw
 write 3
 drop
 step n
 step n
 takefrom mem1
-step ne
+step n
+step e
 write 4
 drop
 step w
@@ -181,6 +191,8 @@ takefrom mem1
 step w
 write 5
 drop
+
+
 DEFINE COMMENT 0
 eJwTYmBgaAhgKGoIYshgCGeIaEhmMAHirIYkhhlA/IAhmeEJQwoQg9TlMtxqyGS405DK8IghguFJQyjD
 CwZ/IPZjeMYwCkbBKBiSAACLQhYk;

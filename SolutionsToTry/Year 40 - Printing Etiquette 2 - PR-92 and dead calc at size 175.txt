@@ -1,10 +1,15 @@
+-- 7 Billion Humans (2145) --
+-- 40: Printing Etiquette 2 --
+
 mem1 = nearest printer
 takefrom mem1
-step sw
-if c == nothing:
+step w
+step w
+write 1
+if nw == nothing:
 	jump a
 endif
-step s
+step n
 if c == nothing:
 	jump b
 endif
@@ -12,173 +17,181 @@ step e
 if c == nothing:
 	jump c
 endif
-step e
+step ne
 if c == nothing:
 	jump d
 endif
-step n
+step e
 jump e
 comment 0
 a:
+step nw
 drop
-step se
+step e
+step e
+step e
+takefrom mem1
+step e
+write 2
+drop
+takefrom mem1
+step e
+step e
+write 3
 step ne
-step n
+drop
 takefrom mem1
 step w
 step w
 step w
+step w
+write 4
 drop
-step ne
-step e
-step e
+pickup e
+step w
+drop
 takefrom mem1
+step w
 step w
 step sw
-step sw
+write 5
 drop
-step e
-step ne
-step n
-step ne
-takefrom mem1
-step se
-step se
-step e
-drop
-step nw
-step n
-step nw
-step w
-takefrom mem1
-step w
-step w
-step w
-step w
-drop
+end
 comment 1
 b:
 drop
 step e
-step ne
-step n
-takefrom mem1
-step w
-step w
-drop
-step ne
 step e
 takefrom mem1
 step w
-step sw
+step w
+write 2
+step w
 drop
-step n
-step ne
+takefrom mem1
+step w
+step w
+step w
+write 3
+step nw
+drop
+step e
+step e
+step e
 step e
 takefrom mem1
-step se
-step e
-step e
-drop
 step n
 step nw
+write 4
+drop
+pickup e
 step w
-step w
+drop
+step e
 takefrom mem1
-step nw
+step n
+step n
+write 5
 drop
 end
 comment 2
 c:
 drop
-step ne
-step n
-takefrom mem1
-step sw
-step sw
-drop
-step n
-step n
-step ne
 step e
 takefrom mem1
+step w
+step s
+write 2
+drop
+step nw
+pickup ne
 step se
-step e
+step s
 drop
 step n
-step nw
-step w
+step n
 takefrom mem1
 step w
-step nw
+step s
+step sw
+step w
+write 3
 drop
 step ne
-step se
-takefrom mem1
 step ne
+step n
+step e
+takefrom mem1
+step e
+step e
+step e
+write 4
+drop
+step w
+pickup w
+drop
+takefrom mem1
+write 5
 drop
 end
 comment 3
 d:
 drop
-step n
-step n
 takefrom mem1
-step sw
-step w
-step w
-drop
-step ne
-step ne
-step e
-takefrom mem1
-step w
-step nw
-step w
-drop
-step e
-step e
-step e
-takefrom mem1
-step w
-step nw
-step n
-drop
-step e
 step e
 step s
+write 2
+step sw
+drop
+step ne
+step n
+takefrom mem1
+step e
+step s
+step s
+write 3
+drop
+step n
+step n
 takefrom mem1
 step w
+step w
+write 4
+drop
+takefrom mem1
+step n
+write 5
 drop
 end
 comment 4
 e:
 drop
-step n
 takefrom mem1
-step se
-step se
+step w
+step sw
+write 2
+drop
+step ne
+takefrom mem1
+step w
+step s
+step sw
+write 3
 drop
 step n
 step n
+takefrom mem1
+step n
+step e
+write 4
+drop
 step w
 takefrom mem1
 step w
-step nw
-step nw
+write 5
 drop
-step e
-step e
-step e
-takefrom mem1
-step e
-step e
-step e
-drop
-step nw
-step nw
-takefrom mem1
-drop
+
+
 DEFINE COMMENT 0
 eJwTYmBgaAhgKGoIYshgCGeIaEhmMAHirIYkhhlA/IAhmeEJQwoQg9TlMtxqyGS405DK8IghguFJQyjD
 CwZ/IPZjeMYwCkbBKBiSAACLQhYk;
