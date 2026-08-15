@@ -1,7 +1,0 @@
--- Y15 canonical size 4: allow adjacent columns to share cube collection.
-
-a:
-step n,s
-pickup c,n,nw,ne,w,e,sw,se
-giveto s
-jump a

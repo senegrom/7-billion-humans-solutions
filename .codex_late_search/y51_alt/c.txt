@@ -1,6 +1,0 @@
-﻿a:
-pickup s
-mem1 = calc 1 + w
-write mem1
-drop
-jump a

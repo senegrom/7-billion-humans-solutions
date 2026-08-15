@@ -1,8 +1,0 @@
--- Y15 canonical size 4: pick a cube either after stepping onto it or from
--- the square immediately south of it.
-
-a:
-step n,s
-pickup c,n
-giveto s
-jump a

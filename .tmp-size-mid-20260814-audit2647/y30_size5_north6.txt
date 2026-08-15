@@ -1,8 +1,0 @@
--- Novel Year 30 size-5 north-biased direction set
-
-mem1 = nearest printer
-a:
-takefrom mem1
-step nw,sw,n,ne,e,se
-drop
-jump a

@@ -1,5 +1,0 @@
-pickup w
-a:
-step sw,s,se
-giveto s
-jump a

@@ -1,6 +1,0 @@
-mem1 = nearest printer
-a:
-takefrom mem1
-step nw,w,s,ne,se
-drop
-jump a

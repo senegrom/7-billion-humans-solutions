@@ -1,8 +1,0 @@
--- Year 15: Shred Lines, stochastic vertical-walk size candidate
--- Failed item actions resume at the following instruction.
-
-a:
-step n,s
-pickup n
-giveto s
-jump a

@@ -1,4 +1,0 @@
-pickup s
-a:
-step n,s
-jump a

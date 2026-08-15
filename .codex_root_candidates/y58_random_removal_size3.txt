@@ -1,4 +1,0 @@
-a:
-step nw,w,sw,n,s,ne,e,se
-pickup c
-jump a

@@ -1,3 +1,0 @@
-pickup c
-step n,s
-drop

@@ -1,8 +1,0 @@
-pickup s
-a:
-step e,s
-if w == datacube and
- c == nothing:
-	drop
-endif
-jump a

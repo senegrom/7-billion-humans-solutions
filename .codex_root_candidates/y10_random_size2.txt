@@ -1,3 +1,0 @@
-a:
-step n,s,w
-jump a

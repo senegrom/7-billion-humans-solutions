@@ -1,4 +1,0 @@
-﻿mem1 = nearest shredder
-step s
-pickup c
-giveto mem1

@@ -1,7 +1,0 @@
--- 7 Billion Humans (static candidate) --
--- 58: Good Neighbors --
-
-a:
-mem1 = nearest datacube
-pickup mem1
-jump a

@@ -1,6 +1,0 @@
-a:
-pickup c
-write 23
-drop
-step nw,w,sw,n,s,ne,e,se
-jump a

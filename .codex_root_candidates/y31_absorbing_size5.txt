@@ -1,6 +1,0 @@
-a:
-takefrom nw,sw,ne,se
-step w,e
-step nw,sw,ne,se
-drop
-jump a

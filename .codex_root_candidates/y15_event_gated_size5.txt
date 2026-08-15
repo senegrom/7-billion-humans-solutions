@@ -1,9 +1,0 @@
-a:
-step n,s
-if n == datacube and
- myitem == nothing or
- s == shredder:
-    pickup n
-    giveto s
-endif
-jump a
