@@ -43,9 +43,9 @@ file was derived and verified.
   clocks for you; the row records a typical value.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 24 - Code For Sale - one-sided relay at size 4
+### [ ] Year 24 - Budget Brigade 1 - one-sided relay at size 4
 
-- **Paste-ready program:** [SolutionsToTry/Year 24 - Code For Sale - one-sided relay at size 4.txt](<SolutionsToTry/Year 24 - Code For Sale - one-sided relay at size 4.txt>)
+- **Paste-ready program:** [SolutionsToTry/Year 24 - Budget Brigade 1 - one-sided relay at size 4.txt](<SolutionsToTry/Year 24 - Budget Brigade 1 - one-sided relay at size 4.txt>)
 - Goal: improve the current size record from 5 commands to **4** without the
   rejected size-3 program's two-sided handoff race.
 - Program:
@@ -759,7 +759,8 @@ jump a
 ### [ ] Year 30 - Fill the Floor - probabilistic size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
-- Goal: add a size-4 Solutions50+ record below the size-5 main entry.
+- Goal: live-confirm the size-4 Solutions50+ row (already published at
+  ~1211) below the size-5 main entry.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
 - Current capped-emulator evidence: 64/100 wins, average winning speed
   1,210.8, range 813-1,397.  The close agreement supports the 50+ tier, but
