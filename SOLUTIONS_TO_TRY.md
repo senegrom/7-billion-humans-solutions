@@ -671,34 +671,6 @@ endif
 mem1 = calc 0 / 0
 ```
 
-### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the public size-4
-  low-percent entry and size-5 main entry.
-- Mechanism: all 45 workers take their cubes and walk toward the room's holes.
-  The goal is checked every frame, so the run wins during any transient frame
-  with exactly seven survivors whose held values are a permutation of 0-6;
-  the workers do not need to remain stable afterward.
-- Constructive evidence: 38 workers can follow finite routes into upper/bottom
-  holes within 13 strides while seven designated workers take longer cardinal
-  routes, leaving a nonempty exactly-seven window.  Conditional on a fixed
-  last-seven set, value uniqueness has probability `7! / 7^7`, about 0.612%.
-- Fidelity caveat: the current Year 44 emulator loses even the public size-4
-  program and is not a trustworthy large-crowd oracle.  This is a live-only
-  candidate with a positive finite schedule, not a measured success rate.
-- Expected editor size: **3**; paste-only because of `step s,e,se`.
-- Suggested live test: repeated fresh runs, capturing every exactly-seven
-  survivor pattern and the first completion panel.
-- Result: _not yet tested locally in the game_.
-
-```text
-pickup s
-a:
-step s,e,se
-jump a
-```
-
 ### [ ] Year 44 - Unique Fashion Party - low-percent size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
@@ -800,28 +772,6 @@ drop
 jump a
 ```
 
-### [ ] Year 12 - Unzip - one-shot low-percent size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt](<SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the size-5 main
-  entry.
-- Mechanism: all 12 workers pick up their on-tile cubes, independently choose
-  north or south once, and drop.  Exactly one of the `2^12 = 4,096` direction
-  patterns is the required alternating zipper.
-- Capped-emulator evidence: 23/100,000 wins, close to the theoretical 1/4,096
-  rate; every win completed in exactly 56 frames with displayed speed 1.
-- Expected editor size: **3**; paste-only because of `step n,s`.
-- Suggested live test: use repeated fresh runs rather than waiting within one
-  run—the program finishes immediately.  A live win may take several thousand
-  attempts, so this is lower priority than the main-tier candidates.
-- Result: _not yet tested locally in the game_.
-
-```text
-pickup c
-step n,s
-drop
-```
-
 ### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
 
 - **Paste-ready program:** [SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt](<SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt>)
@@ -845,32 +795,6 @@ drop
 ```text
 a:
 step w,e
-jump a
-```
-
-### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the existing
-  size-7 low-percent entry and the size-8 main entry.
-- Mechanism: the restricted random walk moves only southward/eastward through
-  the maze.  A small set of direction sequences reaches pickup range of the
-  target cube; other paths absorb into holes rather than wandering until the
-  game deadline.
-- Capped-emulator evidence: 2/10,000 wins (0.02%); the two wins completed in
-  755 and 862 frames with displayed speeds 13 and 14.
-- Expected editor size: **3**.
-- Entry method: paste the text; the four-direction random step and eight-target
-  pickup are not constructible from Year 06's normal editor controls.
-- Suggested live test: repeated quick resets only if pursuing a very rare
-  record.  The observed rate implies thousands of attempts per win, so this is
-  lower priority than the deterministic and main-tier candidates.
-- Result: _not yet tested locally in the game_.
-
-```text
-a:
-step s,sw,se,e
-pickup c,s,se,sw,e,w,n,ne
 jump a
 ```
 
@@ -931,6 +855,194 @@ step n,s
 jump a
 ```
 
+### [ ] Year 54 - Terrain Leveler - constant-average low-percent size 5
+
+- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt>)
+- Goal: establish a size-5 SolutionsLowPercent record below the size-9 main
+  entry.
+- Mechanism: all seven workers sweep straight north through their columns,
+  rewriting every cube to 3.  The run wins exactly in worlds whose original
+  49-cube average rounds down to 3.
+- Probability analysis: accounting for the level's random 0-6, 0-10, and 0-20
+  range modes gives an intended-world probability about 0.259.  The 0-6 mode
+  alone has probability about 0.514 of averaging to 3.
+- Capped-emulator evidence: 20/100 wins; winning speed averaged 30.6, ranged
+  from 29 to 31, and used 1,786-1,936 frames.
+- Expected editor size: **5**; all commands are available in Year 54.
+- Suggested live test: repeated quick runs; record the random range and capture
+  the first completion panel with editor size 5.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step n
+pickup c
+write 3
+drop
+jump a
+```
+
+### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt>)
+- Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
+  and size-8 Solutions50+ entries.
+- Mechanism: each worker selects and shreds one nearest cube.  The level wins
+  only when the first shredded cube happens to be the room's global minimum;
+  routing and selection do not inspect values.
+- Capped-emulator evidence: 23/1,000 wins (2.3%); every win completed in 133
+  frames with displayed speed 3.
+- Expected editor size: **4**; all commands are available in Year 38.
+- Suggested live test: 50-100 fresh runs; each attempt ends within a few
+  seconds, so reset immediately after an explicit failure.
+- Result: _not yet tested locally in the game_.
+
+```text
+mem1 = nearest datacube
+pickup mem1
+mem1 = nearest shredder
+giveto mem1
+```
+
+### Commit `c7112a1`
+
+- [ ] Y10 speed
+- [ ] Y11 speed
+- [ ] Y12 size
+- [ ] Y20 speed
+- [ ] Y21 size, speed, and Solutions50+ speed
+- [ ] Y22 speed
+- [ ] Y31 size
+- [ ] Y32 size
+- [ ] Y39 size
+- [ ] Y40 size
+- [ ] Y41 speed
+- [ ] Y42 speed
+- [ ] Y50 size
+- [ ] Y51 speed
+- [ ] Y52 speed
+- [ ] Y60 size and speed
+- [ ] Y62 Solutions99+ size and Solutions50+ size
+- [ ] Y65 speed
+- [ ] Y67 speed
+
+### Commit `412d9d1`
+
+- [ ] Y09 speed
+- [ ] Y16 size
+- [ ] Y18 size
+- [ ] Y22 size
+- [ ] Y23 speed
+- [ ] Y34 size and speed
+- [ ] Y37 size
+- [ ] Y38 size and speed
+- [ ] Y57 size
+- [ ] Y58 size
+- [ ] Y68 size
+
+### Current all-level audit
+
+- [ ] Y05 low-percent size
+- [ ] Y06 low-percent size
+- [ ] Y13 low-percent size
+- [ ] Y30 Solutions50+ size
+- [ ] Y34 Solutions50+ speed
+- [ ] Y43 Solutions50+ size
+- [ ] Y44 low-percent size
+- [ ] Y53 low-percent size
+- [ ] Y54 Solutions50+ speed
+
+Current-audit evidence: Y30 is 15/25 in the public header and 64/100 in the
+capped emulator; Y34 is 79/100; Y43 is 144/150 publicly and 18/20 locally
+(winning emulator range 639-1,349 seconds); Y53 is 46/100 and was demoted from
+Solutions50+; Y54 is 64/120.  The public Y44 size-4 header is arithmetically
+inconsistent, and its incidental speed is still `TBD` until a live win is
+captured.
+
+## Parked long shots (win rate below 1 in 100)
+
+Per the maintainer's rule, candidates that win less often than **1 in
+100 runs** are not part of the live-game queue: a witnessed completion
+would cost more restart-grinding than the row is worth.  They remain
+here (with their paste-ready files) in case the rule changes or a
+higher-rate variant is found.  Nothing below this line needs game time.
+
+### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt>)
+- Goal: establish a size-3 SolutionsLowPercent record below the public size-4
+  low-percent entry and size-5 main entry.
+- Mechanism: all 45 workers take their cubes and walk toward the room's holes.
+  The goal is checked every frame, so the run wins during any transient frame
+  with exactly seven survivors whose held values are a permutation of 0-6;
+  the workers do not need to remain stable afterward.
+- Constructive evidence: 38 workers can follow finite routes into upper/bottom
+  holes within 13 strides while seven designated workers take longer cardinal
+  routes, leaving a nonempty exactly-seven window.  Conditional on a fixed
+  last-seven set, value uniqueness has probability `7! / 7^7`, about 0.612%.
+- Fidelity caveat: the current Year 44 emulator loses even the public size-4
+  program and is not a trustworthy large-crowd oracle.  This is a live-only
+  candidate with a positive finite schedule, not a measured success rate.
+- Expected editor size: **3**; paste-only because of `step s,e,se`.
+- Suggested live test: repeated fresh runs, capturing every exactly-seven
+  survivor pattern and the first completion panel.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+a:
+step s,e,se
+jump a
+```
+
+### [ ] Year 12 - Unzip - one-shot low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt](<SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt>)
+- Goal: establish a size-3 SolutionsLowPercent record below the size-5 main
+  entry.
+- Mechanism: all 12 workers pick up their on-tile cubes, independently choose
+  north or south once, and drop.  Exactly one of the `2^12 = 4,096` direction
+  patterns is the required alternating zipper.
+- Capped-emulator evidence: 23/100,000 wins, close to the theoretical 1/4,096
+  rate; every win completed in exactly 56 frames with displayed speed 1.
+- Expected editor size: **3**; paste-only because of `step n,s`.
+- Suggested live test: use repeated fresh runs rather than waiting within one
+  run—the program finishes immediately.  A live win may take several thousand
+  attempts, so this is lower priority than the main-tier candidates.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup c
+step n,s
+drop
+```
+
+### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
+- Goal: establish a size-3 SolutionsLowPercent record below the existing
+  size-7 low-percent entry and the size-8 main entry.
+- Mechanism: the restricted random walk moves only southward/eastward through
+  the maze.  A small set of direction sequences reaches pickup range of the
+  target cube; other paths absorb into holes rather than wandering until the
+  game deadline.
+- Capped-emulator evidence: 2/10,000 wins (0.02%); the two wins completed in
+  755 and 862 frames with displayed speeds 13 and 14.
+- Expected editor size: **3**.
+- Entry method: paste the text; the four-direction random step and eight-target
+  pickup are not constructible from Year 06's normal editor controls.
+- Suggested live test: repeated quick resets only if pursuing a very rare
+  record.  The observed rate implies thousands of attempts per win, so this is
+  lower priority than the deterministic and main-tier candidates.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+step s,sw,se,e
+pickup c,s,se,sw,e,w,n,ne
+jump a
+```
+
 ### [ ] Year 52 - The Mode Code - one-shot low-percent size 6
 
 - **Paste-ready program:** [SolutionsToTry/Year 52 - The Mode Code - one-shot low-percent size 6.txt](<SolutionsToTry/Year 52 - The Mode Code - one-shot low-percent size 6.txt>)
@@ -959,33 +1071,6 @@ mem1 = calc n + 8
 pickup mem2
 write mem1
 drop
-```
-
-### [ ] Year 54 - Terrain Leveler - constant-average low-percent size 5
-
-- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt>)
-- Goal: establish a size-5 SolutionsLowPercent record below the size-9 main
-  entry.
-- Mechanism: all seven workers sweep straight north through their columns,
-  rewriting every cube to 3.  The run wins exactly in worlds whose original
-  49-cube average rounds down to 3.
-- Probability analysis: accounting for the level's random 0-6, 0-10, and 0-20
-  range modes gives an intended-world probability about 0.259.  The 0-6 mode
-  alone has probability about 0.514 of averaging to 3.
-- Capped-emulator evidence: 20/100 wins; winning speed averaged 30.6, ranged
-  from 29 to 31, and used 1,786-1,936 frames.
-- Expected editor size: **5**; all commands are available in Year 54.
-- Suggested live test: repeated quick runs; record the random range and capture
-  the first completion panel with editor size 5.
-- Result: _not yet tested locally in the game_.
-
-```text
-a:
-step n
-pickup c
-write 3
-drop
-jump a
 ```
 
 ### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
@@ -1104,28 +1189,6 @@ giveto n,w,s
 jump a
 ```
 
-### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt>)
-- Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
-  and size-8 Solutions50+ entries.
-- Mechanism: each worker selects and shreds one nearest cube.  The level wins
-  only when the first shredded cube happens to be the room's global minimum;
-  routing and selection do not inspect values.
-- Capped-emulator evidence: 23/1,000 wins (2.3%); every win completed in 133
-  frames with displayed speed 3.
-- Expected editor size: **4**; all commands are available in Year 38.
-- Suggested live test: 50-100 fresh runs; each attempt ends within a few
-  seconds, so reset immediately after an explicit failure.
-- Result: _not yet tested locally in the game_.
-
-```text
-mem1 = nearest datacube
-pickup mem1
-mem1 = nearest shredder
-giveto mem1
-```
-
 ### [ ] Year 33 - Data Backup Day - one-shot low-percent size 5
 
 - **Paste-ready program:** [SolutionsToTry/Year 33 - Data Backup Day - one-shot low-percent size 5.txt](<SolutionsToTry/Year 33 - Data Backup Day - one-shot low-percent size 5.txt>)
@@ -1177,58 +1240,3 @@ giveto mem1
 These already have public real-game evidence and are committed to `master`.
 Local smoke-testing is optional, but unchecked items have not yet been
 personally reproduced in this game installation.
-
-### Commit `c7112a1`
-
-- [ ] Y10 speed
-- [ ] Y11 speed
-- [ ] Y12 size
-- [ ] Y20 speed
-- [ ] Y21 size, speed, and Solutions50+ speed
-- [ ] Y22 speed
-- [ ] Y31 size
-- [ ] Y32 size
-- [ ] Y39 size
-- [ ] Y40 size
-- [ ] Y41 speed
-- [ ] Y42 speed
-- [ ] Y50 size
-- [ ] Y51 speed
-- [ ] Y52 speed
-- [ ] Y60 size and speed
-- [ ] Y62 Solutions99+ size and Solutions50+ size
-- [ ] Y65 speed
-- [ ] Y67 speed
-
-### Commit `412d9d1`
-
-- [ ] Y09 speed
-- [ ] Y16 size
-- [ ] Y18 size
-- [ ] Y22 size
-- [ ] Y23 speed
-- [ ] Y34 size and speed
-- [ ] Y37 size
-- [ ] Y38 size and speed
-- [ ] Y57 size
-- [ ] Y58 size
-- [ ] Y68 size
-
-### Current all-level audit
-
-- [ ] Y05 low-percent size
-- [ ] Y06 low-percent size
-- [ ] Y13 low-percent size
-- [ ] Y30 Solutions50+ size
-- [ ] Y34 Solutions50+ speed
-- [ ] Y43 Solutions50+ size
-- [ ] Y44 low-percent size
-- [ ] Y53 low-percent size
-- [ ] Y54 Solutions50+ speed
-
-Current-audit evidence: Y30 is 15/25 in the public header and 64/100 in the
-capped emulator; Y34 is 79/100; Y43 is 144/150 publicly and 18/20 locally
-(winning emulator range 639-1,349 seconds); Y53 is 46/100 and was demoted from
-Solutions50+; Y54 is 64/120.  The public Y44 size-4 header is arithmetically
-inconsistent, and its incidental speed is still `TBD` until a live win is
-captured.
