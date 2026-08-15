@@ -27,25 +27,16 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 40 - Printing Etiquette 2 - PR-92 ladder (size 176 verified-speed, then 175)
+### [x] Year 40 - Printing Etiquette 2 - PR-92 ladder — RECORD PUBLISHED at 176 / 36
 
-- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
-- **Next rung (size 175):** [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 and dead calc at size 175.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 and dead calc at size 175.txt>)
-- Goal: take the row from 177 / 37 to **176 / 36** (already live-verified by
-  the PR author), then try 175.
-- Rung 1 (size 176): exactly [upstream PR #92](https://github.com/hingston/7-billion-humans-solutions/pull/92)
-  — @commonnickname recorded **36 s in the game** for this one-line step
-  deletion.  Strictly better than the current 177/37 row on both axes;
-  the only question is reproducing the author's own result.
-- Rung 2 (size 175): rung 1 plus the data-dead
-  `mem2 = calc [blank] + [blank]` deletion.  Frame-identical to rung 1 in
-  the simulator, but after the Year 39/40 live results frame-identity does
-  NOT establish displayed speed — run rung 1 first, and accept rung 2 only
-  if its displayed speed does not regress.
-- History: the six-diagonal composition at size 169 was REFUTED LIVE
-  (41 s vs 36 — see the rejected ledger); diagonal substitutions cost
-  asynchronous wall-time the frame model cannot see.
-- Result: _size-169 form refuted live at 41 s; rungs 176/175 not yet tested_.
+- **Live result (maintainer, 2026-08-15): rung 1 (size 176) completed at
+  36 s — beats the 177/37 row on both axes and is PUBLISHED** to
+  Solutions99+ with the README row updated (credit @commonnickname,
+  upstream PR #92).
+- Rung 2 (size 175, the data-dead calc deletion) REFUTED live: 38 s.  A
+  frame-identical pure deletion still cost two seconds — dead code can be
+  load-bearing timing (see the rejected ledger).
+- File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
 
 ### [ ] Year 15 - Shred Lines - event-gated size 5
 

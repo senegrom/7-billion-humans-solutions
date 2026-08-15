@@ -213,3 +213,13 @@ for records.  Candidates that still need live-game verification remain in
   class.  Y40 falls back to the PR-92 ladder (176 live-verified 36, then
   175).  Frame-based speed evidence anywhere in the queue is downgraded
   to "requires live incumbent control first".
+- Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
+  deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
+  frame-identical simulator evidence.  With the Y39/Y40 diagonal results
+  this completes the picture: EVEN PURE DELETIONS of data-dead commands
+  shift the asynchronous wall clock — a dead store or calc can be
+  load-bearing timing (the pad keeps a worker's arrival in phase with a
+  machine's serve rhythm; removing it trades ~250 ms of command time for
+  a longer queue wait).  The live ladder protocol (test one edit at a
+  time, keep the last non-regressing rung) is therefore mandatory for
+  every speed-row size reduction; the simulator cannot pre-clear them.
