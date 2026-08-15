@@ -19,7 +19,7 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 21 - Big Data - position-preserving reach merge at size 39
+### [<50%] Year 21 - Big Data - position-preserving reach merge at size 39
 
 - **Paste-ready program:** [SolutionsToTry/Year 21 - Big Data - position-preserving reach merge at size 39.txt](<SolutionsToTry/Year 21 - Big Data - position-preserving reach merge at size 39.txt>)
 - Goal: improve the imported speed record's typical value (recorded 16-22)
@@ -41,7 +41,7 @@ file was derived and verified.
 - Expected editor size: **39**.
 - Suggested live test: a few runs against what the unedited program
   clocks for you; the row records a typical value.
-- Result: _not yet tested in the game_.
+- Result: _most of the times the humans get shredded. if they dont get shredded it works but very rarely; < 10%_.
 
 ### [ ] Year 24 - Budget Brigade 1 - one-sided relay at size 4
 
