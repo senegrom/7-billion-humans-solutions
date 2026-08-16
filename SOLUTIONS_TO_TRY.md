@@ -38,10 +38,47 @@ file was derived and verified.
   load-bearing timing (see the rejected ledger).
 - File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
 
+### [ ] Year 15 - Shred Lines - event-gated size 5 (RETEST - suspected contaminated run)
+
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - event-gated size 5.txt>)
+- Goal: improve the size record from 8 commands to **5** — the largest size
+  prize in the queue.
+- History: the earlier live run reported "all workers die" and the entry was
+  retracted.  Two later findings reopen it: `myitem` cannot be TYPED on this
+  level (it unlocks at Year 22), so a typed test ran a different program; and
+  Year 42's verified record random-walks a shreddered level live, so random
+  steps onto shredders appear to be fenced, leaving NO death mechanism on
+  this map for the real program.
+- Protocol: **paste the file verbatim** (never retype; `step n,s` and the
+  `myitem` line are both paste-only here).  Run up to five attempts.
+- 30-second discriminator worth running first: paste `a:` / `step s` /
+  `jump a` alone — if the worker at the shredder row DIES, the old
+  refutation stands and this entry is dead; if it fences (bounces), the
+  retest is live.
+- Emulator: 100/100 at avg 191 s on the current build.
+- Result: _retest pending; prior run suspected contaminated_.
+
+### [ ] Year 24 - Budget Brigade 1 - one-sided relay at size 4 (RETEST - suspected contaminated run)
+
+- **Paste-ready program:** [SolutionsToTry/Year 24 - Budget Brigade 1 - one-sided relay at size 4.txt](<SolutionsToTry/Year 24 - Budget Brigade 1 - one-sided relay at size 4.txt>)
+- Goal: improve the size record from 5 commands to **4**.
+- History: the earlier live run reported the cube thrown back into the
+  printer and a death.  The program's guard begins `if myitem == something`
+  — if that line was typed with a substitution (the `something` comparand
+  may not be offered by the editor), every downstream worker's guard
+  changes and the observed chaos follows from the wrong program.
+- Protocol: **paste the file verbatim**.  One run (~2 min, deterministic
+  in simulation at 99 s).
+- Emulator: 50/50 deterministic on the current build.
+- Result: _retest pending; prior run suspected contaminated_.
+
 ### [ ] Year 15 - Shred Lines - deterministic size 7
 
 - **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt](<SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt>)
 - Goal: improve the current size record from 8 commands to 7.
+- Protocol note: the prior live attempt retyped `myitem == nothing` as
+  `c == nothing` (the editor cannot build myitem here) and ran forever —
+  that tested a different program.  **Paste the file verbatim.**
 - Emulator evidence: deterministic win in 2,167 frames; displayed emulator
   speed 35 after correcting invalid `giveto` timing.
 - Expected editor size: **7**.  The emulator currently prints 6 because its

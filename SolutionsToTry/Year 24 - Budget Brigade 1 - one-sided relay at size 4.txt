@@ -1,0 +1,7 @@
+a:
+if myitem == something or
+ w == hole:
+    takefrom s
+    giveto e,s
+endif
+jump a

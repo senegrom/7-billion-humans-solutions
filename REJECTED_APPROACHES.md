@@ -260,3 +260,18 @@ for records.  Candidates that still need live-game verification remain in
   ever curious: run the `pickup se,w` variant once -- identical leftmost
   starvation would indicate the game picks randomly among listed squares,
   while a totally different failure supports ordered first-found.
+- CONTAMINATED-RUN AUDIT (maintainer insight): `myitem` conditions cannot
+  be TYPED before Year 22, so live tests that retyped programs with
+  substitutions tested DIFFERENT programs.  Three refutations reopened as
+  paste-verbatim retests: Y15 event-gated size 5, Y24 one-sided relay
+  size 4, and Y15 deterministic size 7 (its "runs forever" came from a
+  confirmed `c == nothing` substitution).  Supporting evidence: Year 42's
+  verified record random-walks a shreddered level live, so random steps
+  onto shredders appear fenced — removing the only death mechanism the
+  Y15 map offered and undermining the step-death reading of the original
+  "all workers die" report.  The step-death stays available as opt-in
+  screening until the 30-second single-step discriminator settles it.
+  Refutations that STAND (paste-verified or no untypable constructs):
+  Y21 reach-merge (diagonal shredder give), Y60 ordered-pickup (leftmost
+  starvation; repair space exhausted), Y39/Y40 diagonal stacks and the
+  Y40 dead-calc (async wall-clock).
