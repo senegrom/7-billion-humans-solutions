@@ -190,7 +190,8 @@ jump a
   194.  Canonical sizes are 11 and 12.
 - Expected editor size: **11**; expected displayed speed: **3**.
 - Suggested live test: one incumbent/candidate A/B should suffice; capture the
-  completion panel and editor size.  All commands are editor-constructible.
+  completion panel and editor size.  Correction: the `myitem` condition is NOT
+  editor-constructible on Year 07 (it unlocks at Year 22) -- paste the file.
 - Live-speed caution: frame-based evidence no longer establishes
   displayed speed (Years 39/40 regressed 36→41 live).  Run the
   incumbent as control first; discard on regression.
