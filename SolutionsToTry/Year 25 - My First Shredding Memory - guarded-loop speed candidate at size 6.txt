@@ -1,8 +1,0 @@
-mem1 = nearest shredder
-a:
-mem2 = nearest datacube
-pickup mem2
-if myitem == datacube:
-    giveto mem1
-endif
-jump a

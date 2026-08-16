@@ -63,8 +63,7 @@ if mem1 == 2 and
 			endif
 		endif
 	else:
-		if mem1 == 0:
-		else:
+		if mem1 != 0:
 			mem2 = set mem1
 		endif
 	endif
@@ -292,10 +291,7 @@ else:
 			if mem4 == 12 or
 			 mem4 == 14:
 				if mem4 == 12:
-					mem1 = set c
-					if mem1 != datacube:
-						mem1 = set e
-					endif
+					mem1 = set c,e
 					mem4 = set 13
 				else:
 					step e

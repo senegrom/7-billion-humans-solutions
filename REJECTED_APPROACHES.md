@@ -275,3 +275,40 @@ for records.  Candidates that still need live-game verification remain in
   Y21 reach-merge (diagonal shredder give), Y60 ordered-pickup (leftmost
   starvation; repair space exhausted), Y39/Y40 diagonal stacks and the
   Y40 dead-calc (async wall-clock).
+- LIVE SWEEP VERDICTS (maintainer session, eleven results):
+  - Y15 event-gated size 5 and Y24 one-sided relay size 4: retested
+    PASTE-VERBATIM and still fail the same ways.  The contamination
+    theory is dead for both; the original refutations stand FINAL.
+    (The Y42-random-walk fence contradiction remains an open mechanic
+    question, but no Y15 candidate survives it either way.)
+  - Y47 size 33: fails live.  Mechanism: the deleted always-true
+    `if myitem == myitem` was load-bearing WALL-TIME -- it delays the
+    eastmost worker's greeting so the west-to-east chain lands in order;
+    without it the greeting order breaks.  Frame-model evidence cannot
+    see async ordering (the Year 39/40 lesson, again).
+  - Y07 size 11: fails live.  Mechanism: the added `if myitem == nothing`
+    check shifts the x6 worker's drop by the if's wall-cost, and the
+    collation stack demands the original drop order.  Same async class.
+  - Y42 size 143: endless loop live -- the mem1->mem2 retarget breaks the
+    recovery path in ways the model (which cannot referee this level)
+    endorsed.  FINAL.
+  - Y68 size 164, Y66 sizes 239 AND 240: fail live.  Even the
+    "frame-identical" Y66 fallback diverges -- frame identity in the
+    simulator establishes nothing about the game's async execution on
+    press levels.  FINAL; the rows stand (172, 254).
+  - Y29 size 182: one worker ends holding a cube.  Mechanism: the deleted
+    second consecutive `giveto mem3` was a live RETRY -- in the game a
+    give at a contended machine can fail outright, and the duplicate
+    caught it; the simulator's machine model parks-until-served and never
+    fails a give, so it endorsed the deletion.  FINAL, and a prime
+    witness for the machine-serve rules still missing from the model.
+  - Y25 size 6: "really almost works -- at the end people stand around in
+    a queue."  Same signature as Y29: the final gives at a contended
+    machine never land in the game while the simulator serves them.
+    The incumbent's terminal cleanup exists precisely to handle this.
+    FINAL at size 6; the machine-serve read (front/arrival/failure
+    rules) is the emulator work that would reopen this class.
+  - Y44 speed-at-size-8: completes live at displayed speed 2 -- the
+    source's claimed 1 did not reproduce, and speed ranks first, so the
+    17-command speed-1 row stands.  Re-rolls might show 1; parked until
+    someone feels lucky.
