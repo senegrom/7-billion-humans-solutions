@@ -27,6 +27,52 @@ file was derived and verified.
 
 ## Priority queue
 
+### [ ] Year 20 - Reverse Line - speed tie-break at size 37
+
+- **Paste-ready program:** [SolutionsToTry/Year 20 - Reverse Line - speed tie-break at size 37.txt](<SolutionsToTry/Year 20 - Reverse Line - speed tie-break at size 37.txt>)
+- Goal: retain the displayed speed of 4 while reducing the size from 38 to
+  **37**.
+- Exact edit: delete the `if sw == datacube:` / `endif` guard around
+  `pickup sw` near the end (the guard is always true when reached, so the
+  pickup runs either way).
+- Emulator evidence: 200/200 wins at 304 frames versus the incumbent's
+  314 — one command fewer and slightly faster in the model.
+- Suggested live test: incumbent once as control, then the candidate;
+  4-second runs.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
+
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt>)
+- **Fallback (size 141):** [SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break fallback at size 141.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break fallback at size 141.txt>)
+- Goal: retain the displayed 9-10 while reducing the size from 142 to
+  **140**.
+- Exact edit: inside the second `if mem3 != mem4:` block, the column walk
+  goes `step w`, five `step n`, `step e`, `step w`.  The first `step w`
+  and the `step e` cancel (identical endpoint), so both are deleted; the
+  fallback deletes only the `step w`.
+- Emulator evidence: 199/200 wins at 606 frames versus the incumbent's
+  620 (the fallback: 200/200 at 614).
+- Suggested live test: incumbent once as control, then the candidate;
+  9-second runs.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 60 - Understaffed Sorting - speed tie-break at size 158
+
+- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - speed tie-break at size 158.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - speed tie-break at size 158.txt>)
+- Goal: retain the displayed 54-62 while reducing the size from 159 to
+  **158**.
+- Exact edit: in the block that ends `... drop / step e / pickup n / drop /
+  step ne / step e / jump b`, delete the first `step e` (after the `drop`):
+  the worker takes its `pickup n` one square west and the following
+  `step ne / step e` still lands it on the same square.
+- Emulator evidence: 60/60 wins at 3,441 average frames versus the
+  incumbent's 3,672 (6% fewer).
+- Live caution: displayed speed is asynchronous wall-time and this level's
+  runs are a minute long — run the incumbent once as control first.
+- Result: _not yet tested in the game_.
+
+
 ### [x] Year 22 - Number Royale - Solutions50+ speed tie-break — PUBLISHED at 6 / 2
 
 - **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt](<SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt>)
