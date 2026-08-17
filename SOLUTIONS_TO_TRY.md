@@ -43,6 +43,9 @@ file was derived and verified.
   authoritative (no async wall-time question).  The pickup targets are
   floor datacubes on squares adjacent to the worker, so no machine-reach
   rule applies.
+- Live-legality confirmed: `pickup w,se` is the exact command Year 16's
+  published speed record uses, typed (not a paste-only 📋 form), so this
+  candidate is a normal editor program and needs no clipboard marker.
 - Emulator evidence: 300/300 wins (matching the incumbent's published
   0/200 failures) at canonical size 8; winning runs also average fewer
   frames (37,752 versus 41,718) because the wasted second pickup is gone.
