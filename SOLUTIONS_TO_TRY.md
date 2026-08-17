@@ -211,6 +211,39 @@ file was derived and verified.
   incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
+### [ ] Year 15 - Shred Lines - community size 6 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - community size 6.txt](<SolutionsToTry/Year 15 - Shred Lines - community size 6.txt>)
+- Goal: locally confirm abfipes12's public size-6 program, newly imported to
+  Solutions50+ below our size-8 main row (found in the 2026-08-17 source
+  audit; it was never in our tables).
+- Public evidence: abfipes12 reports 16/25 real-game wins (64%) at about
+  950 seconds.  Local emulator: 47/50 wins, average 56,503 frames — same
+  ballpark, though Year 15's model is known to diverge on gated forms.
+- Mechanism: a random seven-direction walk with a guarded pickup/give; the
+  give lands on the south shredder row.  No `myitem` anywhere, so the
+  refuted Year 15 gated-form class does not apply; random steps fence at
+  machine rows live (the Year 42 precedent).
+- Expected editor size: **6**; paste-only (multi-direction random step).
+- Suggested live test: a few full-length runs — wins are SLOW (near 1,000
+  seconds), so let each run reach the game's own cutoff.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 38 - Seek and Destroy 3 - community speed 6-7 at size 122
+
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - community speed 6-7.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - community speed 6-7.txt>)
+- Goal: locally confirm abfipes12 and commonnickname's public speed
+  program, newly imported to Solutions50+ below our 9-10 main speed row
+  (found in the 2026-08-17 source audit; it was never in our tables).
+- Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
+- Local emulator: 36/50 wins, average 423.6 frames (win/fail evidence
+  only; displayed speed is async wall-time and theirs is live-measured).
+- Expected editor size: **122**; glitchless, so it should also be
+  typable/editable normally.
+- Suggested live test: repeated runs until a win; capture displayed speed
+  and editor size.
+- Result: _not yet tested locally in the game_.
+
 ### [ ] Year 44 - Unique Fashion Party - low-percent size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
