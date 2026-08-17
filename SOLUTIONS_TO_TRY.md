@@ -27,12 +27,89 @@ file was derived and verified.
 
 ## Priority queue
 
+### [ ] Year 22 - Number Royale - Solutions50+ speed tie-break at size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt](<SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt>)
+- Goal: retain the Solutions50+ speed row's displayed speed of 2 while
+  reducing its size from 7 to **6** (eiTTio's program; keep the credit).
+- Exact edit: delete the `pickup c` inside `if myitem < 90:` — the worker
+  is already holding its cube, so that pickup only fails; the 80-89 holders
+  then walk south immediately instead of after the failed action.
+- Emulator evidence (corpus deletion sweep): 101/200 wins versus the
+  incumbent's 14/25 on the same model, i.e. the same tier; winning runs
+  average 98 frames versus 152, so the change can only shorten the run.
+- Suggested live test: repeated 2-second runs until a win (about every
+  second run); capture the displayed speed and editor size 6.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 23 - Sorting Hall - speed tie-break at size 8
+
+- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt](<SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt>)
+- Goal: retain the displayed speed of 15-17 while reducing the size from 9
+  to **8** (eiTTio and abfipes12's program; keep the credits).
+- Exact edit: delete the outer `if myitem < 50:` guard and its `endif`, so
+  every worker runs the west-walk block; the value comparisons inside it
+  already stop the walk for the workers the guard used to exclude.
+- Emulator evidence (corpus deletion sweep): 200/200 wins at 1,094.8
+  average frames versus the incumbent's 1,099.9 — same run, one command
+  fewer.
+- Live-speed caution: displayed speed is asynchronous wall-time.  Run the
+  incumbent once as control, then the candidate; discard on regression.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 09 - Dynamic Angles - speed tie-break at size 14
+
+- **Paste-ready program:** [SolutionsToTry/Year 09 - Dynamic Angles - speed tie-break at size 14.txt](<SolutionsToTry/Year 09 - Dynamic Angles - speed tie-break at size 14.txt>)
+- Goal: retain the displayed speed of 3 while reducing the size from 15 to
+  **14** (martinez8859, n05ucc4u and abfipes12's program; keep the credits).
+- Exact edit: delete the first `jump a` (inside the first `if e == nothing:`
+  block).  Without it, the workers on the longest route re-test
+  `e == nothing` at each following block instead of jumping past the test;
+  on this level's diagonal edge those tests are always true, so the walk is
+  the same.
+- Emulator evidence (corpus deletion sweep): 200/200 wins at exactly the
+  incumbent's 230.0 frames.  The only live risk is that the three extra
+  tests cost wall time on the longest route (Year 47 showed an `if` is not
+  free live) — a 3-second A/B decides it.
+- Suggested live test: incumbent once as control, then the candidate.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
+
+- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
+- **Fallback (size 21):** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt>)
+- Goal: retain the low-percent speed row's displayed ~14 while reducing its
+  size from 23 to **19** (n05ucc4u's program; keep the credit).
+- Exact edits: delete the two three-line re-check tails — in the `> 49`
+  branch `if w > myitem: jump d / endif` and in the `else` branch
+  `if e < myitem: jump h / endif`.  The size-21 fallback deletes only the
+  first of them.
+- Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
+  16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
+  16.2.  The win rate drops from about 52% to about 38-45% (still the
+  low-percent tier) with the speed distribution unchanged.
+- Suggested live test: repeated ~14-second runs until a win; capture the
+  displayed speed and editor size.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36 (lower confidence)
+
+- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36.txt](<SolutionsToTry/Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36.txt>)
+- Goal: retain the Solutions50+ speed row's 22-27 while reducing its size
+  from 37 to **36** (commonnickname's program; keep the credit).
+- Exact edit: delete the first `write 3` (after the first `pickup n`).
+- Emulator evidence (corpus deletion sweep): 50/200 wins versus the
+  incumbent's 32/150 on the same model, at 1,925 versus 1,982 frames.  The
+  model under-reproduces this program's live 53% rate, so this is weaker
+  evidence than the entries above; treat it as a single cheap A/B.
+- Result: _not yet tested in the game_.
+
 ### [x] Year 58 - Good Neighbors - inverted-if speed tie-break — PUBLISHED at 105 / 2
 
 - **Live result (2026-08-17): completed averaging 2 seconds — the speed
   record of 2 is retained with the secondary size down 106 → 105.
-  PUBLISHED** to Solutions99+ with the README row updated (credit stays
-  @commonnickname; the inversion is an encoding-only edit).
+  PUBLISHED** to Solutions99+ with the README row updated (credited to
+  @commonnickname and @senegrom; the inversion is an encoding-only edit).
 - The savegame watcher confirmed the record fields: size 106→105, speed
   2→2.
 - File kept: [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
@@ -42,8 +119,8 @@ file was derived and verified.
 
 - **Live result (maintainer, 2026-08-15): rung 1 (size 176) completed at
   36 s — beats the 177/37 row on both axes and is PUBLISHED** to
-  Solutions99+ with the README row updated (credit @commonnickname,
-  upstream PR #92).
+  Solutions99+ with the README row updated (credited to @commonnickname,
+  whose 2018 upstream PR #92 program it is verbatim, and @senegrom).
 - Rung 2 (size 175, the data-dead calc deletion) REFUTED live: 38 s.  A
   frame-identical pure deletion still cost two seconds — dead code can be
   load-bearing timing (see the rejected ledger).

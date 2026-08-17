@@ -334,3 +334,34 @@ for records.  Candidates that still need live-game verification remain in
   a pure step/pickup program with no myitem — completed at 11 and is
   published, so the divergence is specific to the gated forms, not to
   pasting on Year 15.)
+- Corpus deletion sweep (2026-08-17, every published solution, singles +
+  if/endif pairs + all-pairs on small size rows + greedy chains, 4→25→200
+  emulator gates): survivors held back from the queue, with reasons —
+  - Y14 speed guard removal (`if s == datacube:`): the result IS the
+    published size-4 row, which the game times at 4 versus the guarded
+    program's 2 — the emulator prices failed pickups/gives far too cheaply
+    (97 versus 130 frames the wrong way round).  Calibration fact, not a
+    candidate: failed item actions cost real wall time live.
+  - Y48 `takefrom n` deletions (size 4→3 and speed 5→4): the training-goal
+    false positive already rejected live; ledgered above.
+  - Y13 low-percent `step se` deletion: identical to the queued
+    recoverable size-5 entry.
+  - Y25 speed: `giveto mem1` deletion (frame-identical) and two guard
+    removals — the machine-serve model is known wrong on this level (live
+    queue at the end) and give deletions were live retries on Y29; not
+    queued until the model learns the serve rules.
+  - Y33 speed 8→7: 1/200 (below the 1-in-100 floor).
+  - Y34 speed 33→32 (any of the `nearest` re-reads): 106-175/200 — drops
+    a 100% row below the 99% tier without beating the 50+ speed row.
+  - Y10 speed `step n`, Y22 speed (all), Y09 `jump b`/`jump c`, Y23
+    speed `jump a`/`jump c`: win but with more frames — regressions.
+  - Y47 speed 34→33: every always-true `if` pair (the class refuted live —
+    those ifs are wall-time pacing) and the eastmost worker's `tell w
+    morning` (frame-identical in the model, but the same choreography);
+    not queued.
+  - Y50 speed 31→30 (steps, a give, listens — several frame-identical or
+    faster): a tell/listen choreography level where the model's inbox
+    timing is exactly what the live game disputes; not queued.
+  Queued from the same sweep: Y22 Solutions50+ speed 7→6, Y23 speed 9→8,
+  Y09 speed 15→14, Y23 low-percent speed 23→19 (fallback 21), Y54
+  Solutions50+ speed 37→36.
