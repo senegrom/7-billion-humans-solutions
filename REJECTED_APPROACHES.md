@@ -312,3 +312,14 @@ for records.  Candidates that still need live-game verification remain in
     source's claimed 1 did not reproduce, and speed ranks first, so the
     17-command speed-1 row stands.  Re-rolls might show 1; parked until
     someone feels lucky.
+- Set/if fold class EXHAUSTED corpus-wide: after Year 36's four live-
+  confirmed folds, dead-store analysis of every remaining
+  `memN = set X` + `if memN` pair in the published set (five more in
+  Year 36, one each in Years 44/51/54, press levels excluded) shows all
+  of them READ the stored value later -- none are foldable.  Year 36 is
+  locally optimal at 210 for this transform.  Likewise the inversion
+  class: the corpus holds six empty-true-arm ifs; five (Year 38) shift
+  frames because inverting an or-chain changes short-circuit sampling
+  (each sampled term costs time -- a corollary of the async findings),
+  leaving the single-comparison Year 58 site as the class's one clean
+  candidate (queued).
