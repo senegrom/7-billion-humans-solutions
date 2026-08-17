@@ -108,8 +108,9 @@ file was derived and verified.
 
 - **Live result (2026-08-17): completed averaging 2 seconds — the speed
   record of 2 is retained with the secondary size down 106 → 105.
-  PUBLISHED** to Solutions99+ with the README row updated (credited to
-  @commonnickname and @senegrom; the inversion is an encoding-only edit).
+  PUBLISHED** to Solutions99+ with the README row updated (contributor
+  senegrom; the header notes it is commonnickname's program with one
+  inverted if).
 - The savegame watcher confirmed the record fields: size 106→105, speed
   2→2.
 - File kept: [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
@@ -119,8 +120,8 @@ file was derived and verified.
 
 - **Live result (maintainer, 2026-08-15): rung 1 (size 176) completed at
   36 s — beats the 177/37 row on both axes and is PUBLISHED** to
-  Solutions99+ with the README row updated (credited to @commonnickname,
-  whose 2018 upstream PR #92 program it is verbatim, and @senegrom).
+  Solutions99+ with the README row updated (contributor senegrom; the
+  header notes it is commonnickname's 2018 upstream PR #92 program).
 - Rung 2 (size 175, the data-dead calc deletion) REFUTED live: 38 s.  A
   frame-identical pure deletion still cost two seconds — dead code can be
   load-bearing timing (see the rejected ledger).

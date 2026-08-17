@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
--- 58: Good Neighbors by @commonnickname and @senegrom --
--- 106 to 105 commands at the same 2 s (one inverted if), live-verified 2026-08-17 --
+-- 58: Good Neighbors by @senegrom --
+-- 106 to 105 commands at the same 2 s (one inverted if in commonnickname's 106-command program), live-verified 2026-08-17 --
 
 mem1 = nearest datacube
 mem2 = nearest worker

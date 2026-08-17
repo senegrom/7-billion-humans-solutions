@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
--- 37: Dangerous Spreadsheeting by @commonnickname and @senegrom --
--- 246 to 243 commands at the same 10-11 s, live-verified 2026-08-17 --
+-- 37: Dangerous Spreadsheeting by @senegrom --
+-- 246 to 243 commands at the same 10-11 s (from commonnickname's 246-command program), live-verified 2026-08-17 --
 
 step e
 mem1 = set e
