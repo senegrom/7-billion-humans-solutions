@@ -67,4 +67,8 @@ If you know of an earlier public posting of a solution, open an issue with a dat
 Twitch VOD, a forum post) and the credit will be updated. Where a contributor knows their solution was not the first,
 that is noted in a comment at the top of the solution file.
 
+When an existing solution is improved rather than replaced (for example fewer commands at the same reported speed),
+the person who made the improvement is credited alongside the original contributor, and the file's header notes
+what changed.
+
 If you would rather be credited under a different name or link, say so in your pull request or open an issue.

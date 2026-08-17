@@ -1,5 +1,5 @@
 -- 7 Billion Humans --
--- 58: Good Neighbors --
+-- 58: Good Neighbors by @senegrom --
 -- SIZE 4 --
 
 a:
