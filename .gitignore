@@ -3,6 +3,7 @@
 _tmp*
 tmp_*
 .codex*
+**/__pycache__/
 
 # The emulator lives in its own private repository
 emulator/
