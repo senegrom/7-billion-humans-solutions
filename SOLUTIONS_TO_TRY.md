@@ -129,6 +129,21 @@ file was derived and verified.
 - Suggested live test: incumbent once as control, then the candidate.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 26 - Budget Brigade 2 - speed tie-break at size 55 (caution)
+
+- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt>)
+- Goal: retain the displayed 8-10 while reducing the size from 56 to
+  **55**.
+- Exact edit: delete the `else:` before the late `takefrom nw`, merging
+  that takefrom into the end of the big then-arm.
+- Emulator evidence: 60/60 wins, fully deterministic at 5,967 frames
+  versus the incumbent's 6,096.
+- **Caution:** the merge makes the takefrom run on the main path where it
+  can fail, and failed item actions cost real wall time live even though
+  the model prices them cheaply (the Year 14 calibration).  Run the
+  incumbent as control first and discard on any regression.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
 
 - **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
