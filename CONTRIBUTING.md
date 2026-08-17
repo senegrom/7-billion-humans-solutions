@@ -67,8 +67,6 @@ If you know of an earlier public posting of a solution, open an issue with a dat
 Twitch VOD, a forum post) and the credit will be updated.
 
 Each row names one contributor: the person who produced the current record.  When an existing solution is improved
-(for example fewer commands at the same reported speed), the improver becomes the contributor.  Solution files carry
-no attribution: their header is three fixed comment lines — the game version, the level, and the file's Size and
-Speed — and the README table is the only place credit lives.
+(for example fewer commands at the same reported speed), the improver becomes the contributor.
 
 If you would rather be credited under a different name or link, say so in your pull request or open an issue.
