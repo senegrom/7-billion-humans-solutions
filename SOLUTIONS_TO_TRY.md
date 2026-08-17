@@ -129,6 +129,19 @@ file was derived and verified.
 - Suggested live test: incumbent once as control, then the candidate.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 59 - Glory Hole - speed tie-break at size 142
+
+- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt](<SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt>)
+- Goal: retain the displayed 12 while reducing the size from 144 to
+  **142**.
+- Exact edit: in the else-arm walk `step w / step sw / step sw / step sw /
+  step e`, the `step w` and `step e` cancel — the three diagonals land on
+  the same square, two commands shorter.
+- Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
+  incumbent's 447 — 8 frames slower in the model, so the displayed speed
+  needs the live A/B (control run first, discard on regression).
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 26 - Budget Brigade 2 - speed tie-break at size 55 (caution)
 
 - **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt>)
