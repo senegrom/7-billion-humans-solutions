@@ -27,6 +27,24 @@ file was derived and verified.
 
 ## Priority queue
 
+### [ ] Year 58 - Good Neighbors - inverted-if speed tie-break at size 105
+
+- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
+- Goal: retain the displayed speed record of 2 while reducing the secondary
+  size from 106 to **105**.
+- Exact edit: the incumbent's `if mem4 == worker:` with an EMPTY true arm
+  followed by `else:` becomes `if mem4 != worker:` -- the else disappears.
+  The executed instruction sequence is unchanged: same single comparison,
+  same arm, no chain short-circuit involved, no sampling difference.
+- Evidence: 25 random-world trials measure byte-identical statistics to the
+  incumbent (wins, frames, items all equal); canonical sizes 106 vs 105.
+  This is the narrowest edit class known: the encoding changes, the
+  execution does not.
+- Suggested live test: one ~2-second run; capture displayed speed and
+  editor size.
+- Result: _not yet tested in the game_.
+
+
 ### [x] Year 40 - Printing Etiquette 2 - PR-92 ladder — RECORD PUBLISHED at 176 / 36
 
 - **Live result (maintainer, 2026-08-15): rung 1 (size 176) completed at
