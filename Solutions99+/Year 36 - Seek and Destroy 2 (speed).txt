@@ -1,5 +1,5 @@
 -- 7 Billion Humans (2214M) --
--- 36: Seek and Destroy 2 --
+-- 36: Seek and Destroy 2 by @commonnickname --
 
 mem1 = nearest wall
 step n

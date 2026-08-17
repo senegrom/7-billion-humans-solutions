@@ -1,5 +1,5 @@
 -- 7 Billion Humans (2214M) --
--- 58: Good Neighbors --
+-- 58: Good Neighbors by @commonnickname --
 
 mem1 = nearest datacube
 mem2 = nearest worker
@@ -78,8 +78,7 @@ if mem1 == 5:
 	jump f
 	mem4 = foreachdir nw:
 		f:
-		if mem4 == worker:
-		else:
+		if mem4 != worker:
 			if mem3 == wall:
 				step mem1
 				pickup nw

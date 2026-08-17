@@ -323,3 +323,14 @@ for records.  Candidates that still need live-game verification remain in
   (each sampled term costs time -- a corollary of the async findings),
   leaving the single-comparison Year 58 site as the class's one clean
   candidate (queued).
+- Y15 deterministic size 7 (`if myitem == nothing` gate): REFUTED LIVE
+  pasted verbatim (2026-08-17) — the run does not complete despite the
+  emulator's deterministic 2,167-frame win.  Two prior Y15 size attempts
+  died the same way, so Shred Lines live behavior (worker death and/or
+  `myitem` semantics on this level) diverges from the model in a way the
+  Y21 paste-legality confirmation does NOT cover.  Verdict: no more
+  `myitem`-gated Year 15 candidates from simulator evidence alone; the
+  size row stays 8.  (The same session's Year 15 SPEED tie-break at 42 —
+  a pure step/pickup program with no myitem — completed at 11 and is
+  published, so the divergence is specific to the gated forms, not to
+  pasting on Year 15.)

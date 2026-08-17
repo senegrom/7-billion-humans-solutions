@@ -1,5 +1,5 @@
 -- 7 Billion Humans (2214M) --
--- 37: Dangerous Spreadsheeting --
+-- 37: Dangerous Spreadsheeting by @commonnickname --
 
 step e
 mem1 = set e

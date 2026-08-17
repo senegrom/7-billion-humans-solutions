@@ -9,7 +9,7 @@ from typing import Dict, List, NamedTuple, Optional, Set
 
 REPO_ROOT = Path(__file__).parent
 README = REPO_ROOT / "README.md"
-BLOB_PREFIX = "https://github.com/hingston/7-billion-humans-solutions/blob/master/"
+BLOB_PREFIX = "https://github.com/senegrom/7-billion-humans-solutions/blob/master/"
 
 # Maps a README section heading to the folder its rows must link to.
 SECTION_DIRECTORIES: Dict[str, str] = {

@@ -1,5 +1,5 @@
 -- 7 Billion Humans (2145) --
--- 40: Printing Etiquette 2 --
+-- 40: Printing Etiquette 2 by @commonnickname --
 
 mem1 = nearest printer
 takefrom mem1

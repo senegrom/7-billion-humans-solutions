@@ -27,22 +27,15 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 58 - Good Neighbors - inverted-if speed tie-break at size 105
+### [x] Year 58 - Good Neighbors - inverted-if speed tie-break — PUBLISHED at 105 / 2
 
-- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
-- Goal: retain the displayed speed record of 2 while reducing the secondary
-  size from 106 to **105**.
-- Exact edit: the incumbent's `if mem4 == worker:` with an EMPTY true arm
-  followed by `else:` becomes `if mem4 != worker:` -- the else disappears.
-  The executed instruction sequence is unchanged: same single comparison,
-  same arm, no chain short-circuit involved, no sampling difference.
-- Evidence: 25 random-world trials measure byte-identical statistics to the
-  incumbent (wins, frames, items all equal); canonical sizes 106 vs 105.
-  This is the narrowest edit class known: the encoding changes, the
-  execution does not.
-- Suggested live test: one ~2-second run; capture displayed speed and
-  editor size.
-- Result: _not yet tested in the game_.
+- **Live result (2026-08-17): completed averaging 2 seconds — the speed
+  record of 2 is retained with the secondary size down 106 → 105.
+  PUBLISHED** to Solutions99+ with the README row updated (credit stays
+  @commonnickname; the inversion is an encoding-only edit).
+- The savegame watcher confirmed the record fields: size 106→105, speed
+  2→2.
+- File kept: [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
 
 
 ### [x] Year 40 - Printing Etiquette 2 - PR-92 ladder — RECORD PUBLISHED at 176 / 36
@@ -55,33 +48,6 @@ file was derived and verified.
   frame-identical pure deletion still cost two seconds — dead code can be
   load-bearing timing (see the rejected ledger).
 - File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
-
-### [ ] Year 15 - Shred Lines - deterministic size 7
-
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt](<SolutionsToTry/Year 15 - Shred Lines - deterministic size 7.txt>)
-- Goal: improve the current size record from 8 commands to 7.
-- Protocol note: the prior live attempt retyped `myitem == nothing` as
-  `c == nothing` (the editor cannot build myitem here) and ran forever —
-  that tested a different program.  **Paste the file verbatim.**
-- Emulator evidence: deterministic win in 2,167 frames; displayed emulator
-  speed 35 after correcting invalid `giveto` timing.
-- Expected editor size: **7**.  The emulator currently prints 6 because its
-  size counter incorrectly treats `else` as free.
-- Suggested live test: one completion is enough to establish correctness;
-  run three times only if the displayed speed unexpectedly varies.
-- Result: _not yet tested in the game_.
-
-```text
-a:
-if myitem == nothing:
-    step n
-    pickup n
-else:
-    step s
-    giveto s
-endif
-jump a
-```
 
 ### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
 
@@ -116,10 +82,15 @@ jump a
   capture the completion panel and editor size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 15 - Shred Lines - speed tie-break at size 42 📋
+### [x] Year 15 - Shred Lines - speed tie-break 📋 — PUBLISHED at 42 / 11
 
+- **Live result (2026-08-17): completed at displayed speed 11 with 42
+  commands — the speed record is retained with the secondary size down
+  46 → 42.  PUBLISHED** to Solutions99+ with the README row updated
+  (credits @n05ucc4u and @abfipes12; the savegame watcher confirmed the
+  record fields).
 - **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt](<SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt>)
-- Goal: retain the current displayed speed record of 11 while reducing the
+- Goal was: retain the current displayed speed record of 11 while reducing the
   secondary size from 46 commands to 42.
 - Source: [n05ucc4u and abfipes12's cross-block program](https://github.com/abfipes12/7-Billion-Humans-Solutions/blob/6663ed04d735d92525f6ee1fbb9263461889faa2/WithGliches/Speed/Year%2015%20-%20Shred%20Lines).
   Preserve both credits.
@@ -274,7 +245,12 @@ endif
   confirm that this belongs in Solutions50+, not Solutions99+.
 - Suggested live test: at least 10 runs.  A definitive frozen failure is all 20
   workers holding cubes while the level has not completed; capture the board.
-- Result: _not yet tested in the game_.
+- Result: **one live attempt (2026-08-17) looked like an infinite loop** and
+  was abandoned before the 1,400-second cutoff.  That matches either the
+  known ~2.5% emulator failure mode or a live/emulator divergence at
+  contended machines; the winning tail is slow (emulator range 85-1,379
+  seconds), so a run only counts as failed at the cutoff or visibly frozen.
+  Low priority until a patient full-length session.
 
 ### [ ] Year 30 - Fill the Floor - probabilistic size 4
 
