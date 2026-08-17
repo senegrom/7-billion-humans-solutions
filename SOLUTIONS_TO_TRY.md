@@ -27,6 +27,30 @@ file was derived and verified.
 
 ## Priority queue
 
+### [ ] Year 60 - Understaffed Sorting - pickup-fusion size 8
+
+- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - pickup-fusion size 8.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - pickup-fusion size 8.txt>)
+- Goal: improve the current size record from 9 to **8** (dmr's program;
+  senegrom becomes the contributor per the one-record-creator rule, header
+  keeps dmr's provenance).
+- Exact edit: fuse the two sequential `pickup w` and `pickup se` into one
+  `pickup w,se`.  A worker holds one item, so after a successful `pickup w`
+  the following `pickup se` was always a no-op, and if `w` was empty the
+  `pickup se` did the grab — the ordered list `pickup w,se` reaches the same
+  held cube in one command.
+- Why size evidence is strong here: unlike a speed tie-break, this is a
+  pure size reduction, and simulator WIN/FAIL plus canonical size are
+  authoritative (no async wall-time question).  The pickup targets are
+  floor datacubes on squares adjacent to the worker, so no machine-reach
+  rule applies.
+- Emulator evidence: 300/300 wins (matching the incumbent's published
+  0/200 failures) at canonical size 8; winning runs also average fewer
+  frames (37,752 versus 41,718) because the wasted second pickup is gone.
+- Suggested live test: one completion establishes the size record; the
+  program is deterministic in structure, so a single win with editor size
+  8 is decisive.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 22 - Number Royale - Solutions50+ speed tie-break at size 6
 
 - **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt](<SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt>)
