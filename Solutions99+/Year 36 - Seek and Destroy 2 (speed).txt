@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
--- 36: Seek and Destroy 2 by @senegrom --
--- 215 to 210 commands at the same 46-47 s (four dead-store folds and one empty else arm removed from commonnickname's 215-command program), live-verified 2026-08-17 --
+-- 36: Seek and Destroy 2 --
+-- Size 210 Speed 46-47s --
 
 mem1 = nearest wall
 step n

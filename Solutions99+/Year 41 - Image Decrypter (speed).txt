@@ -1,5 +1,6 @@
--- 7 Billion Humans (2059) --
--- 41: Image Decrypter by @commonnickname and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 41: Image Decrypter --
+-- Size 45 Speed 6s --
 
 mem4 = nearest datacube
 step w

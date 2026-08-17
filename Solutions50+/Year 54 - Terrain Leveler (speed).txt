@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 54: Terrain Leveler by @commonnickname --
--- failed 56 out of 120 => % 53.3 successful --
+-- 7 Billion Humans (2214M) --
+-- 54: Terrain Leveler --
+-- Size 37 Speed 22-27s --
 
 step s
 step s

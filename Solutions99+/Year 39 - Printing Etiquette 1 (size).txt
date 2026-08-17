@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 39: Printing Etiquette 1 by @abfipes12 and @n05ucc4u --
+-- 7 Billion Humans (2214M) --
+-- 39: Printing Etiquette 1 --
+-- Size 6 Speed 460-580s --
 
 a:
 step w,sw,n,s,e,se

@@ -1,7 +1,6 @@
--- 7 Billion Humans (2145) --
--- 40: Printing Etiquette 2 by @senegrom --
--- program from commonnickname's 2018 upstream pull request #92 (never merged there), live-verified here 2026-08-15 --
--- 36s at size 176 --
+-- 7 Billion Humans (2214M) --
+-- 40: Printing Etiquette 2 --
+-- Size 176 Speed 36s --
 
 mem1 = nearest printer
 takefrom mem1

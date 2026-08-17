@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 20: Reverse Line by @landfillbaby, @ansvonwa and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 20: Reverse Line --
+-- Size 38 Speed 4s --
 
 if sw == hole or
  se == hole:

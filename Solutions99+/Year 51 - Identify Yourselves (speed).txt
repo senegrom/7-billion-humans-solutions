@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 51: Identify Yourselves by @commonnickname --
+-- 7 Billion Humans (2214M) --
+-- 51: Identify Yourselves --
+-- Size 33 Speed 2s --
 
 mem1 = set w
 if mem1 == nothing:

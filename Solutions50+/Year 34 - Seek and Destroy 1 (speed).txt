@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
--- 34: Seek and Destroy 1 by @commonnickname and @abfipes12 --
--- calculated expected => 71.4% ; failed 21 out of 100 => 79% successful --
+-- 34: Seek and Destroy 1 --
+-- Size 53 Speed 7s --
 
 mem1 = nearest wall
 step n

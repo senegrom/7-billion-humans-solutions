@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 65: Defrag Ordered by @commonnickname --
+-- 7 Billion Humans (2214M) --
+-- 65: Defrag Ordered --
+-- Size 121 Speed 12s --
 
 jump a
 mem1 = foreachdir w:

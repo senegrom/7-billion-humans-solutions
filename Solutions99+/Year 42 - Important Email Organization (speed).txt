@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 42: Important Email Organization by @abfipes12 --
--- failed 0 out of 400 => 100% successful --
+-- 7 Billion Humans (2214M) --
+-- 42: Important Email Organization --
+-- Size 145 Speed 72-74s --
 
 mem2 = nearest datacube
 pickup mem2

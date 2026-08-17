@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 62: The Sorting Floor by dmr [https://steamcommunity.com/profiles/76561197960413748] --
--- failed 6 out of 100 => 94% successful --
+-- 7 Billion Humans (2214M) --
+-- 62: The Sorting Floor --
+-- Size 10 Speed 751-806s --
 
 a:
 if n == hole:

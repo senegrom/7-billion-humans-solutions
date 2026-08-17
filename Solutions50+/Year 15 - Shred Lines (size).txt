@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 15: Shred Lines by @abfipes12 --
--- failed 9 out of 25 => ???% successful --
+-- 7 Billion Humans (2214M) --
+-- 15: Shred Lines --
+-- Size 6 Speed ~950s --
 
 a:
 step nw,w,sw,s,ne,e,se

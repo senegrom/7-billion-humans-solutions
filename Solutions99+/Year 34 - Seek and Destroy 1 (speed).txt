@@ -1,5 +1,6 @@
--- 7 Billion Humans (2145) --
--- 34: Seek and Destroy 1 by @landfillbaby --
+-- 7 Billion Humans (2214M) --
+-- 34: Seek and Destroy 1 --
+-- Size 33 Speed 8s --
 
 mem1 = nearest datacube
 mem4 = nearest shredder

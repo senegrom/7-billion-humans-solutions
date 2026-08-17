@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 67: Decimal Doubler by @commonnickname --
+-- 7 Billion Humans (2214M) --
+-- 67: Decimal Doubler --
+-- Size 210 Speed 41s --
 
 mem1 = set w
 if mem1 == datacube:

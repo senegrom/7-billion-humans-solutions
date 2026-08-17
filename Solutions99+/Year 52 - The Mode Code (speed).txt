@@ -1,5 +1,6 @@
--- 7 Billion Humans (2199) --
--- 52: The Mode Code by @commonnickname --
+-- 7 Billion Humans (2214M) --
+-- 52: The Mode Code --
+-- Size 213 Speed 33s --
 
 step n
 mem1 = nearest wall

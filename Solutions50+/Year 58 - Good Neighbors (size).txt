@@ -1,6 +1,6 @@
--- 7 Billion Humans --
--- 58: Good Neighbors by @senegrom --
--- SIZE 4 --
+-- 7 Billion Humans (2214M) --
+-- 58: Good Neighbors --
+-- Size 4 Speed ~501s --
 
 a:
 step nw,w,sw,n,s,ne,e,se

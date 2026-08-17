@@ -1,5 +1,6 @@
--- 7 Billion Humans --
--- 44: Unique Fashion Party by dmr --
+-- 7 Billion Humans (2214M) --
+-- 44: Unique Fashion Party --
+-- Size 5 Speed 10s --
 
 a:
 if se != worker or

@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 57: Neighborly Sweeper by dmr [https://steamcommunity.com/profiles/76561197960413748] --
--- and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 57: Neighborly Sweeper --
+-- Size 9 Speed 514-663s --
 
 a:
 step nw,sw,s,ne,e

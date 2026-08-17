@@ -64,11 +64,11 @@ first discovered it. Many of these solutions were found independently by several
 elsewhere first.
 
 If you know of an earlier public posting of a solution, open an issue with a dated link to it (a Steam thread, a
-Twitch VOD, a forum post) and the credit will be updated. Where a contributor knows their solution was not the first,
-that is noted in a comment at the top of the solution file.
+Twitch VOD, a forum post) and the credit will be updated.
 
 Each row names one contributor: the person who produced the current record.  When an existing solution is improved
-(for example fewer commands at the same reported speed), the improver becomes the contributor and the file's header
-notes what changed and whose program it was based on.
+(for example fewer commands at the same reported speed), the improver becomes the contributor.  Solution files carry
+no attribution: their header is three fixed comment lines — the game version, the level, and the file's Size and
+Speed — and the README table is the only place credit lives.
 
 If you would rather be credited under a different name or link, say so in your pull request or open an issue.

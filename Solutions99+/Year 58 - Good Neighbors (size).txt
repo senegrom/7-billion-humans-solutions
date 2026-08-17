@@ -1,5 +1,6 @@
--- 7 Billion Humans (2235) --
--- 58: Good Neighbors by @commonnickname and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 58: Good Neighbors --
+-- Size 5 Speed 227-251s --
 
 a:
 step nw,sw,ne,se

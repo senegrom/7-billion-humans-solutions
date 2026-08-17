@@ -1,5 +1,6 @@
--- 7 Billion Humans (2059) --
--- 9: Dynamic Angles by @martinez8859, @n05ucc4u and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 9: Dynamic Angles --
+-- Size 15 Speed 3s --
 
 pickup s
 step s

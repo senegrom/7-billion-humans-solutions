@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
--- 60: Understaffed Sorting by dmr [https://steamcommunity.com/profiles/76561197960413748] --
--- failed 0 out of 200 => 100% successful --
+-- 60: Understaffed Sorting --
+-- Size 9 Speed 654-741s --
 
 a:
 if sw == datacube or

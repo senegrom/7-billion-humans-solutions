@@ -1,6 +1,6 @@
--- 7 Billion Humans (2235) --
--- 43: Multiplication Table by dmr [https://steamcommunity.com/profiles/76561197960413748] --
--- failed 6 out of 150 => 96% successful --
+-- 7 Billion Humans (2214M) --
+-- 43: Multiplication Table --
+-- Size 8 Speed ~899s --
 
 a:
 if c == 0 and
