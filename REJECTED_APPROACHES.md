@@ -365,3 +365,35 @@ for records.  Candidates that still need live-game verification remain in
   Queued from the same sweep: Y22 Solutions50+ speed 7→6, Y23 speed 9→8,
   Y09 speed 15→14, Y23 low-percent speed 23→19 (fallback 21), Y54
   Solutions50+ speed 37→36.
+
+## Year 60 pickup fusion (size 9→8) — refuted live 2026-08-17
+
+The fused `pickup w,se` (two sequential pickups collapsed into one
+direction list) failed in the game: the worker stalled at the **empty**
+west square and the run overran the 1,400-second cap.  The emulator's
+pickup list scans for the first listed square that has a cube; the live
+game evidently does not skip an empty listed square that way.  Year 16's
+published record types the same `pickup w,se` and works — there both
+squares hold cubes when the command runs, so it never discriminates.
+Standing rule: **no candidate may depend on a pickup/give direction list
+skipping an empty square.**  The Year 60 size row stays 9.
+
+## Conditional-to-direction-list collapse (whole class) — closed 2026-08-17
+
+Sweep of all 33 sites where an `if`/`else` chooses between two same-verb
+direction commands and a single direction-list command would be shorter
+(e.g. `if n == datacube: pickup n / else: pickup ne` → `pickup n,ne`).
+Emulator survivors: four.  All fall to known live mechanisms —
+
+- Y58 speed 105→102 (`pickup ne`/`pickup nw` merge): depends on the list
+  skipping an empty square — the exact mechanism Year 60's live failure
+  refuted above.
+- Y60 speed 159→157 (three variants of `pickup e` + guarded retry
+  `if myitem == nothing: pickup e` merged): deletes a pickup **retry**,
+  the class already refuted live on Year 38.
+
+Every other site (step collapses on Y11/12/13/20/30/36/41/42/52/56/62/68,
+the Y23 size `step e,w`, Y26's give collapse) loses in the emulator
+outright — a step list is a random choice live and in the model, so
+collapsing a measured comparison into one throws the information away.
+Class closed; do not re-derive.

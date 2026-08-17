@@ -27,34 +27,7 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 60 - Understaffed Sorting - pickup-fusion size 8
-
-- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - pickup-fusion size 8.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - pickup-fusion size 8.txt>)
-- Goal: improve the current size record from 9 to **8** (dmr's program;
-  senegrom becomes the contributor per the one-record-creator rule, header
-  keeps dmr's provenance).
-- Exact edit: fuse the two sequential `pickup w` and `pickup se` into one
-  `pickup w,se`.  A worker holds one item, so after a successful `pickup w`
-  the following `pickup se` was always a no-op, and if `w` was empty the
-  `pickup se` did the grab — the ordered list `pickup w,se` reaches the same
-  held cube in one command.
-- Why size evidence is strong here: unlike a speed tie-break, this is a
-  pure size reduction, and simulator WIN/FAIL plus canonical size are
-  authoritative (no async wall-time question).  The pickup targets are
-  floor datacubes on squares adjacent to the worker, so no machine-reach
-  rule applies.
-- Live-legality confirmed: `pickup w,se` is the exact command Year 16's
-  published speed record uses, typed (not a paste-only 📋 form), so this
-  candidate is a normal editor program and needs no clipboard marker.
-- Emulator evidence: 300/300 wins (matching the incumbent's published
-  0/200 failures) at canonical size 8; winning runs also average fewer
-  frames (37,752 versus 41,718) because the wasted second pickup is gone.
-- Suggested live test: one completion establishes the size record; the
-  program is deterministic in structure, so a single win with editor size
-  8 is decisive.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 22 - Number Royale - Solutions50+ speed tie-break at size 6
+### [x] Year 22 - Number Royale - Solutions50+ speed tie-break — PUBLISHED at 6 / 2
 
 - **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt](<SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt>)
 - Goal: retain the Solutions50+ speed row's displayed speed of 2 while
@@ -65,11 +38,13 @@ file was derived and verified.
 - Emulator evidence (corpus deletion sweep): 101/200 wins versus the
   incumbent's 14/25 on the same model, i.e. the same tier; winning runs
   average 98 frames versus 152, so the change can only shorten the run.
-- Suggested live test: repeated 2-second runs until a win (about every
-  second run); capture the displayed speed and editor size 6.
-- Result: _not yet tested in the game_.
+- **Live result (2026-08-17): completed at the expected roughly
+  every-other-run rate — PUBLISHED** to Solutions50+ (measured
+  205/400 = 51% on the model, identical to the incumbent's 205/400;
+  the two programs win the same worlds).  README row updated
+  (size 7 → 6, contributor senegrom).
 
-### [ ] Year 23 - Sorting Hall - speed tie-break at size 8
+### [x] Year 23 - Sorting Hall - speed tie-break — PUBLISHED at 8 / 15-17
 
 - **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt](<SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt>)
 - Goal: retain the displayed speed of 15-17 while reducing the size from 9
@@ -80,9 +55,9 @@ file was derived and verified.
 - Emulator evidence (corpus deletion sweep): 200/200 wins at 1,094.8
   average frames versus the incumbent's 1,099.9 — same run, one command
   fewer.
-- Live-speed caution: displayed speed is asynchronous wall-time.  Run the
-  incumbent once as control, then the candidate; discard on regression.
-- Result: _not yet tested in the game_.
+- **Live result (2026-08-17): completed at size 8 at roughly the
+  incumbent's speed — PUBLISHED** to Solutions99+ (README row updated,
+  size 9 → 8, contributor senegrom).
 
 ### [ ] Year 09 - Dynamic Angles - speed tie-break at size 14
 
@@ -90,14 +65,21 @@ file was derived and verified.
 - Goal: retain the displayed speed of 3 while reducing the size from 15 to
   **14** (martinez8859, n05ucc4u and abfipes12's program; keep the credits).
 - Exact edit: delete the first `jump a` (inside the first `if e == nothing:`
-  block).  Without it, the workers on the longest route re-test
+  block) **and the label `a:` it pointed to** (labels are free, so the size
+  is unchanged).  Without the jump, the workers on the longest route re-test
   `e == nothing` at each following block instead of jumping past the test;
   on this level's diagonal edge those tests are always true, so the walk is
   the same.
-- Emulator evidence (corpus deletion sweep): 200/200 wins at exactly the
-  incumbent's 230.0 frames.  The only live risk is that the three extra
-  tests cost wall time on the longest route (Year 47 showed an `if` is not
-  free live) — a 3-second A/B decides it.
+- **Paste-validity fix after the first live attempt (2026-08-17):** the
+  first cut deleted only the jump and left `a:` behind, and the game
+  refused the paste — a label can only exist as some jump's destination,
+  so an orphaned label makes the whole program invalid.  The paste file
+  now removes the pair.  (Standing rule for deletion candidates: a deleted
+  jump takes its label with it.)
+- Emulator evidence (corpus deletion sweep, re-run on the fixed file):
+  100/100 wins at exactly the incumbent's 230.0 frames.  The only live risk
+  is that the three extra tests cost wall time on the longest route
+  (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
 - Result: _not yet tested in the game_.
 

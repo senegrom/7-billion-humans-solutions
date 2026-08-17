@@ -1,15 +1,14 @@
--- 7 Billion Humans (2059) --
--- 23: Sorting Hall by @eiTTio and @abfipes12 --
+-- 7 Billion Humans (2214M) --
+-- 23: Sorting Hall --
+-- Size 8 Speed 15-17s --
 
 pickup s
-if myitem < 50:
 	a:
 	b:
 	if myitem < w:
 		step w
 		jump a
 	endif
-endif
 c:
 if myitem > e:
 	step e
