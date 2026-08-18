@@ -1,0 +1,10 @@
+-- 7 Billion Humans (2214M) --
+-- 54: Terrain Leveler --
+-- Size 5 Speed ~460s --
+
+a:
+pickup c
+write 3
+drop
+step nw,w,sw,n,s,ne,e,se
+jump a
