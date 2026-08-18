@@ -407,3 +407,29 @@ Its LowPercent tier also settles the live behavior: seven workers
 converging on the one shredder fail often enough to sit under 50%.
 Curation rule: before queueing a "new" candidate, check every tier's
 rows INCLUDING (both) files — a (size)-only glob misses them.
+
+## Exhaustive synthesis closures (2026-08-18) — do not re-derive
+
+Every program one command below the record was enumerated and run
+(straight-line grammar with the jump-always-last rule; stage 2 adds one
+if-block over all conditions; palettes' own commands only, plus
+nearest/mem1 forms where available).  Zero winners in every case, so
+these size records are optimal within those grammars:
+
+- Year 02 at 3 (324 programs), Year 04 at 3 (341) — no if/jump palettes,
+  fully closed.
+- Year 03 at 5 (105k) — no if in palette, fully closed.
+- Year 07 at 4 (6.5k + 168k stage 2) — fully closed.
+- Year 14 at 4 (21k + 377k stage 2) — fully closed.
+- Year 28 at 4 (17k with the nearest/mem grammar) — no if, fully closed.
+- Year 09 at 5 (122k + 5.35M stage 2) — fully closed.
+- Year 11 at 5 (122k + 5.35M stage 2) — fully closed.
+- Year 18 at 5 (680k stage 1) — stage 2 (~18M) still open.
+- Year 23 at 6 (3.0M stage 1 at size 5) — stage 2 still open.
+
+Grammar limits for honesty: direction lists, multi-mem programs, and
+foreachdir forms are not enumerated; a hypothetical winner would have to
+come from those.  Hand-checked separately and dead: Year 35 at 4 is
+structurally minimal (acquire/compute/write/replace), Year 17 at 1 is
+unbeatable, and the Year 05 low-percent question is already queued as
+the absorbing size-2 walker.
