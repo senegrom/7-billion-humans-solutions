@@ -397,3 +397,13 @@ the Y23 size `step e,w`, Y26's give collapse) loses in the emulator
 outright — a step list is a random choice live and in the model, so
 collapsing a measured comparison into one throws the information away.
 Class closed; do not re-derive.
+
+## Year 56 written-max size 4 — withdrawn before test 2026-08-18
+
+Designed independently (write 99 on any group cube, shred it — the goal
+grades the cube by the number it shows going in), then found to be
+n05ucc4u's existing LowPercent (both) row, same size 4, same mechanism.
+Its LowPercent tier also settles the live behavior: seven workers
+converging on the one shredder fail often enough to sit under 50%.
+Curation rule: before queueing a "new" candidate, check every tier's
+rows INCLUDING (both) files — a (size)-only glob misses them.

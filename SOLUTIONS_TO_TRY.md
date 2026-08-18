@@ -27,29 +27,13 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 56 - Local Maximums - written-max size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 56 - Local Maximums - written-max size 4.txt](<SolutionsToTry/Year 56 - Local Maximums - written-max size 4.txt>)
-- Goal: reduce the size record from 7 (tied with the stat page) to **4** —
-  a record no one on the OCD+ page has.
-- Idea: the goal grades the shredded cube by the number it SHOWS when it
-  goes in, not the number it started with.  So each worker takes any cube
-  from its own group, writes 99 on it, and feeds it to the shredder — it
-  is now the largest in its group by construction.
-- Program: `mem1 = nearest shredder / pickup w / write 99 / giveto mem1`.
-  Every worker stands with a group cube to its west; no loop needed.
-- Emulator evidence: 100/100 wins, deterministic at 367 frames.
-- Live risks to watch: all seven workers converge on the single shredder
-  at once (a give at a contended machine can fail outright live), and the
-  editor's write picker must accept the literal 99.  One completion
-  decides the record.
-- Result: _not yet tested in the game_.
-
 ### [ ] Year 54 - Terrain Leveler - uniform-average low-percent size 5
 
 - **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - uniform-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - uniform-average low-percent size 5.txt>)
-- Goal: a NEW LowPercent row at size **5** under the 99+ row's 9 (no
-  LowPercent entry exists for this level).
+- Goal: a NEW LowPercent size row at **5** under the best size anywhere
+  for this level (dmr's 9).  The uniform-write idea itself is known — the
+  50+/low-percent SPEED rows write 3s across the board in 37 commands —
+  but no one has filed the tiny-size version.
 - Idea: any uniform board equals its own average, and the target average
   is the integer mean of the initial cubes.  Half the worlds draw values
   0-6, whose 49-cube integer mean is 3 about half the time — so writing 3
