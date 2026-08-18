@@ -142,6 +142,24 @@ file was derived and verified.
   needs the live A/B (control run first, discard on regression).
 - Result: _not yet tested in the game_.
 
+### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
+
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt](<SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt>)
+- Goal: retain the displayed 24 while reducing the size from 254 to
+  **244**.
+- Exact edit: ten oscillation steps whose opposite partner sits in the
+  same walk are deleted — the whole `s/n` jiggle block at lines 106-112,
+  an `e/w` pair at 117-118, and an `e/w` pair at 169/171.  Every worker
+  path ends on the same squares.
+- Emulator evidence: 200/200 wins at 1,547 frames versus the incumbent's
+  1,552; the greedy ladder confirmed no further pair survives (the
+  maximal 222-command cancellation fails outright).
+- **Caution:** this is a press level, where live evidence has shown
+  removed dead code shifting the displayed clock.  The jiggles could be
+  deliberate pacing.  Run the incumbent as control first; discard on any
+  regression.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 26 - Budget Brigade 2 - speed tie-break at size 55 (caution)
 
 - **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt>)
