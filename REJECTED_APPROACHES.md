@@ -433,3 +433,24 @@ come from those.  Hand-checked separately and dead: Year 35 at 4 is
 structurally minimal (acquire/compute/write/replace), Year 17 at 1 is
 unbeatable, and the Year 05 low-percent question is already queued as
 the absorbing size-2 walker.
+
+## Year 20 guard deletion (38→37) — refuted live 2026-08-19
+
+Live run: infinite loop, timed out at the cap.  The emulator had scored
+it 200/200 — but at 304 frames and 42 item actions versus the
+incumbent's 314 and 45.  Those two drops were the tell: deleting the
+`if sw == datacube:` guard did not run a harmless always-true pickup,
+it rearranged who picks which cube.  The emulator explores ONE
+deterministic arrival order and that order still finishes; the live
+scheduler's order leaves a worker without a cube blocking the line
+forever.  The Year 26 else-merge (56→55) was withdrawn untested as the
+same class: an item action moved onto a path where it can fail, on a
+multi-worker level.
+
+Curation rule from this: **a deletion is only trustworthy when the
+model's item-action count is unchanged.**  Fewer frames plus fewer
+items = a different choreography that one scheduler order happened to
+survive, not an equivalent program.  Applying the rule to the standing queue measured Years 38, 59 and 66
+items-identical (they stand, as does Year 9's jump deletion) — but
+Year 60's 158 showed 319.8 items against the incumbent's 321.3, so it
+was withdrawn untested as the same class.

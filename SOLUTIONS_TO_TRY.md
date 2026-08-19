@@ -43,20 +43,6 @@ file was derived and verified.
   frames (~450 s, inside the 1,400 s cap).
 - Result: _not yet tested in the game_.
 
-### [ ] Year 20 - Reverse Line - speed tie-break at size 37
-
-- **Paste-ready program:** [SolutionsToTry/Year 20 - Reverse Line - speed tie-break at size 37.txt](<SolutionsToTry/Year 20 - Reverse Line - speed tie-break at size 37.txt>)
-- Goal: retain the displayed speed of 4 while reducing the size from 38 to
-  **37**.
-- Exact edit: delete the `if sw == datacube:` / `endif` guard around
-  `pickup sw` near the end (the guard is always true when reached, so the
-  pickup runs either way).
-- Emulator evidence: 200/200 wins at 304 frames versus the incumbent's
-  314 — one command fewer and slightly faster in the model.
-- Suggested live test: incumbent once as control, then the candidate;
-  4-second runs.
-- Result: _not yet tested in the game_.
-
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt>)
@@ -72,54 +58,6 @@ file was derived and verified.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
-
-### [ ] Year 60 - Understaffed Sorting - speed tie-break at size 158
-
-- **Paste-ready program:** [SolutionsToTry/Year 60 - Understaffed Sorting - speed tie-break at size 158.txt](<SolutionsToTry/Year 60 - Understaffed Sorting - speed tie-break at size 158.txt>)
-- Goal: retain the displayed 54-62 while reducing the size from 159 to
-  **158**.
-- Exact edit: in the block that ends `... drop / step e / pickup n / drop /
-  step ne / step e / jump b`, delete the first `step e` (after the `drop`):
-  the worker takes its `pickup n` one square west and the following
-  `step ne / step e` still lands it on the same square.
-- Emulator evidence: 60/60 wins at 3,441 average frames versus the
-  incumbent's 3,672 (6% fewer).
-- Live caution: displayed speed is asynchronous wall-time and this level's
-  runs are a minute long — run the incumbent once as control first.
-- Result: _not yet tested in the game_.
-
-
-### [x] Year 22 - Number Royale - Solutions50+ speed tie-break — PUBLISHED at 6 / 2
-
-- **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt](<SolutionsToTry/Year 22 - Number Royale - Solutions50+ speed tie-break at size 6.txt>)
-- Goal: retain the Solutions50+ speed row's displayed speed of 2 while
-  reducing its size from 7 to **6** (eiTTio's program; keep the credit).
-- Exact edit: delete the `pickup c` inside `if myitem < 90:` — the worker
-  is already holding its cube, so that pickup only fails; the 80-89 holders
-  then walk south immediately instead of after the failed action.
-- Emulator evidence (corpus deletion sweep): 101/200 wins versus the
-  incumbent's 14/25 on the same model, i.e. the same tier; winning runs
-  average 98 frames versus 152, so the change can only shorten the run.
-- **Live result (2026-08-17): completed at the expected roughly
-  every-other-run rate — PUBLISHED** to Solutions50+ (measured
-  205/400 = 51% on the model, identical to the incumbent's 205/400;
-  the two programs win the same worlds).  README row updated
-  (size 7 → 6, contributor senegrom).
-
-### [x] Year 23 - Sorting Hall - speed tie-break — PUBLISHED at 8 / 15-17
-
-- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt](<SolutionsToTry/Year 23 - Sorting Hall - speed tie-break at size 8.txt>)
-- Goal: retain the displayed speed of 15-17 while reducing the size from 9
-  to **8** (eiTTio and abfipes12's program; keep the credits).
-- Exact edit: delete the outer `if myitem < 50:` guard and its `endif`, so
-  every worker runs the west-walk block; the value comparisons inside it
-  already stop the walk for the workers the guard used to exclude.
-- Emulator evidence (corpus deletion sweep): 200/200 wins at 1,094.8
-  average frames versus the incumbent's 1,099.9 — same run, one command
-  fewer.
-- **Live result (2026-08-17): completed at size 8 at roughly the
-  incumbent's speed — PUBLISHED** to Solutions99+ (README row updated,
-  size 9 → 8, contributor senegrom).
 
 ### [ ] Year 09 - Dynamic Angles - speed tie-break at size 14
 
@@ -143,6 +81,37 @@ file was derived and verified.
   is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 59 - Glory Hole - speed tie-break at size 142
+
+- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt](<SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt>)
+- Goal: retain the displayed 12 while reducing the size from 144 to
+  **142**.
+- Exact edit: in the else-arm walk `step w / step sw / step sw / step sw /
+  step e`, the `step w` and `step e` cancel — the three diagonals land on
+  the same square, two commands shorter.
+- Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
+  incumbent's 447 — 8 frames slower in the model, so the displayed speed
+  needs the live A/B (control run first, discard on regression).
+- Result: _not yet tested in the game_.
+
+### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
+
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt](<SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt>)
+- Goal: retain the displayed 24 while reducing the size from 254 to
+  **244**.
+- Exact edit: ten oscillation steps whose opposite partner sits in the
+  same walk are deleted — the whole `s/n` jiggle block at lines 106-112,
+  an `e/w` pair at 117-118, and an `e/w` pair at 169/171.  Every worker
+  path ends on the same squares.
+- Emulator evidence: 200/200 wins at 1,547 frames versus the incumbent's
+  1,552; the greedy ladder confirmed no further pair survives (the
+  maximal 222-command cancellation fails outright).
+- **Caution:** this is a press level, where live evidence has shown
+  removed dead code shifting the displayed clock.  The jiggles could be
+  deliberate pacing.  Run the incumbent as control first; discard on any
+  regression.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 59 - Glory Hole - speed tie-break at size 142
