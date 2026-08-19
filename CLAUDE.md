@@ -37,3 +37,14 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   machine square can be accepted by the game and ruled illegal. Never
   queue candidates whose safety depends on either.
 - Simulator frame evidence remains valid for WIN/FAIL and for size.
+
+## Candidate screening rules (learned live, 2026-08-19)
+
+- **Items rule:** a deletion/edit candidate is only trustworthy when the
+  emulator's item-action count matches the incumbent's.  Fewer frames
+  plus fewer items = a different choreography that one scheduler order
+  happened to survive (Year 20's live infinite loop).
+- **Jitter rule:** screen every candidate with `EMU_JITTER=1` (shuffled
+  per-frame worker dispatch).  Interpret comparatively: the candidate
+  must not do materially worse than the incumbent under the same
+  screen; absolute 100% is only demanded where the incumbent holds it.

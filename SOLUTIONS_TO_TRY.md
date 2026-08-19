@@ -54,7 +54,8 @@ file was derived and verified.
   and the `step e` cancel (identical endpoint), so both are deleted; the
   fallback deletes only the `step w`.
 - Emulator evidence: 199/200 wins at 606 frames versus the incumbent's
-  620 (the fallback: 200/200 at 614).
+  620 (the fallback: 200/200 at 614).  Item-action count identical;
+  100/100 under the shuffled-dispatch screen.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
@@ -77,7 +78,8 @@ file was derived and verified.
   now removes the pair.  (Standing rule for deletion candidates: a deleted
   jump takes its label with it.)
 - Emulator evidence (corpus deletion sweep, re-run on the fixed file):
-  100/100 wins at exactly the incumbent's 230.0 frames.  The only live risk
+  100/100 wins at exactly the incumbent's 230.0 frames.  100/100 under
+  the shuffled-dispatch screen.  The only live risk
   is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
@@ -94,6 +96,7 @@ file was derived and verified.
 - Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
   incumbent's 447 — 8 frames slower in the model, so the displayed speed
   needs the live A/B (control run first, discard on regression).
+  Item-action count identical; 100/100 under the shuffled-dispatch screen.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
@@ -110,8 +113,10 @@ file was derived and verified.
   maximal 222-command cancellation fails outright).
 - **Caution:** this is a press level, where live evidence has shown
   removed dead code shifting the displayed clock.  The jiggles could be
-  deliberate pacing.  Run the incumbent as control first; discard on any
-  regression.
+  deliberate pacing.  Under the shuffled-dispatch screen the candidate
+  wins 29/100 against the incumbent's own 45/100 — the whole level is
+  order-sensitive, so treat this as the queue's riskiest entry.  Run the
+  incumbent as control first; discard on any regression.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 59 - Glory Hole - speed tie-break at size 142
@@ -125,6 +130,7 @@ file was derived and verified.
 - Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
   incumbent's 447 — 8 frames slower in the model, so the displayed speed
   needs the live A/B (control run first, discard on regression).
+  Item-action count identical; 100/100 under the shuffled-dispatch screen.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
@@ -141,8 +147,10 @@ file was derived and verified.
   maximal 222-command cancellation fails outright).
 - **Caution:** this is a press level, where live evidence has shown
   removed dead code shifting the displayed clock.  The jiggles could be
-  deliberate pacing.  Run the incumbent as control first; discard on any
-  regression.
+  deliberate pacing.  Under the shuffled-dispatch screen the candidate
+  wins 29/100 against the incumbent's own 45/100 — the whole level is
+  order-sensitive, so treat this as the queue's riskiest entry.  Run the
+  incumbent as control first; discard on any regression.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 26 - Budget Brigade 2 - speed tie-break at size 55 (caution)
