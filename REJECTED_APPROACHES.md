@@ -454,3 +454,22 @@ survive, not an equivalent program.  Applying the rule to the standing queue mea
 items-identical (they stand, as does Year 9's jump deletion) — but
 Year 60's 158 showed 319.8 items against the incumbent's 321.3, so it
 was withdrawn untested as the same class.
+
+## Further synthesis closures (2026-08-19/20) — do not re-derive
+
+- Year 10 at 5: fully closed (5.6k stage 1 + 483k stage 2; its
+  step/jump/if palette is completely covered by the two grammars).
+- Year 21 at 5: closed at stage 1 (2.03M programs at size 4 over the
+  full takefrom/nearest alphabet); stage 2 open.
+- Year 16 at 6: the entire loop-program space at size 5 is exhausted
+  (2.46M, jump-last rule); the halting half (~17M) remains open.
+- Vocabulary probes (each enumerates every shorter program over the
+  record's own commands plus direction/operand variants — evidence,
+  not proof): Year 25 at 5 (46.6k), Year 29 at 5 (46.6k), Year 31
+  at 6 (4.2k) all survive with zero winners.
+- Structural arguments: Year 47 at 3 (the conditional wait is
+  irreducible — the leftmost worker must speak unprompted, all others
+  must wait; spam-tell forms 0/50), Year 49 at 4 (the trailing step e
+  is load-bearing, 0/100 without it), Year 19 at 3 and Year 46 at 2
+  (acquire+pass and the forever-loop each need their commands),
+  Year 35 at 4 (acquire/compute/write/replace, nothing removable).
