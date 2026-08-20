@@ -473,3 +473,22 @@ was withdrawn untested as the same class.
   is load-bearing, 0/100 without it), Year 19 at 3 and Year 46 at 2
   (acquire+pass and the forever-loop each need their commands),
   Year 35 at 4 (acquire/compute/write/replace, nothing removable).
+
+## Year 61 at 7 hardening, and the speed-slack survey (2026-08-20)
+
+The README's sole below-world-best row (Year 61 size, 8 against the stat
+page's 7) cannot be fixed by tuning the known 7: the distance-writing
+walker measures 90% in the model (losses are clock-outs), raising the
+propagation bound to 12 reaches only 92.5%, and every other variant
+tried (bound 10, cardinal-only walk, west-biased walk) scores 0/200 —
+the full 8-direction walk and the <11 bound are both load-bearing.  A
+99% seven needs a different algorithm; the vocabulary space at size 7
+is too large to enumerate.
+
+A frames-versus-displayed survey of every speed row found the apparent
+slack (Years 17, 19, 47, 49, 50, 56) is all cadence-bound — greeting
+chains, contended machines, forever-goal observation windows — where
+frame cuts cannot move the displayed clock.  The one borderline is
+Year 15 speed: 622 frames is 9.95 s of frame time displaying 11, so a
+~60-frame walk redesign could plausibly show 10; no deletion exists
+(swept), it would need new choreography.
