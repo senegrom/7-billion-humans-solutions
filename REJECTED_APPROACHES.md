@@ -492,3 +492,48 @@ frame cuts cannot move the displayed clock.  The one borderline is
 Year 15 speed: 622 frames is 9.95 s of frame time displaying 11, so a
 ~60-frame walk redesign could plausibly show 10; no deletion exists
 (swept), it would need new choreography.
+
+## The never-searched small rows, the trivial-program sweep, and two emulator blind spots (2026-08-21)
+
+First one-command-shorter vocabulary probes over every size row no
+closure, probe, or queue entry had ever touched (gate cap at 3x the
+incumbent's measured frames — an earlier 30,000-frame ceiling blinded
+the slow levels, so Years 30 and 58 were re-run before counting):
+
+- Year 59 at 3 (34 programs), Year 58 at 3 (1,610), Year 30 at 3 (45),
+  Year 32 at 4 (5,632), Year 50 at 4 (320,892): zero winners each.
+- Year 24 at 4: of 144 programs, exactly 14 win in the emulator, and
+  every one strips the incumbent's machine-safety guards (unguarded
+  `giveto s,e` loops, or one-guard halves).  All rest on a give-list
+  falling through the printer square — the live-refuted printer-return
+  family — so none are queueable, and no machine-safe size 4 exists in
+  that vocabulary.  The 5 stands.
+- Year 48 at 3: of 10,143 programs the only four winners are the
+  `takefrom s` + nearest-shredder family — the live-rejected
+  direct-south choreography riding the instructor-shred false
+  positive.  Nothing else at size 3.
+- Year 44: void, see below.
+
+The all-levels size-1/2 exhaustive sweep (straight pairs, label-jump
+loops, one-line if-blocks, one-body foreachdir assignments, and the
+`a: jump a` idle loop; 8-trial gate at the same 3x cap, 200-trial
+confirm; any >=1 percent win below a level's best would have been a
+LowPercent record row): every level from the size-15 record down
+through the size-5 tier — zero hits.  No trivial low-percent cheese
+hides under any large record.  Stated limit: the 8-trial gate
+under-samples sub-10-percent rates; it is a net for big cheese only.
+
+Two emulator blind spots mapped while measuring incumbents (also in
+the private notes): Year 44 is unscorable as a WHOLE LEVEL (its
+low-percent 4, the 99+ size 5 and the 99+ speed 17 all score 0/50 at
+full cap — the fashion mechanic is not modelled; every emulator result
+on Year 44 is void, including this sweep's).  Year 34 is blind on its
+SIZE ROW ONLY: the level models fine (speed row 50/50), but the size-7
+record leans on comparison semantics of a nearest-result register
+(`c < mem1`, `mem1 == something`) the emulator gets wrong.  Never
+seed or screen candidates from either until those are read out live.
+
+Also closed: a frame-minimizing mutation search over the Year 15 speed
+row (96,000 mutants at size <=42, full-win gate) found nothing below
+622 frames — the row is locally tight under mutation reach, matching
+the survey's "needs new choreography" verdict.
