@@ -462,7 +462,9 @@ was withdrawn untested as the same class.
 - Year 21 at 5: closed at stage 1 (2.03M programs at size 4 over the
   full takefrom/nearest alphabet); stage 2 open.
 - Year 16 at 6: the entire loop-program space at size 5 is exhausted
-  (2.46M, jump-last rule); the halting half (~17M) remains open.
+  (2.46M, jump-last rule), and the halting half followed on 2026-08-22
+  (17.21M straight-line programs, zero winners) — the complete size-5
+  space in the grammar is closed; the 6 is optimal within it.
 - Vocabulary probes (each enumerates every shorter program over the
   record's own commands plus direction/operand variants — evidence,
   not proof): Year 25 at 5 (46.6k), Year 29 at 5 (46.6k), Year 31
