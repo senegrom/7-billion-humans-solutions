@@ -1,9 +1,0 @@
-a:
-if myitem == nothing:
-    step n
-    pickup n
-else:
-    step s
-    giveto s
-endif
-jump a

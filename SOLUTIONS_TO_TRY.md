@@ -27,21 +27,147 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 54 - Terrain Leveler - uniform-average low-percent size 5
+### [ ] Year 66 - Decimal Counter - deterministic size 7
 
-- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - uniform-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - uniform-average low-percent size 5.txt>)
-- Goal: a NEW LowPercent size row at **5** under the best size anywhere
-  for this level (dmr's 9).  The uniform-write idea itself is known — the
-  50+/low-percent SPEED rows write 3s across the board in 37 commands —
-  but no one has filed the tiny-size version.
-- Idea: any uniform board equals its own average, and the target average
-  is the integer mean of the initial cubes.  Half the worlds draw values
-  0-6, whose 49-cube integer mean is 3 about half the time — so writing 3
-  on every cube wins roughly a quarter of runs outright.
-- Program: `a: pickup c / write 3 / drop / step <8 dirs> / jump a`.
-- Emulator evidence: 49/200 = 24.5% wins, average winning run ~28,300
-  frames (~450 s, inside the 1,400 s cap).
-- Result: _not yet tested in the game_.
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - deterministic size 7.txt](<SolutionsToTry/Year 66 - Decimal Counter - deterministic size 7.txt>)
+- Goal: reduce the Solutions99+ size record from **11** to **7** with a
+  deterministic one-press construction.
+- Mechanism: after the common south step and pickup, only the workers holding
+  0 and 1, plus the empty-handed presser, enter the branch.  The two cubes are
+  rewritten to 1 and 2 and dropped on the outer sensors; the 8/9 cubes stay
+  off the middle sensors, which therefore read as zero.  The presser's failed
+  pickup and write delay its arrival at the button until both drops are stable.
+- Primary-code evidence: the counter reads floor cubes, accepts direct arrival
+  at 1,000,002, and the real geometry has sensors one row below the initial
+  cube row.  Static timing leaves an 80+ frame margin before the button sample.
+- Expected editor size: **7**; all commands and operands are available in
+  Year 66.
+- Suggested live test: paste at 12x, confirm editor size 7, and capture the
+  deterministic completion panel.
+- Result: _not yet tested locally in the game_.
+
+```text
+step s
+pickup c
+if myitem < 3 or
+ myitem == nothing:
+	mem1 = calc myitem + 1
+	write mem1
+	step s
+endif
+drop
+```
+
+### [ ] Year 66 - Decimal Counter - adjacent-pickup low-percent size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - adjacent-pickup low-percent size 6.txt](<SolutionsToTry/Year 66 - Decimal Counter - adjacent-pickup low-percent size 6.txt>)
+- Goal: establish a practical SolutionsLowPercent record at **6**, below the
+  deterministic size-7 candidate and published size-11 row.
+- Mechanism: every digit worker picks up south and computes value+1.  On this
+  level, writing 10 invokes the real hard-coded explosion path, removing the
+  four 9-cubes and their workers before movement.  The surviving 1 and 2 must
+  move onto the outer sensors, while the surviving 9 moves west off-sensor;
+  the delayed presser is then forced south onto the button.
+- Exact random-state density: `2^30 / (2^32 - 1)`, or
+  **25.0000000058%**.  Persistent live attempts are correlated, so this is a
+  full-state density rather than an independent-trial guarantee.
+- Critical construction detail: retain this exact adjacent-pickup order.  The
+  superficially similar `step s / pickup c / ... / step w,s` form is invalid
+  because a stale exploded-worker tile forces the surviving 9 south.
+- Expected editor size: **6**; all commands and operands are available in
+  Year 66.
+- Suggested live test: only after the deterministic size-7 control succeeds,
+  paste this verbatim and retry at 12x until a completion or a meaningful
+  failure batch is recorded.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+mem1 = calc myitem + 1
+write mem1
+step s
+step w,s
+drop
+```
+
+### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
+- Goal: establish a size-**3** SolutionsLowPercent row below the size-8
+  Solutions50+ and size-10 Solutions99+ entries.
+- Mechanism: the bottom workers move northwest and pick distinct northeast
+  cubes.  Only the leftmost carrier can give west to the empty supervisor;
+  every other carrier targets a still-full neighbour and immediately errors.
+  The rendezvous pins the supervisor through its empty-pickup error, after
+  which its `giveto w,s` selects the cardinal south shredder.
+- The level wins exactly when the one relayed cube is a weak global minimum.
+  The intended random-state model gives about **2.23%** wins; a source-exact
+  2,000,000-state spot check produced 2.23085%.
+- Expected editor size: **3**; the multi-direction `giveto` syntax is already
+  established in exported solutions.
+- Suggested live test: 100-200 fast fresh attempts at 12x, capturing the first
+  completion and editor size.  Do not substitute diagonal `giveto sw`.
+- Result: _not yet tested locally in the game_.
+
+```text
+step nw
+pickup ne
+giveto w,s
+```
+
+### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt>)
+- Goal: establish a practical size-**3** SolutionsLowPercent row below the
+  public size-4 low-percent and size-5 Solutions99+ entries.
+- Mechanism: the three-term static predicate kills 38 workers before pickup
+  and leaves exactly seven stable survivors.  Four survivors hold guaranteed
+  members of the level's shuffled 0-6 set; the remaining three hold ordinary
+  random cubes.  A win occurs when those three supply the missing values.
+- Nominal probability: `3! / 7^3 = 6 / 343`, or **1.749271%**.  A faithful
+  1,000,000-state model produced 17,405 wins (1.7405%).
+- Expected editor size: **3**; the condition has three terms, below the parser
+  limit, and `if`, `calc`, and `pickup` are all available in Year 44.
+- Suggested live test: 100-200 fresh attempts at 12x.  On a stable loss, verify
+  that exactly seven workers survive; any other survivor count falsifies the
+  static classification immediately.
+- Result: _not yet tested locally in the game_.
+
+```text
+if ne != wall and
+ sw != wall or
+ n != datacube:
+	mem1 = calc 0 / 0
+endif
+pickup s
+```
+
+### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5
+
+- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt>)
+- Goal: establish a practical size-**5** SolutionsLowPercent row below the
+  published size-7 low-percent and size-8 main entries.
+- Mechanism: six required binary moves reach the lower funnel with probability
+  1/64; seven of the eight three-step tails then reach a position whose west
+  pickup takes the cube.  Every earlier deviation falls into a hole.
+- Exact full-state density: `7 * 2^23 / (2^32 - 1)`, or
+  **1.367187500318%**.  There is one absorbing losing tail at `(7,10)`.
+- Expected editor size: **5**; the label is free and the program has one
+  pickup, three steps, and one jump.  Paste is required for the direction
+  lists at this early level.
+- Suggested live test: repeated fresh attempts at 12x, resetting shortly
+  after the longest successful path; do not wait for the 1,400-second cap when
+  the worker is visibly parked in the losing corner.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+pickup w
+step s,se
+step e,sw
+step sw,se
+jump a
+```
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 
@@ -88,7 +214,7 @@ file was derived and verified.
 ### [ ] Year 59 - Glory Hole - speed tie-break at size 142
 
 - **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt](<SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt>)
-- Goal: retain the displayed 12 while reducing the size from 144 to
+- Goal: retain the displayed 6 while reducing the size from 144 to
   **142**.
 - Exact edit: in the else-arm walk `step w / step sw / step sw / step sw /
   step e`, the `step w` and `step e` cancel — the three diagonals land on
@@ -99,74 +225,27 @@ file was derived and verified.
   Item-action count identical; 100/100 under the shuffled-dispatch screen.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
+### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
 
-- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt](<SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt>)
-- Goal: retain the displayed 24 while reducing the size from 254 to
-  **244**.
-- Exact edit: ten oscillation steps whose opposite partner sits in the
-  same walk are deleted — the whole `s/n` jiggle block at lines 106-112,
-  an `e/w` pair at 117-118, and an `e/w` pair at 169/171.  Every worker
-  path ends on the same squares.
-- Emulator evidence: 200/200 wins at 1,547 frames versus the incumbent's
-  1,552; the greedy ladder confirmed no further pair survives (the
-  maximal 222-command cancellation fails outright).
-- **Caution:** this is a press level, where live evidence has shown
-  removed dead code shifting the displayed clock.  The jiggles could be
-  deliberate pacing.  Under the shuffled-dispatch screen the candidate
-  wins 29/100 against the incumbent's own 45/100 — the whole level is
-  order-sensitive, so treat this as the queue's riskiest entry.  Run the
-  incumbent as control first; discard on any regression.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 59 - Glory Hole - speed tie-break at size 142
-
-- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt](<SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 142.txt>)
-- Goal: retain the displayed 12 while reducing the size from 144 to
-  **142**.
-- Exact edit: in the else-arm walk `step w / step sw / step sw / step sw /
-  step e`, the `step w` and `step e` cancel — the three diagonals land on
-  the same square, two commands shorter.
-- Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
-  incumbent's 447 — 8 frames slower in the model, so the displayed speed
-  needs the live A/B (control run first, discard on regression).
-  Item-action count identical; 100/100 under the shuffled-dispatch screen.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 66 - Decimal Counter - speed tie-break at size 244 (press-level caution)
-
-- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt](<SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 244.txt>)
-- Goal: retain the displayed 24 while reducing the size from 254 to
-  **244**.
-- Exact edit: ten oscillation steps whose opposite partner sits in the
-  same walk are deleted — the whole `s/n` jiggle block at lines 106-112,
-  an `e/w` pair at 117-118, and an `e/w` pair at 169/171.  Every worker
-  path ends on the same squares.
-- Emulator evidence: 200/200 wins at 1,547 frames versus the incumbent's
-  1,552; the greedy ladder confirmed no further pair survives (the
-  maximal 222-command cancellation fails outright).
-- **Caution:** this is a press level, where live evidence has shown
-  removed dead code shifting the displayed clock.  The jiggles could be
-  deliberate pacing.  Under the shuffled-dispatch screen the candidate
-  wins 29/100 against the incumbent's own 45/100 — the whole level is
-  order-sensitive, so treat this as the queue's riskiest entry.  Run the
-  incumbent as control first; discard on any regression.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 26 - Budget Brigade 2 - speed tie-break at size 55 (caution)
-
-- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - speed tie-break at size 55.txt>)
-- Goal: retain the displayed 8-10 while reducing the size from 56 to
-  **55**.
-- Exact edit: delete the `else:` before the late `takefrom nw`, merging
-  that takefrom into the end of the big then-arm.
-- Emulator evidence: 60/60 wins, fully deterministic at 5,967 frames
-  versus the incumbent's 6,096.
-- **Caution:** the merge makes the takefrom run on the main path where it
-  can fail, and failed item actions cost real wall time live even though
-  the model prices them cheaply (the Year 14 calibration).  Run the
-  incumbent as control first and discard on any regression.
-- Result: _not yet tested in the game_.
+- **Paste-ready program:** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt>)
+- **Fallback (size 171):** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt>)
+- Goal: retain the displayed speed record of 16 while reducing the secondary
+  size from 172 to **170** (or 171 at the conservative rung).
+- Exact edit: delete both consecutive top-level `tell everyone hi` commands at
+  incumbent lines 195-196; restore either one for the size-171 fallback.  No
+  `listenfor` exists, so the deleted greetings carry no data and only change
+  asynchronous cadence.
+- Why this is reopened: the size-171 form was queued originally, then 171/170
+  moved to rejected only because the nominally stronger bypassed-wrapper
+  size-164 program dominated them.  Size 164 later failed live, leaving the
+  tell-only rungs needing an independent test.
+- Live ladder: run the incumbent size-172/speed-16 program as control, then 171,
+  then 170.  Stop at the first failure or displayed speed above 16.
+- Live result at 12x: _inconclusive_.  The published size-172 control failed
+  all three attempts in this session, so it did not establish a passing
+  baseline.  The correctly pasted size-171 rung then failed its one attempt;
+  size 170 was not run under the stop-on-failure rule.  Keep this queued for a
+  future session that first obtains a successful control run.
 
 ### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
 
@@ -185,41 +264,6 @@ file was derived and verified.
 - Suggested live test: repeated ~14-second runs until a win; capture the
   displayed speed and editor size.
 - Result: _not yet tested in the game_.
-
-### [ ] Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36 (lower confidence)
-
-- **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36.txt](<SolutionsToTry/Year 54 - Terrain Leveler - Solutions50+ speed tie-break at size 36.txt>)
-- Goal: retain the Solutions50+ speed row's 22-27 while reducing its size
-  from 37 to **36** (commonnickname's program; keep the credit).
-- Exact edit: delete the first `write 3` (after the first `pickup n`).
-- Emulator evidence (corpus deletion sweep): 50/200 wins versus the
-  incumbent's 32/150 on the same model, at 1,925 versus 1,982 frames.  The
-  model under-reproduces this program's live 53% rate, so this is weaker
-  evidence than the entries above; treat it as a single cheap A/B.
-- Result: _not yet tested in the game_.
-
-### [x] Year 58 - Good Neighbors - inverted-if speed tie-break — PUBLISHED at 105 / 2
-
-- **Live result (2026-08-17): completed averaging 2 seconds — the speed
-  record of 2 is retained with the secondary size down 106 → 105.
-  PUBLISHED** to Solutions99+ with the README row updated (contributor
-  senegrom; the header notes it is commonnickname's program with one
-  inverted if).
-- The savegame watcher confirmed the record fields: size 106→105, speed
-  2→2.
-- File kept: [SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt](<SolutionsToTry/Year 58 - Good Neighbors - inverted-if speed tie-break at size 105.txt>)
-
-
-### [x] Year 40 - Printing Etiquette 2 - PR-92 ladder — RECORD PUBLISHED at 176 / 36
-
-- **Live result (maintainer, 2026-08-15): rung 1 (size 176) completed at
-  36 s — beats the 177/37 row on both axes and is PUBLISHED** to
-  Solutions99+ with the README row updated (contributor senegrom; the
-  header notes it is commonnickname's 2018 upstream PR #92 program).
-- Rung 2 (size 175, the data-dead calc deletion) REFUTED live: 38 s.  A
-  frame-identical pure deletion still cost two seconds — dead code can be
-  load-bearing timing (see the rejected ledger).
-- File kept: [SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - PR-92 step deletion at size 176.txt>)
 
 ### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
 
@@ -252,33 +296,6 @@ file was derived and verified.
   clipboard marker and LowPercent classification.
 - Suggested live test: a handful of attempts should normally produce a win;
   capture the completion panel and editor size.
-- Result: _not yet tested locally in the game_.
-
-### [x] Year 15 - Shred Lines - speed tie-break 📋 — PUBLISHED at 42 / 11
-
-- **Live result (2026-08-17): completed at displayed speed 11 with 42
-  commands — the speed record is retained with the secondary size down
-  46 → 42.  PUBLISHED** to Solutions99+ with the README row updated
-  (credits @n05ucc4u and @abfipes12; the savegame watcher confirmed the
-  record fields).
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt](<SolutionsToTry/Year 15 - Shred Lines - speed tie-break at size 42.txt>)
-- Goal was: retain the current displayed speed record of 11 while reducing the
-  secondary size from 46 commands to 42.
-- Source: [n05ucc4u and abfipes12's cross-block program](https://github.com/abfipes12/7-Billion-Humans-Solutions/blob/6663ed04d735d92525f6ee1fbb9263461889faa2/WithGliches/Speed/Year%2015%20-%20Shred%20Lines).
-  Preserve both credits.
-- Why it is smaller: label `a` moves inside the `else` immediately before the
-  shared south/give/north/pickup tail, and the final `jump a` reuses that tail
-  instead of duplicating it after the branch.
-- Deterministic emulator A/B evidence: candidate and incumbent are exactly
-  identical through the win: 622 frames, modelled speed 10, and 35 item
-  actions.  Canonical sizes are 42 and 46.
-- Construction caveat: the jump crosses into an `else` block, so this is a
-  clipboard/glitch solution and must retain the marker.
-- Suggested live test: one deterministic A/B should suffice; capture the
-  completion panel and editor size.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83
@@ -701,6 +718,30 @@ Per the maintainer's rule, candidates that win less often than **1 in
 would cost more restart-grinding than the row is worth.  They remain
 here (with their paste-ready files) in case the rule changes or a
 higher-rate variant is found.  Nothing below this line needs game time.
+
+### [ ] Year 44 - Unique Fashion Party - divide-by-zero long-shot size 2
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - divide-by-zero long-shot size 2.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - divide-by-zero long-shot size 2.txt>)
+- Goal: preserve the absolute size-**2** construction below the practical
+  size-3 candidate.  It is parked because its rate is far below the 1% live
+  queue threshold.
+- Mechanism: `pickup n` leaves 35 cube-holders.  After those pickups, exactly
+  ten still see an unpicked cube south; everyone else divides by zero and
+  dies.  A win occurs when exactly seven south denominators are nonzero and
+  the corresponding seven held labels are the complete set 0-6.
+- Probability evidence: 131/200,000 faithful modeled states won (0.0655%);
+  the iid calculation is 0.072778626%.  Initial xorshift state `0xa84e338f`
+  is a concrete finite-state witness.
+- Expected editor size: **2**.  Size 1 cannot both acquire cubes and remove
+  redundant workers.
+- Suggested live test: none under the current cutoff; retain for a future
+  reproducible RNG harness or a lucky natural completion.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup n
+mem1 = calc 0 / s
+```
 
 ### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
 

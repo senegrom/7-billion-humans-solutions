@@ -5,14 +5,20 @@ for records.  Candidates that still need live-game verification remain in
 [SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md).
 
 - Y24 size 3: emulator false positive; real handoff semantics do not sustain it.
-- Y15 public size 6: 96/100 capped emulator wins, but superseded in both size
-  and reliability evidence by the retained novel size-5 candidate.
 - Y15 size-5 give-first ordering: 300/300, but average and worst-case timing
-  were slightly worse than the retained pickup-first ordering on the same
-  seeds (191.4 vs 190.9 average; 387 vs 378 worst).
+  were slightly worse than the then-preferred pickup-first ordering on the
+  same seeds (191.4 vs 190.9 average; 387 vs 378 worst).  That pickup-first
+  event-gated program was itself later refuted paste-verbatim in the live game.
 - Y15 symmetric size-5 gate `(shredder and holding) or north-cube`: 300/300,
-  but much slower than the retained empty-worker gate (265.5 average, 727
-  worst).  This exhausts the only other non-dominated one-IF predicate family.
+  but much slower than the then-preferred empty-worker gate (265.5 average,
+  727 worst).  The empty-worker form was later refuted live too, so neither
+  one-IF family is retained.
+- Y15 community inner-guard deletion (size 6→5): removing only the inner
+  `if nw == datacube or s == shredder` around `pickup nw` looked state-neutral
+  because every newly attempted pickup points at a known non-cube, but it
+  failed 0/20 fixed-order worlds while abfipes12's size-6 control won the
+  identical 20/20 (59,848.7 frames, 5,031.4 items).  Failed-pickup timing is
+  load-bearing on Shred Lines; no shuffled test was run.
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
@@ -22,8 +28,9 @@ for records.  Candidates that still need live-game verification remain in
 - Y10 speed size-32 branch fusion: it still wins, but takes 867 model frames
   versus the incumbent's 790 and is therefore not a speed-record tie-break.
 - Y07 deterministic size-9 pickup linearization: it wins, but adds a 93-frame
-  invalid-pickup bubble and slows modelled speed from 4 to 5.  The retained
-  error-free size-11 candidate is the correct secondary-size lead.
+  invalid-pickup bubble and slows modelled speed from 4 to 5.  The then-leading
+  error-free size-11 candidate was later refuted live as timing-sensitive, so
+  neither candidate is retained.
 - Y12 speed size-16 random final-direction fusion: 0/100 while the incumbent
   was 100/100 in 197 frames; endpoint motion changes later branch entrants.
 - Y14 pickup-first size 4: the existing live size-4 and this permutation both
@@ -44,14 +51,20 @@ for records.  Candidates that still need live-game verification remain in
   wins, but average completion worsens from 1,059.0 to 1,382.3 frames and from
   modelled speed 17.5 to 22.7.  It is also larger than the current size-6
   endpoint, so it improves neither record.
+- Y23 if/else priority loop at canonical size 7 (emulator size 6): correct but
+  dominated.  Against the promoted size-8 speed row on the same 100 fixed-order
+  worlds, both won 100/100, but the rewrite regressed average frames
+  1,091.0→1,408.2, modelled speed 17.9→23.0 (range 12–22→15–28), and item
+  actions 491.3→646.1.  It therefore challenges neither the 8/15–17 speed row
+  nor the canonical size-6/23–25 size row.
+- Y25 unconditional-give size 8: it completed correctly at canonical size 8,
+  but averaged 134 seconds live versus 130 seconds for the correct size-9
+  incumbent.  The level's size-row best is 5, so it improves neither record
+  and is dominated.
 - Y25 external persistent-loop reduction: the source program is 32 commands at
   129 seconds and the proposed unconditional-tail form is about 30 commands at
-  the same speed.  Both are dominated by the local size-9/live-129 endpoint and
-  the retained size-8 candidate.
-- Y25 size-8 unconditional-give candidate: it wins and is one modelled second
-  faster than the incumbent, but is superseded by the retained guarded-loop
-  size-6 candidate, which is two commands smaller (three below the incumbent)
-  and 22,919 frames faster.
+  the same speed.  Both are dominated by the local size-9/live-129 endpoint,
+  and neither challenges the size-5 row.
 - Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
 - Y26 size-5 ordered take/give fusion: three distinct routing predicates each
   failed 0/100 at the 1,400-second cap; the mechanism stalls the feeder chain.
@@ -89,23 +102,40 @@ for records.  Candidates that still need live-game verification remain in
 - Y38 speed deletion of one, two, or all three consecutive `pickup c` retries:
   94/100, 93/100, and 91/100 respectively, versus 100/100 for the incumbent.
   The actions are reliability choreography rather than removable dead code.
+- Y38 Solutions50+ speed size-120 neutral-walk family: both two-step cuts fail
+  the item/choreography gate before jitter.  The first removes the opening
+  `step w` and the post-ascent `step e`; over 100 paired worlds the size-122
+  control won 73 and the candidate 71, with seed 20 changing from a 458-frame
+  control win to a full-cap loss.  The distinct adjacent `step e` / `step w`
+  cut preserves the whole ascent and pickup square, but reproduced the same
+  decisive shared-seed regressions: seed 5 changed 18→19 item actions and seed
+  12 changed 17→18 while slowing 382→460 frames.  It was stopped there.
 - Y39 unguarded-printer size 5: 0/100 at a 20,000-frame diagnostic cap; random
   requeueing did not produce the required exactly-five-sheets-per-worker state.
-- Y39 end-only speed size 172: superseded by the retained size-167 composition,
-  which includes the same terminal-`end` deletion plus five neutral diagonals
-  and remains exactly 2,581 frames.
+- Y39 end-only speed size 172: initially superseded in the emulator by the
+  size-167 composition, which included the same terminal-`end` deletion plus
+  five nominally neutral diagonals at exactly 2,581 frames.  Size 167 was later
+  refuted live at 41 seconds versus 36; the end-only form was not independently
+  live-tested and is not retained on frame identity alone.
 - Y40 speed branch-`b` and branch-`c` terminal-`end` deletions: each failed
   0/1 at the real cutoff, while the incumbent wins in 2,777 frames.  Both
   workers fall through into later branches before the global goal is complete,
   so neither `end` is post-goal dead code.
-- Y40 size-170 PR/diagonal and size-175 PR/dead-calc candidates: both are
-  superseded by the retained size-169 composition, which combines every safe
-  edit and remains exactly 2,697 frames/100 item actions like size 175.
+- Y40 size-170 PR/diagonal and size-175 PR/dead-calc candidates: initially
+  superseded in the emulator by the size-169 composition at exactly 2,697
+  frames/100 item actions.  Live testing later refuted size 169 at 41 seconds
+  and size 175 at 38, both behind the published size-176 PR form at 36; none of
+  these smaller compositions is retained.
 - Y41 random-exit size 6: a finite all-west-while-carrying then north-to-hole
   route exists, but even the relaxed geometry estimate is only about 1e-88;
   there is no practical witness search or live test.
 - Y42 size-8 loop fusions: both the outer-delivery and unified random-walk
   variants failed 0/5; the separate search and delivery drifts are material.
+- Y44 speed size-16 write-only-store deletion: `mem4 = set myitem` is globally
+  unread, but removing it fails the exact-action gate.  In 100 fixed paired
+  worlds both programs hit the known-unfaithful model's same 163-frame loss,
+  while every seed changed 97→95 item actions because the store executes twice
+  across the crew.  No shuffled or live test was run.
 - Y48 four-command speed rewrite: emulator training-goal false positive; the
   instructor does not shred its demonstration cube.
 - Y48 size-3 `takefrom n,s` fusion: behaviorally collapses to the previously
@@ -118,11 +148,27 @@ for records.  Candidates that still need live-game verification remain in
 - Y54 deletion of either duplicated `mem2 = set c` before `tell everyone hi`:
   0/1 while the incumbent won in 2,673 frames.  The overwritten value is dead,
   but the store is a required tell/listen synchronization delay.
+- Y54 uniform-average random-walk size 5: correct at 49/200, but superseded
+  before live testing by the existing straight-column constant-average size-5
+  program.  Both win when the initial integer average is 3; the retained form
+  finishes in about 30 seconds rather than roughly 450 and is much safer under
+  the 1,400-second cutoff.
+- Y54 Solutions50+ speed size-36 deletion: withdrawn under the item-action
+  rule.  It deletes a `write 3`, so it necessarily changes item choreography;
+  its earlier evidence was also unpaired (50/200 candidate versus 32/150
+  incumbent) and it never received the comparative jitter screen.
 - Y58 size-3 random, nearest, cardinal-pick, diagonal-pick, and one-shot
   pruning families produced no witness across their bounded screens.  Exact
   graph optimization shows a win must remove at least 12 interior cubes and
   at most 8 perimeter cubes; the tested policies have the wrong removal bias.
 - Y60 alternate size 9: superseded by dmr's public 0/200-failure size-9 record.
+- Y62 speed empty-inner-loop size 215: 35/100 fixed-order wins versus the
+  incumbent's 36/100; its win set loses seed 97, which changes from a
+  666-frame/33-item win to a capped 26-item failure.  Choreography is not
+  preserved, so it did not advance to the jitter screen.
+- Y62 speed both-empty-loops size 214: collapsed to 7/100 fixed-order wins
+  (seeds 8, 11, 13, 34, 55, 70 and 99) versus the incumbent's 36/100, and
+  item counts differed on every common win.  Materially worse; no jitter.
 - Y63 size 9 rewrite: 0/10.
 - Y64 size 7 rewrite: 0/5.
 - Y64 speed size-99 deletion of one initial `mem1 = set myitem` cadence pad:
@@ -132,14 +178,19 @@ for records.  Candidates that still need live-game verification remain in
 - Y66 further padding cuts: deleting one store from the later 14-store block
   fails; deleting the earlier singleton after its first shuffle wins but slows
   from 1,552 to 1,574 frames/modelled speed 26.  Size 240 is the exact-timing
-  fallback and size 239 in the live-game queue is the only retained aggressive
-  boundary.
+  fallback, but both size 240 and 239 later failed live.
+- Y66 endpoint-preserving step-pair reduction at size 244: withdrawn before
+  live testing because it fails the comparative jitter gate.  It won only
+  29/100 shuffled-dispatch worlds against the incumbent's 45/100, a material
+  reliability regression on a press level whose earlier timing cuts failed
+  live.
 - Y68 unconditional size 5: 0/20; removing the side-hole guard did not produce
   an observable low-percent win.
-- Y68 tell-only speed sizes 171/170: superseded as primary candidates by the
-  size-164 bypassed-wrapper core, which removes eight charged but statically
-  unreachable wrapper commands without changing executed cadence.  The tell
-  cuts remain optional size-163/162 follow-ups only after the core works live.
+- Y68 bypassed-wrapper speed size 164: REFUTED LIVE; removing the nominally
+  bypassed `foreachdir` wrappers changed real-game execution.  It no longer
+  dominates the independent tell-only 171/170 ladder, which remains queued.
+  Its latest session was inconclusive because the size-172 control itself
+  failed all three attempts.
 - Y21 speed four-site reach-merge (step s + takefrom e -> takefrom se at four
   sites of the pre-import program): each site 200/200 alone, combined average
   23.4 s vs 24.9 s over 400 paired trials.  Superseded before live testing:
@@ -151,9 +202,10 @@ for records.  Candidates that still need live-game verification remain in
   the new record.  Re-running the merge transform on the imported bases
   instead.
 - Y21 one-walk imported-record reach merge at editor size 40: 400/400 and faster
-  than the size-41 base, but superseded by the retained position-preserving size-39
-  fusion, which removes both walks and wins 100/100 with a better full timing
-  range.
+  than the size-41 base, but initially superseded by the position-preserving
+  size-39 fusion, which removed both walks and won 100/100 with a better model
+  timing range.  That size-39 fusion was later refuted live at under 10%, so
+  neither reach-merge form is retained.
 - Y22 size-3 scatter-tumble family (`a: step <list> / pickup <targets> /
   jump a`): rate-optimized across 45 pickup-target and 50 step-list
   variants; the best, `step n,s / pickup c,s`, measures 120/1,200 = 10.0%
@@ -209,10 +261,12 @@ for records.  Candidates that still need live-game verification remain in
   establish it, and collapsing two cardinal steps into one diagonal costs
   live wall-time (~1 s per site per pass; machine-queue phase alignment
   suspected).  Diagonalization is dead as a speed/tie-break transform;
-  Y38 (140) and Y59 (141) diagonal stacks withdrawn untested as the same
-  class.  Y40 falls back to the PR-92 ladder (176 live-verified 36, then
-  175).  Frame-based speed evidence anywhere in the queue is downgraded
-  to "requires live incumbent control first".
+  the earlier Y38/Y59 diagonal-stack variants were withdrawn untested as
+  the same class.  The currently queued Y38 size-140 and Y59 size-142
+  programs instead delete cancelling opposite steps and remain separate
+  live-control experiments.  Y40 falls back to the PR-92 ladder (176
+  live-verified 36, then 175).  Frame-based speed evidence anywhere in the
+  queue is downgraded to "requires live incumbent control first".
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results
@@ -307,7 +361,10 @@ for records.  Candidates that still need live-game verification remain in
     machine never land in the game while the simulator serves them.
     The incumbent's terminal cleanup exists precisely to handle this.
     FINAL at size 6; the machine-serve read (front/arrival/failure
-    rules) is the emulator work that would reopen this class.
+    rules) is the emulator work that would reopen this class.  This did
+    not predict the size-8 unconditional-give form, which retains that
+    cleanup and completed live; that separate form was rejected only because
+    its 134-second average was slower than the size-9 incumbent's 130.
   - Y44 speed-at-size-8: completes live at displayed speed 2 -- the
     source's claimed 1 did not reproduce, and speed ranks first, so the
     17-command speed-1 row stands.  Re-rolls might show 1; parked until
@@ -322,7 +379,7 @@ for records.  Candidates that still need live-game verification remain in
   frames because inverting an or-chain changes short-circuit sampling
   (each sampled term costs time -- a corollary of the async findings),
   leaving the single-comparison Year 58 site as the class's one clean
-  candidate (queued).
+  candidate; it was subsequently published at size 105 / speed 2.
 - Y15 deterministic size 7 (`if myitem == nothing` gate): REFUTED LIVE
   pasted verbatim (2026-08-17) — the run does not complete despite the
   emulator's deterministic 2,167-frame win.  Two prior Y15 size attempts
@@ -346,10 +403,12 @@ for records.  Candidates that still need live-game verification remain in
     false positive already rejected live; ledgered above.
   - Y13 low-percent `step se` deletion: identical to the queued
     recoverable size-5 entry.
-  - Y25 speed: `giveto mem1` deletion (frame-identical) and two guard
-    removals — the machine-serve model is known wrong on this level (live
-    queue at the end) and give deletions were live retries on Y29; not
-    queued until the model learns the serve rules.
+  - Y25 speed: the `giveto mem1` deletion (frame-identical) and broader guard
+    removals remain withheld because the machine-serve model is known wrong on
+    this level and give deletions were live retries on Y29.  The narrower
+    size-8 edit retained the outer availability guard and terminal cleanup and
+    completed live, but averaged 134 seconds versus the size-9 control's 130;
+    it is rejected above as dominated.
   - Y33 speed 8→7: 1/200 (below the 1-in-100 floor).
   - Y34 speed 33→32 (any of the `nearest` re-reads): 106-175/200 — drops
     a 100% row below the 99% tier without beating the 50+ speed row.
@@ -362,9 +421,11 @@ for records.  Candidates that still need live-game verification remain in
   - Y50 speed 31→30 (steps, a give, listens — several frame-identical or
     faster): a tell/listen choreography level where the model's inbox
     timing is exactly what the live game disputes; not queued.
-  Queued from the same sweep: Y22 Solutions50+ speed 7→6, Y23 speed 9→8,
-  Y09 speed 15→14, Y23 low-percent speed 23→19 (fallback 21), Y54
-  Solutions50+ speed 37→36.
+  Other outcomes from the same sweep: Y22 Solutions50+ speed 7→6 and Y23
+  speed 9→8 were published; Y09 speed 15→14 and Y23 low-percent speed
+  23→19 (fallback 21) remain queued.  Y54 Solutions50+ speed 37→36 was
+  initially queued but later withdrawn under the item-action rule, as recorded
+  above.
 
 ## Year 60 pickup fusion (size 9→8) — refuted live 2026-08-17
 
@@ -450,10 +511,12 @@ multi-worker level.
 Curation rule from this: **a deletion is only trustworthy when the
 model's item-action count is unchanged.**  Fewer frames plus fewer
 items = a different choreography that one scheduler order happened to
-survive, not an equivalent program.  Applying the rule to the standing queue measured Years 38, 59 and 66
-items-identical (they stand, as does Year 9's jump deletion) — but
-Year 60's 158 showed 319.8 items against the incumbent's 321.3, so it
-was withdrawn untested as the same class.
+survive, not an equivalent program.  Applying the rule to the then-standing
+queue measured Years 38, 59 and 66 items-identical in fixed-order runs.  Years
+38 and 59 still stand, as does Year 9's jump deletion; Year 66 was later
+withdrawn after comparative shuffled dispatch fell to 29/100 wins versus the
+incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
+321.3, so it was withdrawn untested as the same class.
 
 ## Further synthesis closures (2026-08-19/20) — do not re-derive
 

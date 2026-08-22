@@ -1,0 +1,6 @@
+if ne != wall and
+ sw != wall or
+ n != datacube:
+	mem1 = calc 0 / 0
+endif
+pickup s

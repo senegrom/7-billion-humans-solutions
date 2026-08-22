@@ -1,0 +1,2 @@
+pickup n
+mem1 = calc 0 / s
