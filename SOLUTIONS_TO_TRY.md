@@ -187,6 +187,33 @@ step sw,se
 jump a
 ```
 
+### [ ] Year 67 - Decimal Doubler - direct-arrival discriminator size 5
+
+- **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - direct-arrival discriminator size 5.txt](<SolutionsToTry/Year 67 - Decimal Doubler - direct-arrival discriminator size 5.txt>)
+- Goal: a one-run discriminator that either sets the size record 13 → **5**
+  or pins down the doubler's sequence rule for the ledger.
+- Mechanism: every digit worker lifts its cube, rewrites it to 9, and
+  carries it two rows south onto its own green sensor; the display then
+  spells 9,999,999, which meets the "at least 8,388,608" target in one
+  press.  The spare worker's failed pickup and write delay it, so it
+  reaches the big red button well after the last drop (local-model trace:
+  pads complete 74 frames before the press samples).
+- The open rule this tests: the sibling decimal counter accepts direct
+  arrival at its target (the primary-code finding behind the Year 66
+  leads).  The local model's doubler instead wipes its memory at any
+  press that is not the exact next double, and under that reading this
+  program records 9,999,999 once and never wins — it scores 0/200 there.
+  Which behavior the live game uses has never been discriminated.
+- Cost of knowing: one deterministic run — all activity finishes inside
+  the first few seconds; give it a minute.  A win is record size **5**
+  and a second sequence-free counter goal; a loss confirms the wipe rule
+  live and closes every direct-arrival idea on this level.  Ledger
+  either way.
+- Expected editor size: **5**; pickup, write, step, and drop are all in
+  the Year 67 palette — no lists, no machine interactions, and every
+  failed action is harmless.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt>)
