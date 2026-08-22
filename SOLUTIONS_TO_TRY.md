@@ -44,6 +44,11 @@ file was derived and verified.
   Year 66.
 - Suggested live test: paste at 12x, confirm editor size 7, and capture the
   deterministic completion panel.
+- Local-emulator cross-check (2026-08-22): **200/200 wins, deterministic at
+  347 frames**, and **100/100 under the shuffled-dispatch screen** — on the
+  press level whose incumbent holds only 45/100 there.  Two independently
+  built models now agree, and the construction is order-robust.  Best
+  evidence in the queue.
 - Result: _not yet tested locally in the game_.
 
 ```text
@@ -79,6 +84,10 @@ drop
 - Suggested live test: only after the deterministic size-7 control succeeds,
   paste this verbatim and retry at 12x until a completion or a meaningful
   failure batch is recorded.
+- Local-emulator note (2026-08-22): 0/200 — the write-10 explosion path is
+  not modelled locally, so the local emulator cannot referee this one; the
+  25% figure rests on the source-state analysis alone.  Live-only, as
+  stated.
 - Result: _not yet tested locally in the game_.
 
 ```text
@@ -107,6 +116,13 @@ drop
   established in exported solutions.
 - Suggested live test: 100-200 fast fresh attempts at 12x, capturing the first
   completion and editor size.  Do not substitute diagonal `giveto sw`.
+- Local-emulator cross-check (2026-08-22): 53/3,000 = **1.77%** against the
+  2.23% claim — the same order of magnitude in a second model, still above
+  the queue floor.  One mechanism caution: live pickup-lists were proven
+  NOT to skip an ineligible square (Year 60 — the worker stalls); if
+  give-lists behave the same way, the supervisor's `w,s` fall-through
+  stalls instead of selecting the shredder.  The cheap live attempts
+  double as the discriminator for that rule.
 - Result: _not yet tested locally in the game_.
 
 ```text
@@ -158,6 +174,8 @@ pickup s
 - Suggested live test: repeated fresh attempts at 12x, resetting shortly
   after the longest successful path; do not wait for the 1,400-second cap when
   the worker is visibly parked in the losing corner.
+- Local-emulator cross-check (2026-08-22): 36/3,000 = **1.20%**, within one
+  sigma of the exact 1.367% claim — the rate is confirmed by a second model.
 - Result: _not yet tested locally in the game_.
 
 ```text
