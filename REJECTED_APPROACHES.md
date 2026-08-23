@@ -602,3 +602,29 @@ Also closed: a frame-minimizing mutation search over the Year 15 speed
 row (96,000 mutants at size <=42, full-win gate) found nothing below
 622 frames — the row is locally tight under mutation reach, matching
 the survey's "needs new choreography" verdict.
+
+## Goal-audit round two: spawn luck, held-cube exemptions (2026-08-23)
+
+- Spawn-luck audit: a single-step no-op run 2,000 trials on every one of
+  the 64 levels — zero wins anywhere.  No goal in the corpus is ever
+  satisfied by its random spawn at a 0.2-percent-or-better rate, so no
+  free size-1 LowPercent row exists.  (The earlier size-1/2 sweep's
+  8-trial gate could not see below ~10 percent; this closes that gap.)
+- Year 57 held-cube reduction: the neighbor-count goal grades floor
+  cubes only (the level's own tip documents the mechanic) and every
+  cube starts at value 0, so the goal is equivalently "no two floor
+  cubes adjacent" with no writing at all.  Dead on arithmetic: 52
+  clustered cubes against 10 hands needs a 42-cube independent set
+  that the clusters cannot contain, and the palette has no `nearest`
+  for ferrying the surplus into the map's holes.  Do not revisit
+  without a new mechanism.
+- Year 55: the flower goal requires at least one INTACT ring to grade
+  (breaking every flower is a loss, not a vacuous win); solving one
+  flower costs the same loop the record already runs.  No exploit.
+- The remaining end-state goals (sorted grid, both defrags,
+  mode-counts, identify-line, decrypt-left-exit) were re-read with the
+  counter-exploit lens: each genuinely demands the work its record
+  performs.  One corroboration fell out: the Year 41 goal requires all
+  workers gone and its community record culls them by divide-by-zero —
+  the same kill mechanism the queued Year 44 static-cull lead relies
+  on, so that mechanism is established rather than speculative.
