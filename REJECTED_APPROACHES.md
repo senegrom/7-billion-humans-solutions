@@ -532,6 +532,9 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
   record's own commands plus direction/operand variants — evidence,
   not proof): Year 25 at 5 (46.6k), Year 29 at 5 (46.6k), Year 31
   at 6 (4.2k) all survive with zero winners.
+- Year 51 at 6: the tight-vocabulary probe at size 5 completed
+  2026-08-24 — 7.56M programs over the record's own 23-command
+  vocabulary, zero winners.  Same evidence tier as the probes above.
 - Structural arguments: Year 47 at 3 (the conditional wait is
   irreducible — the leftmost worker must speak unprompted, all others
   must wait; spam-tell forms 0/50), Year 49 at 4 (the trailing step e
