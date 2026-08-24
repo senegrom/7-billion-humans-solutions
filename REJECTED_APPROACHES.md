@@ -537,6 +537,11 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
 - Year 51 at 6: the tight-vocabulary probe at size 5 completed
   2026-08-24 — 7.56M programs over the record's own 23-command
   vocabulary, zero winners.  Same evidence tier as the probes above.
+- Year 39 at 6: tight probe at size 5 completed 2026-08-25 — 134,865
+  programs over its 9-command vocabulary plus its condition, zero
+  winners.  (A first run had inflated the vocabulary with multi-line
+  condition fragments and was discarded; the loader now joins split
+  conditions before harvesting.)
 - Structural arguments: Year 47 at 3 (the conditional wait is
   irreducible — the leftmost worker must speak unprompted, all others
   must wait; spam-tell forms 0/50), Year 49 at 4 (the trailing step e
