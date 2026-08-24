@@ -204,6 +204,12 @@ jump a
   press that is not the exact next double, and under that reading this
   program records 9,999,999 once and never wins — it scores 0/200 there.
   Which behavior the live game uses has never been discriminated.
+- Provenance check (2026-08-24): the model's wipe rule traces to the
+  emulator's initial hand-written goal set — inferred from the goal
+  text, never verified against the game.  The only verified fact in
+  the family (the sibling's sequence-free acceptance) leans toward
+  the exploit working, so treat this as genuinely open rather than
+  model-refuted.
 - Cost of knowing: one deterministic run — all activity finishes inside
   the first few seconds; give it a minute.  A win is record size **5**
   and a second sequence-free counter goal; a loss confirms the wipe rule
