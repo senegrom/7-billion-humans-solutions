@@ -485,7 +485,9 @@ these size records are optimal within those grammars:
 - Year 28 at 4 (17k with the nearest/mem grammar) — no if, fully closed.
 - Year 09 at 5 (122k + 5.35M stage 2) — fully closed.
 - Year 11 at 5 (122k + 5.35M stage 2) — fully closed.
-- Year 18 at 5 (680k stage 1) — stage 2 (~18M) still open.
+- Year 18 at 5 (680k stage 1; stage 2 completed 2026-08-24 with
+  19.97M programs, zero winners) — the full size-4 space in both
+  grammars is closed; the 5 is optimal within them.
 - Year 23 at 6 (3.0M stage 1 at size 5) — stage 2 still open.
 
 Grammar limits for honesty: direction lists, multi-mem programs, and
