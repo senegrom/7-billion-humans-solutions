@@ -525,7 +525,9 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
 - Year 10 at 5: fully closed (5.6k stage 1 + 483k stage 2; its
   step/jump/if palette is completely covered by the two grammars).
 - Year 21 at 5: closed at stage 1 (2.03M programs at size 4 over the
-  full takefrom/nearest alphabet); stage 2 open.
+  full takefrom/nearest alphabet); stage 2 completed 2026-08-25 with
+  45.91M programs, zero winners — the full size-4 space in both
+  grammars is closed; the 5 is optimal within them.
 - Year 16 at 6: the entire loop-program space at size 5 is exhausted
   (2.46M, jump-last rule), and the halting half followed on 2026-08-22
   (17.21M straight-line programs, zero winners) — the complete size-5
