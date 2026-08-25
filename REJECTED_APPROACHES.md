@@ -542,6 +542,10 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
   winners.  (A first run had inflated the vocabulary with multi-line
   condition fragments and was discarded; the loader now joins split
   conditions before harvesting.)
+- Year 68 at 6: tight probe at size 5 completed 2026-08-25 — 290,000
+  programs, zero winners.  This finishes the small-row probe program:
+  every size row at 6 or below now carries either a full grammar proof
+  or a completed vocabulary probe.
 - Structural arguments: Year 47 at 3 (the conditional wait is
   irreducible — the leftmost worker must speak unprompted, all others
   must wait; spam-tell forms 0/50), Year 49 at 4 (the trailing step e
