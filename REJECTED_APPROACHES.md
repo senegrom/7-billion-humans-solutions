@@ -566,6 +566,22 @@ the full 8-direction walk and the <11 bound are both load-bearing.  A
 99% seven needs a different algorithm; the vocabulary space at size 7
 is too large to enumerate.
 
+Mechanism follow-up (2026-08-25), after a mutation search plateaued at
+93.5% (a north-doubled walk list, `nw,w,sw,n,s,n,e,se`): the level
+pre-seeds the gradient — a ring of small-value cubes near the boss
+(twelve 1s, four 2s, one 3, two 4s) anchors the field, and the other 81
+cubes start at 99.  The walker relaxes each square to (previous
+square's value + 1), monotonically downward, so `mem1 > 1` is what
+stops false 1s propagating off the empty near-boss tiles (a wrong low
+write can never be corrected upward — permanent corruption, which is
+why removing either bound scores 0), and `mem1 < 11` matches the map's
+maximum distance.  A win costs about 7,300 item actions of relaxation
+churn; the ~6% losses are the random-mixing tail not finishing under
+the office clock.  Within this design family the ceiling is ~94%; a
+99% seven needs propagation that is systematic rather than stochastic,
+and no seven-command form of that is known.  The search continues in
+the background; treat 93.5% as the family's measured best.
+
 A frames-versus-displayed survey of every speed row found the apparent
 slack (Years 17, 19, 47, 49, 50, 56) is all cadence-bound — greeting
 chains, contended machines, forever-goal observation windows — where
