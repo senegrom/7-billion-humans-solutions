@@ -1,9 +1,0 @@
-step s
-pickup c
-if myitem < 3 or
- myitem == nothing:
-	mem1 = calc myitem + 1
-	write mem1
-	step s
-endif
-drop

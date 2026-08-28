@@ -635,6 +635,32 @@ row (96,000 mutants at size <=42, full-win gate) found nothing below
 622 frames — the row is locally tight under mutation reach, matching
 the survey's "needs new choreography" verdict.
 
+## The counting machines enforce their sequences — direct arrival is dead (2026-08-28, live)
+
+Two live runs killed the whole direct-arrival family and corrected the
+model.  The Year 66 "deterministic size 7" (place 1 and 2 on the outer
+sensors, one press showing 1,000,002) and the Year 67 size-5 all-nines
+press (9,999,999 at one press, target 8,388,608) both FAILED in the
+game, despite the first scoring 200/200 locally and carrying a
+primary-code acceptance claim from the parallel analysis.
+
+What the failures prove, combined with the records that DO win live:
+the Year 66 record counts 999,981 → 1,000,002 in exactly 22 clean +1
+presses (the goal starts the count at 999,981 — the "million" is
+pre-seeded), and it passes; one-shot arrival does not.  So every
+counting machine enforces its own full chain — binary 0..15, decimal
++1 from the start value, doubler ×2 from 1 — and a press out of
+sequence resets the display's memory.  The local model's decimal
+counter was arrival-only (too lenient, never exposed by the incumbent,
+now fixed to the chain rule); its doubler wipe, written as a guess at
+initial import, is VINDICATED by the Year 67 refusal.
+
+Withdrawn with this: the Year 66 adjacent-pickup low-percent 6 (same
+one-press arrival shape, same death) and every other direct-arrival
+idea on the three counter levels.  The parallel analysis's "accepts
+direct arrival" primary-code claim is falsified — its other leads
+stand on separate mechanisms but lose their claimed evidence tier.
+
 ## Goal-audit round two: spawn luck, held-cube exemptions (2026-08-23)
 
 - Spawn-luck audit: a single-step no-op run 2,000 trials on every one of

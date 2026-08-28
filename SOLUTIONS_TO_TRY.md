@@ -27,78 +27,6 @@ file was derived and verified.
 
 ## Priority queue
 
-### [ ] Year 66 - Decimal Counter - deterministic size 7
-
-- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - deterministic size 7.txt](<SolutionsToTry/Year 66 - Decimal Counter - deterministic size 7.txt>)
-- Goal: reduce the Solutions99+ size record from **11** to **7** with a
-  deterministic one-press construction.
-- Mechanism: after the common south step and pickup, only the workers holding
-  0 and 1, plus the empty-handed presser, enter the branch.  The two cubes are
-  rewritten to 1 and 2 and dropped on the outer sensors; the 8/9 cubes stay
-  off the middle sensors, which therefore read as zero.  The presser's failed
-  pickup and write delay its arrival at the button until both drops are stable.
-- Primary-code evidence: the counter reads floor cubes, accepts direct arrival
-  at 1,000,002, and the real geometry has sensors one row below the initial
-  cube row.  Static timing leaves an 80+ frame margin before the button sample.
-- Expected editor size: **7**; all commands and operands are available in
-  Year 66.
-- Suggested live test: paste at 12x, confirm editor size 7, and capture the
-  deterministic completion panel.
-- Local-emulator cross-check (2026-08-22): **200/200 wins, deterministic at
-  347 frames**, and **100/100 under the shuffled-dispatch screen** — on the
-  press level whose incumbent holds only 45/100 there.  Two independently
-  built models now agree, and the construction is order-robust.  Best
-  evidence in the queue.
-- Result: _not yet tested locally in the game_.
-
-```text
-step s
-pickup c
-if myitem < 3 or
- myitem == nothing:
-	mem1 = calc myitem + 1
-	write mem1
-	step s
-endif
-drop
-```
-
-### [ ] Year 66 - Decimal Counter - adjacent-pickup low-percent size 6
-
-- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - adjacent-pickup low-percent size 6.txt](<SolutionsToTry/Year 66 - Decimal Counter - adjacent-pickup low-percent size 6.txt>)
-- Goal: establish a practical SolutionsLowPercent record at **6**, below the
-  deterministic size-7 candidate and published size-11 row.
-- Mechanism: every digit worker picks up south and computes value+1.  On this
-  level, writing 10 invokes the real hard-coded explosion path, removing the
-  four 9-cubes and their workers before movement.  The surviving 1 and 2 must
-  move onto the outer sensors, while the surviving 9 moves west off-sensor;
-  the delayed presser is then forced south onto the button.
-- Exact random-state density: `2^30 / (2^32 - 1)`, or
-  **25.0000000058%**.  Persistent live attempts are correlated, so this is a
-  full-state density rather than an independent-trial guarantee.
-- Critical construction detail: retain this exact adjacent-pickup order.  The
-  superficially similar `step s / pickup c / ... / step w,s` form is invalid
-  because a stale exploded-worker tile forces the surviving 9 south.
-- Expected editor size: **6**; all commands and operands are available in
-  Year 66.
-- Suggested live test: only after the deterministic size-7 control succeeds,
-  paste this verbatim and retry at 12x until a completion or a meaningful
-  failure batch is recorded.
-- Local-emulator note (2026-08-22): 0/200 — the write-10 explosion path is
-  not modelled locally, so the local emulator cannot referee this one; the
-  25% figure rests on the source-state analysis alone.  Live-only, as
-  stated.
-- Result: _not yet tested locally in the game_.
-
-```text
-pickup s
-mem1 = calc myitem + 1
-write mem1
-step s
-step w,s
-drop
-```
-
 ### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
@@ -186,39 +114,6 @@ step e,sw
 step sw,se
 jump a
 ```
-
-### [ ] Year 67 - Decimal Doubler - direct-arrival discriminator size 5
-
-- **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - direct-arrival discriminator size 5.txt](<SolutionsToTry/Year 67 - Decimal Doubler - direct-arrival discriminator size 5.txt>)
-- Goal: a one-run discriminator that either sets the size record 13 → **5**
-  or pins down the doubler's sequence rule for the ledger.
-- Mechanism: every digit worker lifts its cube, rewrites it to 9, and
-  carries it two rows south onto its own green sensor; the display then
-  spells 9,999,999, which meets the "at least 8,388,608" target in one
-  press.  The spare worker's failed pickup and write delay it, so it
-  reaches the big red button well after the last drop (local-model trace:
-  pads complete 74 frames before the press samples).
-- The open rule this tests: the sibling decimal counter accepts direct
-  arrival at its target (the primary-code finding behind the Year 66
-  leads).  The local model's doubler instead wipes its memory at any
-  press that is not the exact next double, and under that reading this
-  program records 9,999,999 once and never wins — it scores 0/200 there.
-  Which behavior the live game uses has never been discriminated.
-- Provenance check (2026-08-24): the model's wipe rule traces to the
-  emulator's initial hand-written goal set — inferred from the goal
-  text, never verified against the game.  The only verified fact in
-  the family (the sibling's sequence-free acceptance) leans toward
-  the exploit working, so treat this as genuinely open rather than
-  model-refuted.
-- Cost of knowing: one deterministic run — all activity finishes inside
-  the first few seconds; give it a minute.  A win is record size **5**
-  and a second sequence-free counter goal; a loss confirms the wipe rule
-  live and closes every direct-arrival idea on this level.  Ledger
-  either way.
-- Expected editor size: **5**; pickup, write, step, and drop are all in
-  the Year 67 palette — no lists, no machine interactions, and every
-  failed action is harmless.
-- Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 

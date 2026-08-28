@@ -1,9 +1,0 @@
--- 7 Billion Humans (2214M) --
--- 67: Decimal Doubler --
--- Size 5 Speed TBD --
-
-pickup s
-write 9
-step s
-step s
-drop
