@@ -649,11 +649,14 @@ the Year 66 record counts 999,981 → 1,000,002 in exactly 22 clean +1
 presses (the goal starts the count at 999,981 — the "million" is
 pre-seeded), and it passes; one-shot arrival does not.  So every
 counting machine enforces its own full chain — binary 0..15, decimal
-+1 from the start value, doubler ×2 from 1 — and a press out of
-sequence resets the display's memory.  The local model's decimal
-counter was arrival-only (too lenient, never exposed by the incumbent,
-now fixed to the chain rule); its doubler wipe, written as a guess at
-initial import, is VINDICATED by the Year 67 refusal.
++1 from the start value, doubler ×2 from 1 — advancing only on the
+exact next value, with any other reading simply ignored (the speed
+record flashes mid-carry values between chain steps and still wins
+live, so off-chain readings cannot be fatal).  The local model's
+decimal counter was arrival-only (too lenient, never exposed by the
+incumbent, now fixed to the chain rule); the doubler's strict chain,
+written as a guess at initial import, is VINDICATED by the Year 67
+refusal.
 
 Withdrawn with this: the Year 66 adjacent-pickup low-percent 6 (same
 one-press arrival shape, same death) and every other direct-arrival
