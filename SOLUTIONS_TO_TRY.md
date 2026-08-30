@@ -27,6 +27,32 @@ file was derived and verified.
 
 ## Priority queue
 
+### [ ] Year 26 - Budget Brigade 2 - relay size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt>)
+- Goal: reduce the size record from **7** to **6** as a Solutions50+ row
+  (82% in the model).
+- Mechanism: a bidirectional relay with no steps at all (the no-walk rule
+  is met trivially).  Empty or small-holding workers push left with
+  `giveto w,nw` and refill with `takefrom s` (the middle chain pulls
+  prints up; the leftmost feeds the left shredder); every worker's
+  `takefrom w` pulls the large cubes rightward to the right shredder,
+  and `giveto n,s` serves it there.  All machine contact is cardinal.
+- Emulator evidence: 328/400 = 82% at ~23,400 frames (well inside the
+  clock); 75/100 under the shuffled-dispatch screen against the
+  incumbent's 100/100 — a modest order-sensitivity drop, not a cliff,
+  and above the tier bar.  Found by mutation search 2026-08-30.
+- **Caution (give-lists at holes):** `giveto w,nw` and `giveto n,s` rely
+  on the game trying the next list entry when the first target is a hole
+  or a full-handed neighbour.  Live give-list fall-through has never been
+  verified in isolation (the Year 24 printer-return and Year 60
+  pickup-list stalls are the cautionary cousins).  If the game stalls on
+  the first target instead, the relay jams — a quick visible failure.
+- Suggested live test: paste, confirm editor size 6, run at 12x; a win
+  inside ~6-7 minutes of game time.  Two or three attempts should land
+  one at 82%.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
