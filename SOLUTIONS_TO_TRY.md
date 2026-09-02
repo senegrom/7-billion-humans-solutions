@@ -27,6 +27,18 @@ file was derived and verified.
 
 ## Priority queue
 
+**Next session (50%+ rule in force — no low-percent testing for now):**
+
+1. **Year 26 size 6** — paste the primary, then run Arm B once regardless
+   (the diagonal-give discriminator), then the 81% fallback only if the
+   primary stalled cleanly.  Record editor size and completion for each.
+2. **Year 13 size 6** — two or three attempts; the attempt count is the
+   tier evidence.
+3. The speed tie-breaks below, each with the incumbent control run first.
+
+Low-percent leads are parked in their own section further down until you
+ask for that tier again.
+
 ### [ ] Year 26 - Budget Brigade 2 - relay size 6 (99% primary, 81% fallback)
 
 - **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt>)
@@ -97,94 +109,6 @@ file was derived and verified.
   three attempts should land a win.  Capture the completion panel — the
   attempt count is the tier evidence.
 - Result: _not yet tested in the game_.
-
-### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
-- Goal: establish a size-**3** SolutionsLowPercent row below the size-8
-  Solutions50+ and size-10 Solutions99+ entries.
-- Mechanism: the bottom workers move northwest and pick distinct northeast
-  cubes.  Only the leftmost carrier can give west to the empty supervisor;
-  every other carrier targets a still-full neighbour and immediately errors.
-  The rendezvous pins the supervisor through its empty-pickup error, after
-  which its `giveto w,s` selects the cardinal south shredder.
-- The level wins exactly when the one relayed cube is a weak global minimum.
-  The intended random-state model gives about **2.23%** wins; a source-exact
-  2,000,000-state spot check produced 2.23085%.
-- Expected editor size: **3**; the multi-direction `giveto` syntax is already
-  established in exported solutions.
-- Suggested live test: 100-200 fast fresh attempts at 12x, capturing the first
-  completion and editor size.  Do not substitute diagonal `giveto sw`.
-- Local-emulator cross-check (2026-08-22): 53/3,000 = **1.77%** against the
-  2.23% claim — the same order of magnitude in a second model, still above
-  the queue floor.  One mechanism caution: live pickup-lists were proven
-  NOT to skip an ineligible square (Year 60 — the worker stalls); if
-  give-lists behave the same way, the supervisor's `w,s` fall-through
-  stalls instead of selecting the shredder.  The cheap live attempts
-  double as the discriminator for that rule.
-- Result: _not yet tested locally in the game_.
-
-```text
-step nw
-pickup ne
-giveto w,s
-```
-
-### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt>)
-- Goal: establish a practical size-**3** SolutionsLowPercent row below the
-  public size-4 low-percent and size-5 Solutions99+ entries.
-- Mechanism: the three-term static predicate kills 38 workers before pickup
-  and leaves exactly seven stable survivors.  Four survivors hold guaranteed
-  members of the level's shuffled 0-6 set; the remaining three hold ordinary
-  random cubes.  A win occurs when those three supply the missing values.
-- Nominal probability: `3! / 7^3 = 6 / 343`, or **1.749271%**.  A faithful
-  1,000,000-state model produced 17,405 wins (1.7405%).
-- Expected editor size: **3**; the condition has three terms, below the parser
-  limit, and `if`, `calc`, and `pickup` are all available in Year 44.
-- Suggested live test: 100-200 fresh attempts at 12x.  On a stable loss, verify
-  that exactly seven workers survive; any other survivor count falsifies the
-  static classification immediately.
-- Result: _not yet tested locally in the game_.
-
-```text
-if ne != wall and
- sw != wall or
- n != datacube:
-	mem1 = calc 0 / 0
-endif
-pickup s
-```
-
-### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5
-
-- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt>)
-- Goal: establish a practical size-**5** SolutionsLowPercent row below the
-  published size-7 low-percent and size-8 main entries.
-- Mechanism: six required binary moves reach the lower funnel with probability
-  1/64; seven of the eight three-step tails then reach a position whose west
-  pickup takes the cube.  Every earlier deviation falls into a hole.
-- Exact full-state density: `7 * 2^23 / (2^32 - 1)`, or
-  **1.367187500318%**.  There is one absorbing losing tail at `(7,10)`.
-- Expected editor size: **5**; the label is free and the program has one
-  pickup, three steps, and one jump.  Paste is required for the direction
-  lists at this early level.
-- Suggested live test: repeated fresh attempts at 12x, resetting shortly
-  after the longest successful path; do not wait for the 1,400-second cap when
-  the worker is visibly parked in the losing corner.
-- Local-emulator cross-check (2026-08-22): 36/3,000 = **1.20%**, within one
-  sigma of the exact 1.367% claim — the rate is confirmed by a second model.
-- Result: _not yet tested locally in the game_.
-
-```text
-a:
-pickup w
-step s,se
-step e,sw
-step sw,se
-jump a
-```
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 
@@ -263,80 +187,6 @@ jump a
   baseline.  The correctly pasted size-171 rung then failed its one attempt;
   size 170 was not run under the stop-on-failure rule.  Keep this queued for a
   future session that first obtains a successful control run.
-
-### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
-
-- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
-- **Fallback (size 21):** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt>)
-- Goal: retain the low-percent speed row's displayed ~14 while reducing its
-  size from 23 to **19** (n05ucc4u's program; keep the credit).
-- Exact edits: delete the two three-line re-check tails — in the `> 49`
-  branch `if w > myitem: jump d / endif` and in the `else` branch
-  `if e < myitem: jump h / endif`.  The size-21 fallback deletes only the
-  first of them.
-- Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
-  16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
-  16.2.  The win rate drops from about 52% to about 38-45% (still the
-  low-percent tier) with the speed distribution unchanged.
-- Suggested live test: repeated ~14-second runs until a win; capture the
-  displayed speed and editor size.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt](<SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt>)
-- Goal: establish a low-percent size-13 program that retains or improves the
-  reliable incumbent's displayed speed of 5 and is smaller than its size 16.
-- Exact edit: in the current speed program, replace the final five-line
-  `if n == nothing: step n; else: step s; endif` with random `step n,s`.
-- Capped-emulator evidence: 1/100 candidate runs won in 278 frames with
-  modelled speed 5 and 18 item actions.  The incumbent was 100/100 at 311
-  frames and 24 actions; canonical sizes are 13 and 16.
-- Construction caveat: random multi-direction movement is paste-only here, so
-  retain the clipboard marker and classify the program as LowPercent.
-- Suggested live test: repeated quick attempts; on a win, capture both the
-  displayed speed and editor size.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt>)
-- Goal: establish a low-percent speed-5 program at size 17 versus the reliable
-  incumbent's size 20.
-- Exact edit: retain the outer guard, but replace its inner
-  `if ne != datacube: step ne; else: step sw; endif` with random `step ne,sw`.
-- Capped-emulator A/B evidence: candidate won 23/100.  Every winning run was
-  frame-identical to the incumbent at 326 frames and modelled speed 6, while
-  using 21 instead of 24 item actions.  Canonical sizes are 17 and 20; the
-  incumbent's authoritative live score is 5.
-- Construction caveat: the random diagonal step is paste-only, so retain the
-  clipboard marker and LowPercent classification.
-- Suggested live test: a handful of attempts should normally produce a win;
-  capture the completion panel and editor size.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83
-
-- **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt>)
-- Goal: retain the current low-percent speed record of about 6 while reducing
-  its secondary size from 84 commands to 83.
-- Exact edit: start from
-  [the current low-percent speed program](<SolutionsLowPercent/Year 34 - Seek and Destroy 1 (speed).txt>)
-  and delete the third `mem1 = nearest datacube` in the `mem2 == mem3` branch,
-  immediately before `if n <= mem2`.
-- Why it should be safe: no path reads that value; after the branch picks up
-  either north or `mem2`, every continuation overwrites `mem1` with the nearest
-  shredder.  `nearest` itself is timing-free in the validated model.
-- Same-seed emulator A/B evidence: candidate and incumbent won the identical
-  5/20 seeds, each in exactly 411 frames with modelled speed 7 and 11 item
-  actions.  Canonical sizes are 83 and 84.
-- Expected editor size: **83**; expected displayed speed: **about 6**.
-- Suggested live test: run repeated candidate attempts until it wins, then
-  capture the completion panel and editor size.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
-- Result: _not yet tested locally in the game_.
 
 ### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214 (fallback 215)
 
@@ -450,30 +300,6 @@ jump a
   and editor size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 44 - Unique Fashion Party - low-percent size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
-- Goal: live-confirm the new size-4 SolutionsLowPercent entry below the
-  size-5 main record.
-- Public evidence: abfipes12 reports positive real-game wins, but its header is
-  internally inconsistent: "40 failures out of 50" implies 20%, while the
-  same line labels the result 10%.
-- Current emulator evidence: 0/20.  Year 44's model is already known to have an
-  unfaithful randomized layout, so that result cannot overrule the live source.
-- Expected editor size: **4**.
-- Suggested live test: 10-20 runs; capture the final cube/worker arrangement on
-  every failure.
-- Result: _not yet tested locally in the game_.
-
-```text
-pickup s
-if w != wall:
-    a:
-    step s,e,se
-    jump a
-endif
-```
-
 ### [ ] Year 58 - Good Neighbors - size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
@@ -539,6 +365,252 @@ takefrom mem1
 step nw,sw,n,e,se
 drop
 jump a
+```
+
+### Commit `c7112a1`
+
+- [ ] Y10 speed
+- [ ] Y11 speed
+- [ ] Y12 size
+- [ ] Y20 speed
+- [ ] Y21 size, speed, and Solutions50+ speed
+- [ ] Y22 speed
+- [ ] Y31 size
+- [ ] Y32 size
+- [ ] Y39 size
+- [ ] Y40 size
+- [ ] Y41 speed
+- [ ] Y42 speed
+- [ ] Y50 size
+- [ ] Y51 speed
+- [ ] Y52 speed
+- [ ] Y60 size and speed
+- [ ] Y62 Solutions99+ size and Solutions50+ size
+- [ ] Y65 speed
+- [ ] Y67 speed
+
+### Commit `412d9d1`
+
+- [ ] Y09 speed
+- [ ] Y16 size
+- [ ] Y18 size
+- [ ] Y22 size
+- [ ] Y23 speed
+- [ ] Y34 size and speed
+- [ ] Y37 size
+- [ ] Y38 size and speed
+- [ ] Y57 size
+- [ ] Y58 size
+- [ ] Y68 size
+
+### Current all-level audit
+
+- [ ] Y05 low-percent size
+- [ ] Y06 low-percent size
+- [ ] Y13 low-percent size
+- [ ] Y30 Solutions50+ size
+- [ ] Y34 Solutions50+ speed
+- [ ] Y43 Solutions50+ size
+- [ ] Y44 low-percent size
+- [ ] Y53 low-percent size
+- [ ] Y54 Solutions50+ speed
+
+Current-audit evidence: Y30 is 15/25 in the public header and 64/100 in the
+capped emulator; Y34 is 79/100; Y43 is 144/150 publicly and 18/20 locally
+(winning emulator range 639-1,349 seconds); Y53 is 46/100 and was demoted from
+Solutions50+; Y54 is 64/120.  The public Y44 size-4 header is arithmetically
+inconsistent, and its incidental speed is still `TBD` until a live win is
+captured.
+
+## Low-percent leads (parked — 50%+ only for now)
+
+Valid candidates below the Solutions50+ bar.  Not for the next session;
+kept intact so nothing is rediscovered.
+
+### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
+- Goal: establish a size-**3** SolutionsLowPercent row below the size-8
+  Solutions50+ and size-10 Solutions99+ entries.
+- Mechanism: the bottom workers move northwest and pick distinct northeast
+  cubes.  Only the leftmost carrier can give west to the empty supervisor;
+  every other carrier targets a still-full neighbour and immediately errors.
+  The rendezvous pins the supervisor through its empty-pickup error, after
+  which its `giveto w,s` selects the cardinal south shredder.
+- The level wins exactly when the one relayed cube is a weak global minimum.
+  The intended random-state model gives about **2.23%** wins; a source-exact
+  2,000,000-state spot check produced 2.23085%.
+- Expected editor size: **3**; the multi-direction `giveto` syntax is already
+  established in exported solutions.
+- Suggested live test: 100-200 fast fresh attempts at 12x, capturing the first
+  completion and editor size.  Do not substitute diagonal `giveto sw`.
+- Local-emulator cross-check (2026-08-22): 53/3,000 = **1.77%** against the
+  2.23% claim — the same order of magnitude in a second model, still above
+  the queue floor.  One mechanism caution: live pickup-lists were proven
+  NOT to skip an ineligible square (Year 60 — the worker stalls); if
+  give-lists behave the same way, the supervisor's `w,s` fall-through
+  stalls instead of selecting the shredder.  The cheap live attempts
+  double as the discriminator for that rule.
+- Result: _not yet tested locally in the game_.
+
+```text
+step nw
+pickup ne
+giveto w,s
+```
+
+### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt>)
+- Goal: establish a practical size-**3** SolutionsLowPercent row below the
+  public size-4 low-percent and size-5 Solutions99+ entries.
+- Mechanism: the three-term static predicate kills 38 workers before pickup
+  and leaves exactly seven stable survivors.  Four survivors hold guaranteed
+  members of the level's shuffled 0-6 set; the remaining three hold ordinary
+  random cubes.  A win occurs when those three supply the missing values.
+- Nominal probability: `3! / 7^3 = 6 / 343`, or **1.749271%**.  A faithful
+  1,000,000-state model produced 17,405 wins (1.7405%).
+- Expected editor size: **3**; the condition has three terms, below the parser
+  limit, and `if`, `calc`, and `pickup` are all available in Year 44.
+- Suggested live test: 100-200 fresh attempts at 12x.  On a stable loss, verify
+  that exactly seven workers survive; any other survivor count falsifies the
+  static classification immediately.
+- Result: _not yet tested locally in the game_.
+
+```text
+if ne != wall and
+ sw != wall or
+ n != datacube:
+	mem1 = calc 0 / 0
+endif
+pickup s
+```
+
+### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5
+
+- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt>)
+- Goal: establish a practical size-**5** SolutionsLowPercent row below the
+  published size-7 low-percent and size-8 main entries.
+- Mechanism: six required binary moves reach the lower funnel with probability
+  1/64; seven of the eight three-step tails then reach a position whose west
+  pickup takes the cube.  Every earlier deviation falls into a hole.
+- Exact full-state density: `7 * 2^23 / (2^32 - 1)`, or
+  **1.367187500318%**.  There is one absorbing losing tail at `(7,10)`.
+- Expected editor size: **5**; the label is free and the program has one
+  pickup, three steps, and one jump.  Paste is required for the direction
+  lists at this early level.
+- Suggested live test: repeated fresh attempts at 12x, resetting shortly
+  after the longest successful path; do not wait for the 1,400-second cap when
+  the worker is visibly parked in the losing corner.
+- Local-emulator cross-check (2026-08-22): 36/3,000 = **1.20%**, within one
+  sigma of the exact 1.367% claim — the rate is confirmed by a second model.
+- Result: _not yet tested locally in the game_.
+
+```text
+a:
+pickup w
+step s,se
+step e,sw
+step sw,se
+jump a
+```
+
+### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
+
+- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
+- **Fallback (size 21):** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt>)
+- Goal: retain the low-percent speed row's displayed ~14 while reducing its
+  size from 23 to **19** (n05ucc4u's program; keep the credit).
+- Exact edits: delete the two three-line re-check tails — in the `> 49`
+  branch `if w > myitem: jump d / endif` and in the `else` branch
+  `if e < myitem: jump h / endif`.  The size-21 fallback deletes only the
+  first of them.
+- Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
+  16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
+  16.2.  The win rate drops from about 52% to about 38-45% (still the
+  low-percent tier) with the speed distribution unchanged.
+- Suggested live test: repeated ~14-second runs until a win; capture the
+  displayed speed and editor size.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt](<SolutionsToTry/Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13.txt>)
+- Goal: establish a low-percent size-13 program that retains or improves the
+  reliable incumbent's displayed speed of 5 and is smaller than its size 16.
+- Exact edit: in the current speed program, replace the final five-line
+  `if n == nothing: step n; else: step s; endif` with random `step n,s`.
+- Capped-emulator evidence: 1/100 candidate runs won in 278 frames with
+  modelled speed 5 and 18 item actions.  The incumbent was 100/100 at 311
+  frames and 24 actions; canonical sizes are 13 and 16.
+- Construction caveat: random multi-direction movement is paste-only here, so
+  retain the clipboard marker and classify the program as LowPercent.
+- Suggested live test: repeated quick attempts; on a win, capture both the
+  displayed speed and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - low-percent speed tie-break at size 17.txt>)
+- Goal: establish a low-percent speed-5 program at size 17 versus the reliable
+  incumbent's size 20.
+- Exact edit: retain the outer guard, but replace its inner
+  `if ne != datacube: step ne; else: step sw; endif` with random `step ne,sw`.
+- Capped-emulator A/B evidence: candidate won 23/100.  Every winning run was
+  frame-identical to the incumbent at 326 frames and modelled speed 6, while
+  using 21 instead of 24 item actions.  Canonical sizes are 17 and 20; the
+  incumbent's authoritative live score is 5.
+- Construction caveat: the random diagonal step is paste-only, so retain the
+  clipboard marker and LowPercent classification.
+- Suggested live test: a handful of attempts should normally produce a win;
+  capture the completion panel and editor size.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83
+
+- **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - low-percent speed tie-break at size 83.txt>)
+- Goal: retain the current low-percent speed record of about 6 while reducing
+  its secondary size from 84 commands to 83.
+- Exact edit: start from
+  [the current low-percent speed program](<SolutionsLowPercent/Year 34 - Seek and Destroy 1 (speed).txt>)
+  and delete the third `mem1 = nearest datacube` in the `mem2 == mem3` branch,
+  immediately before `if n <= mem2`.
+- Why it should be safe: no path reads that value; after the branch picks up
+  either north or `mem2`, every continuation overwrites `mem1` with the nearest
+  shredder.  `nearest` itself is timing-free in the validated model.
+- Same-seed emulator A/B evidence: candidate and incumbent won the identical
+  5/20 seeds, each in exactly 411 frames with modelled speed 7 and 11 item
+  actions.  Canonical sizes are 83 and 84.
+- Expected editor size: **83**; expected displayed speed: **about 6**.
+- Suggested live test: run repeated candidate attempts until it wins, then
+  capture the completion panel and editor size.
+- Live-speed caution: frame-based evidence no longer establishes
+  displayed speed (Years 39/40 regressed 36→41 live).  Run the
+  incumbent as control first; discard on regression.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 44 - Unique Fashion Party - low-percent size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
+- Goal: live-confirm the new size-4 SolutionsLowPercent entry below the
+  size-5 main record.
+- Public evidence: abfipes12 reports positive real-game wins, but its header is
+  internally inconsistent: "40 failures out of 50" implies 20%, while the
+  same line labels the result 10%.
+- Current emulator evidence: 0/20.  Year 44's model is already known to have an
+  unfaithful randomized layout, so that result cannot overrule the live source.
+- Expected editor size: **4**.
+- Suggested live test: 10-20 runs; capture the final cube/worker arrangement on
+  every failure.
+- Result: _not yet tested locally in the game_.
+
+```text
+pickup s
+if w != wall:
+    a:
+    step s,e,se
+    jump a
+endif
 ```
 
 ### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
@@ -672,61 +744,6 @@ pickup mem1
 mem1 = nearest shredder
 giveto mem1
 ```
-
-### Commit `c7112a1`
-
-- [ ] Y10 speed
-- [ ] Y11 speed
-- [ ] Y12 size
-- [ ] Y20 speed
-- [ ] Y21 size, speed, and Solutions50+ speed
-- [ ] Y22 speed
-- [ ] Y31 size
-- [ ] Y32 size
-- [ ] Y39 size
-- [ ] Y40 size
-- [ ] Y41 speed
-- [ ] Y42 speed
-- [ ] Y50 size
-- [ ] Y51 speed
-- [ ] Y52 speed
-- [ ] Y60 size and speed
-- [ ] Y62 Solutions99+ size and Solutions50+ size
-- [ ] Y65 speed
-- [ ] Y67 speed
-
-### Commit `412d9d1`
-
-- [ ] Y09 speed
-- [ ] Y16 size
-- [ ] Y18 size
-- [ ] Y22 size
-- [ ] Y23 speed
-- [ ] Y34 size and speed
-- [ ] Y37 size
-- [ ] Y38 size and speed
-- [ ] Y57 size
-- [ ] Y58 size
-- [ ] Y68 size
-
-### Current all-level audit
-
-- [ ] Y05 low-percent size
-- [ ] Y06 low-percent size
-- [ ] Y13 low-percent size
-- [ ] Y30 Solutions50+ size
-- [ ] Y34 Solutions50+ speed
-- [ ] Y43 Solutions50+ size
-- [ ] Y44 low-percent size
-- [ ] Y53 low-percent size
-- [ ] Y54 Solutions50+ speed
-
-Current-audit evidence: Y30 is 15/25 in the public header and 64/100 in the
-capped emulator; Y34 is 79/100; Y43 is 144/150 publicly and 18/20 locally
-(winning emulator range 639-1,349 seconds); Y53 is 46/100 and was demoted from
-Solutions50+; Y54 is 64/120.  The public Y44 size-4 header is arithmetically
-inconsistent, and its incidental speed is still `TBD` until a live win is
-captured.
 
 ## Parked long shots (win rate below 1 in 100)
 
