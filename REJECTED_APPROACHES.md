@@ -722,3 +722,30 @@ duplicate-free list, which is a different (and separately measured)
 program.  The searcher now refuses to generate duplicates.  Casualties:
 this Year 15 form, and the Year 61 walker-family ceiling of 93.5%, which
 was reached by a step list naming `n` twice and does not stand.
+
+## Year 53 at size 7 — a rarer starter gate does not help (2026-09-02)
+
+The published low-percent seven measures **49.1% over 1000 trials** at
+the live clock, so a single point would make it a Solutions50+ row
+against a 99%+ eight.  The level gives 100 cubes and demands 100
+distinct values, which leaves no slack at all: one worker must make all
+99 writes and leave exactly one cube still showing 0, so a second
+worker that starts its own count duplicates the low numbers and burns
+cubes the leader still needs.  That suggested a rarer starter, and the
+suggestion is wrong — the published gate is *already* a single tile
+(top row, empty tile to the east, which only the block's north-east
+corner satisfies), and moving it further from where the workers spawn
+only costs time:
+
+| starter | rate over 200 |
+| --- | --- |
+| published (block's NE corner) | 52.5% |
+| north-west corner only | 47.0% |
+| south-west corner only | 42.0% |
+| published plus a redundant clause | 52.5% (identical, the clause never binds) |
+| left column / top row with a cube east | 0% (never usefully fires) |
+
+Winners average about 73,400 frames against the 87,500 the clock
+allows, so this row is a race against time, not against worker
+interference: what would lift it is a walk that finds the cubes still
+showing 0 faster, especially the last few.  Gate rarity is closed.
