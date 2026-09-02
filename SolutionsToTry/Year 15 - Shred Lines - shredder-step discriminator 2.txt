@@ -1,0 +1,7 @@
+-- 7 Billion Humans (2214M) --
+-- 15: Shred Lines --
+-- discriminator 2 of 2: random step that can pick the shredder row --
+
+a:
+step n,s
+jump a

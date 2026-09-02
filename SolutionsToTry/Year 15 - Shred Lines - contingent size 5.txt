@@ -1,0 +1,12 @@
+-- 7 Billion Humans (2214M) --
+-- 15: Shred Lines --
+-- Size 5 Speed TBD --
+
+a:
+step nw,n,w,sw,s,ne,e,se
+if nw == datacube or
+ s == shredder:
+	pickup nw
+	giveto s
+endif
+jump a

@@ -749,3 +749,76 @@ Winners average about 73,400 frames against the 87,500 the clock
 allows, so this row is a race against time, not against worker
 interference: what would lift it is a walk that finds the cubes still
 showing 0 faster, especially the last few.  Gate rarity is closed.
+
+## Year 53 at size 7 — a directed walk does not help either (2026-09-02)
+
+Following the gate result above, the other half of the seven was tested:
+the starter clause was held fixed and only the walk varied, which costs
+nothing in size.  Seven alternatives to the published all-eight list
+were measured over 200 runs each, and six of them never win at all,
+because a worker that cannot move in every direction never reaches the
+one tile where the count can start:
+
+| walk | rate over 200 |
+| --- | --- |
+| published, all eight directions | 52.5% |
+| west, south, north, east | 43.0% |
+| the other six (any list dropping a diagonal) | 0% |
+
+So neither the gate nor the walk is the lever on this row.  What is left
+is a different program, not a tuning of this one.
+
+## Year 15 — how much the repeated direction was worth (2026-09-02)
+
+Measured over 400 runs each, holding the published six's body fixed and
+varying only its step list.  The repeat was worth almost everything, and
+the answer to "what happens if the editor silently drops it" is that the
+program becomes a much worse one rather than an equivalent one:
+
+| step list | rate over 400 |
+| --- | --- |
+| `sw` named twice (the illegal form) | 99.5% |
+| the published list | 95.5% |
+| `sw` twice plus south | 87.2% |
+| `w` named twice | 82.8% |
+| the repeat simply removed | 27.8% |
+| all eight directions | 16.5% |
+| four other duplicate-free lists | 0% |
+
+Two things follow.  A duplicate-bearing candidate is not merely
+unpasteable, it is actively misleading, because the duplicate-free
+program it would collapse to is a different and much weaker one.  And
+this body is extraordinarily sensitive to its walk, which is worth
+knowing before reading any single result on this level as structural.
+
+## Year 15 size 5 — held back until the shredder-step rule is settled (2026-09-02)
+
+The hardening search produced a five that wins **1000/1000** plain and
+**400/400** under the shuffled-dispatch screen, against a size record of
+8.  It is not queued as a record, because it belongs to the family this
+level has already refuted live once.  Screened with the fatal-shredder
+rule turned on:
+
+| program | shredder treated as a fence | shredder step fatal |
+| --- | --- | --- |
+| the size-5 candidate | 100% | **0%** |
+| the published 50%+ six | 95.5% | **0%** |
+| the published 99%+ eight | 100% | 100% |
+| the published speed 42 | 100% | 100% |
+
+So the candidate and the published six stand or fall together, and only
+the two deterministic published programs survive either reading.  A
+maintainer's live run of an earlier random-walk five reported "again all
+workers die", yet the six is a recorded row doing the same thing, so the
+two pieces of live evidence contradict each other and no simulator
+result can break the tie.  Two one-line programs are queued to settle
+it; until they are run, no random-walk candidate on Shred Lines should
+be pasted, and the size row stays 8.
+
+Two side results from the same batch, both size 5 and all 400/400 plain
+and jittered, so the choice between them is about exposure and speed
+rather than reliability: putting the give **inside** the guard runs in
+23,200 frames and never hands into a wall, while leaving it outside runs
+in 38,600 and does hand into walls at the room's bottom edge, which the
+published six's `se != wall` clause exists to prevent.  The inside form
+is the one queued.

@@ -39,18 +39,76 @@ file was derived and verified.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 26 size 6** — paste the primary, then run Arm B once regardless
+1. **Year 15 shredder-step discriminator** — two runs of a few seconds
+   each, and neither can win.  It decides whether a size-5 candidate for
+   a record that stands at 8 is real or dead, and whether the published
+   50%+ six on that level should be there at all.
+2. **Year 26 size 6** — paste the primary, then run Arm B once regardless
    (the diagonal-give discriminator), then the 81% fallback only if the
    primary stalled cleanly.  Record editor size and completion for each.
-2. **Year 13 size 6** — two or three attempts; the attempt count is the
+3. **Year 13 size 6** — two or three attempts; the attempt count is the
    tier evidence.
-3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
+4. **Year 56 size 4** — five quick attempts (about 12 s each) on the
    community's published four.  Cheapest entry in the queue and the
    largest tier gain: its 99+ size row is 7.
-4. The speed tie-breaks below, each with the incumbent control run first.
+5. The speed tie-breaks below, each with the incumbent control run first.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
+
+### [ ] Year 15 - Shred Lines - settle the shredder-step rule (two runs of seconds each)
+
+- **Paste-ready programs:** [SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 1.txt](<SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 1.txt>) and [SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 2.txt](<SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 2.txt>)
+- This settles an open question that gates a whole family, including a
+  size-5 candidate for a record that currently stands at 8.  Every
+  worker starts directly north of a shredder.  Does a step aimed at a
+  shredder tile get **refused**, so the worker fences off the machine
+  row, or is it **taken and fatal**?
+- Why it is open: a maintainer's live run of an earlier random-walk five
+  reported "again all workers die", which is why the model treats the
+  death as opt-in screening.  But the published 50%+ six on this very
+  level is itself a random walk starting on that same row, and it is a
+  recorded row.  Both readings cannot be true, and everything on this
+  level depends on which one is.
+- Discriminator 1 is `step s` in a loop.  Under fencing the crew stands
+  still until the clock runs out, which is a failure with everyone
+  alive; under the fatal reading they walk into the blades within
+  seconds.  The two outcomes look nothing alike, so one run answers it.
+- Discriminator 2 is `step n,s`, the random form, in case the game
+  treats a direction it chose differently from one it was given — the
+  distinction the live report and the published six disagree about.
+- Neither program can win.  The result to record is what happens to the
+  workers, not the completion panel.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 15 - Shred Lines - contingent size 5 (paste only if the step is a fence)
+
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - contingent size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 5.txt>)
+- Goal: size **5** against a 99%+ record of **8** — a three-size gain,
+  and a tier above the published 50%+ six.
+- Mechanism: workers wander over all eight directions.  When the
+  north-west tile holds a cube, or the worker is standing on the north
+  edge of the shredder row, it lifts that cube and hands it south.  The
+  published six spends a six-clause condition keeping workers off the
+  map's edges; this drops that condition entirely and lets the same
+  two-branch guard carry the whole program.  Found by the hardening
+  search 2026-09-02.
+- Emulator evidence: **400/400 plain and 400/400 under the
+  shuffled-dispatch screen** at the live cap, in about 23,200 frames
+  (roughly 370 s of game time), against the published six's 95.5% at
+  54,600 frames.  The step list names all eight directions once each, so
+  it is not the repeated-direction artefact archived the same day.
+- **Do not paste this before the discriminator above.**  Under the fatal
+  reading it measures 0/200 — and so does the published six, while the
+  published eight and the speed 42 survive both readings.  That is
+  exactly why the rule has to be settled first: this candidate is only
+  meaningful if the step is a fence.
+- The give sits inside the guard, so a worker never hands into a wall.
+  It can still hand into empty floor while holding a cube, which the
+  published six does too.  A variant with the give outside the guard
+  measures the same but runs 40% slower and does hand into walls, so it
+  is not the one queued.
+- Result: _not yet tested in the game_.
 
 ### [ ] Year 26 - Budget Brigade 2 - relay size 6 (99% primary, 81% fallback)
 
