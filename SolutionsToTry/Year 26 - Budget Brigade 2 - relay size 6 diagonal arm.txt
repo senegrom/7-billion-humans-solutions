@@ -1,0 +1,14 @@
+-- 7 Billion Humans (2214M) --
+-- 26: Budget Brigade 2 --
+-- Size 6 Speed TBD --
+
+a:
+if myitem == nothing or
+ myitem < 50 and
+ s != shredder:
+	giveto sw,w,s
+	takefrom s,ne
+endif
+giveto n,s
+takefrom ne,w
+jump a

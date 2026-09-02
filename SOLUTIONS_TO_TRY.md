@@ -56,10 +56,23 @@ file was derived and verified.
   verified in isolation (the Year 24 printer-return and Year 60
   pickup-list stalls are the cautionary cousins).  If the game stalls on
   the first target instead, the relay jams visibly within a minute.
+- **Arm B — the diagonal-give discriminator:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt>)
+  differs from the primary by exactly one thing: the push list is
+  `giveto sw,w,s`, so the worker in column 3 feeds the left shredder
+  DIAGONALLY every time it holds a small cube.  In the model this is the
+  strongest form of all — **999/1000, 199/200 jittered** — but it is the
+  construct the Year 21 refutation blamed for a "walk-in" death, a
+  mechanism never isolated since.  Running B after the primary settles
+  it: both win → diagonal machine gives are legal and a whole guarded
+  class reopens; primary wins and B loses (watch column 3's worker) →
+  the walk-in death is confirmed as a rule; both stall → give-list
+  fall-through is the live problem, not the diagonal.
 - Suggested live test: paste the primary, confirm editor size 6, run at
-  12x (~11 minutes of game time at 12x is under a minute of wall time).
-  A first-try win is expected; on a clean stall, the fallback will stall
-  the same way, so stop there and report.
+  12x (~11 minutes of game time is under a minute of wall time).  A
+  first-try win is expected.  Then run Arm B once regardless of the
+  primary's outcome and report both — the pair is worth more than either
+  alone.  On a clean stall of the primary, the 81% fallback will stall
+  the same way; skip it.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
