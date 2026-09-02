@@ -87,10 +87,12 @@ file was derived and verified.
   instead of retiring after one.  The opener `pickup s` is the published
   row's own; there are no direction lists on item commands anywhere, so
   the Year 60 list-stall class does not apply.
-- Emulator evidence: **285/400 = 71%** at ~22,000 frames; **67/100 under
-  the shuffled-dispatch screen**; the published low-percent row measures
-  83/200 = 41.5% on the same model.  Found by the tier-upgrade hardening
-  search 2026-09-02; a list-free hardening run continues from this form.
+- Emulator evidence: **331/400 = 83%** at ~39,000 frames (about 630 s of
+  game time); **85/100 under the shuffled-dispatch screen**; the
+  published low-percent row measures 83/200 = 41.5% on the same model,
+  and the pickup-before-drop ordering of the same idea 71%.  Found by the
+  tier-upgrade hardening search 2026-09-02; a list-free hardening run
+  continues from this form.
 - Suggested live test: paste, confirm editor size 6, run at 12x; two or
   three attempts should land a win.  Capture the completion panel — the
   attempt count is the tier evidence.

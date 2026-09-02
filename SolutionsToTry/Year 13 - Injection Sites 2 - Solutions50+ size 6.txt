@@ -7,7 +7,7 @@ a:
 step w,sw,n,e,se
 if c == nothing and
  w == datacube:
-	pickup w
 	drop
+	pickup w
 endif
 jump a
