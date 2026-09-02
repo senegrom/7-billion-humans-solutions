@@ -75,6 +75,27 @@ file was derived and verified.
   the same way; skip it.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
+- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
+  record of 7, and a tier above the existing low-percent 6.
+- Mechanism: the published low-percent six's random walk and gap-filling,
+  with one change — after dropping into a gap the worker immediately
+  re-picks the cube it just walked past (`pickup w` under the guard that
+  already vouches for `w == datacube`), so each worker chains fills
+  instead of retiring after one.  The opener `pickup s` is the published
+  row's own; there are no direction lists on item commands anywhere, so
+  the Year 60 list-stall class does not apply.
+- Emulator evidence: **285/400 = 71%** at ~22,000 frames; **67/100 under
+  the shuffled-dispatch screen**; the published low-percent row measures
+  83/200 = 41.5% on the same model.  Found by the tier-upgrade hardening
+  search 2026-09-02; a list-free hardening run continues from this form.
+- Suggested live test: paste, confirm editor size 6, run at 12x; two or
+  three attempts should land a win.  Capture the completion panel — the
+  attempt count is the tier evidence.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
