@@ -93,9 +93,9 @@ ask for that tier again.
   map's edges; this drops that condition entirely and lets the same
   two-branch guard carry the whole program.  Found by the hardening
   search 2026-09-02.
-- Emulator evidence: **400/400 plain and 400/400 under the
+- Emulator evidence: **1000/1000 plain and 400/400 under the
   shuffled-dispatch screen** at the live cap, in about 23,200 frames
-  (roughly 370 s of game time), against the published six's 95.5% at
+  (roughly 372 s of game time), against the published six's 95.5% at
   54,600 frames.  The step list names all eight directions once each, so
   it is not the repeated-direction artefact archived the same day.
 - **Do not paste this before the discriminator above.**  Under the fatal
