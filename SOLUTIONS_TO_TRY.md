@@ -150,6 +150,14 @@ ask for that tier again.
   bar, so the attempt is worth making, and a much lower live rate would
   instead expose a real emulator gap on this level, which is worth
   knowing either way.
+- **This was withdrawn once, on 2026-08-18**, on the reasoning that the
+  low-percent tier label already settled the live behaviour as workers
+  jamming at the single shredder.  What is new is measurement rather
+  than opinion: the shuffled-dispatch screen says the run is
+  order-robust, so jamming is not a failure mode in anything we model,
+  and the tie decomposition above gives a concrete mechanism for a
+  sub-100% live rate that is not crowding.  The tier label is a reason
+  to test it, not a reason to claim it.
 - Suggested live test: five attempts, about 12 s each.  Record every win
   and loss; three or more wins supports the Solutions50+ row.  The one
   unmodelled risk is seven workers converging on the single shredder,

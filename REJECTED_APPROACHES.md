@@ -469,6 +469,23 @@ converging on the one shredder fail often enough to sit under 50%.
 Curation rule: before queueing a "new" candidate, check every tier's
 rows INCLUDING (both) files — a (size)-only glob misses them.
 
+**Re-opened 2026-09-02 for a measured test.**  The withdrawal above
+inferred the live rate from the tier label alone ("seven workers
+converging on one shredder fail often enough to sit under 50%"), and
+that inference now has evidence against it: the program wins 400/400 in
+the model both plain and under the shuffled-dispatch screen, in about
+six seconds, so converging on the shredder is not a failure mode in
+anything we model.  What the model does gloss is the tie: values run
+0..99, 44% of worlds already contain a 99 somewhere, and our check
+rejects a group only when a cube still shows something strictly
+greater.  So the model's 100% is really 56% of worlds won outright plus
+44% won on a tie, and the live rate is about 56% if the game wants a
+strict maximum, near 100% if it does not — both above the bar.  Five
+twelve-second attempts separate those, and a much lower result would
+instead expose a real gap on this level.  Queued in
+[SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md); the tier label stays the
+reason to test it rather than to claim it.
+
 ## Exhaustive synthesis closures (2026-08-18) — do not re-derive
 
 Every program one command below the record was enumerated and run
@@ -689,3 +706,19 @@ stand on separate mechanisms but lose their claimed evidence tier.
   workers gone and its community record culls them by divide-by-zero —
   the same kill mechanism the queued Year 44 static-cull lead relies
   on, so that mechanism is established rather than speculative.
+
+## Repeated directions in a direction list — unpasteable, however well they score (2026-09-02)
+
+A Year 15 harden produced a size-6 form at 99.5% (against the published
+six's 95.5%) whose step list named `sw` twice.  In our model a repeated
+direction doubles that direction's draw, because a multi-direction step
+picks uniformly from the names as written — so the duplicate was doing
+real work, and the gain was an artefact.  The game cannot express it:
+one command has a slot per direction, so a direction is either named or
+it is not, and no published solution in any tier repeats one.  Every
+duplicate-bearing candidate is therefore void whatever it measures, and
+if the editor silently drops the repeat the program collapses to the
+duplicate-free list, which is a different (and separately measured)
+program.  The searcher now refuses to generate duplicates.  Casualties:
+this Year 15 form, and the Year 61 walker-family ceiling of 93.5%, which
+was reached by a step list naming `n` twice and does not stand.
