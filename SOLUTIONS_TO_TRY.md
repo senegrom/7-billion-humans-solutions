@@ -44,7 +44,10 @@ file was derived and verified.
    primary stalled cleanly.  Record editor size and completion for each.
 2. **Year 13 size 6** — two or three attempts; the attempt count is the
    tier evidence.
-3. The speed tie-breaks below, each with the incumbent control run first.
+3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
+   community's published four.  Cheapest entry in the queue and the
+   largest tier gain: its 99+ size row is 7.
+4. The speed tie-breaks below, each with the incumbent control run first.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -121,6 +124,36 @@ ask for that tier again.
 - Suggested live test: paste, confirm editor size 6, run at 12x; two or
   three attempts should land a win.  Capture the completion panel — the
   attempt count is the tier evidence.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 56 - Local Maximums - tier check at size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 56 - Local Maximums - tier check at size 4.txt](<SolutionsToTry/Year 56 - Local Maximums - tier check at size 4.txt>)
+- Goal: promote the community's published **low-percent size 4** row to
+  Solutions50+.  Year 56 has no 50+ row at all today and its 99+ size
+  record is 7, so a confirmed 50%+ four is a three-size gain in that
+  tier.  The program is n05ucc4u's own, unchanged.
+- Mechanism: no maximum is ever searched for.  Each worker lifts the cube
+  on its north-west ring tile, overwrites it with `write 99`, and hands
+  it to the room's single shredder.  The goal grades the number a cube
+  shows as it goes in rather than the number it started with, so
+  overwriting makes the carried cube its group's maximum instead of
+  finding it.
+- Emulator evidence: **400/400** at the live cap and **400/400 under the
+  shuffled-dispatch screen**, finishing in about 6 s of simulated time.
+- Why it sits in the low-percent tier, and what the attempts measure:
+  values are drawn 0..99, so a group can already hold a 99.  That happens
+  in **44% of worlds** (measured over 200) and the model passes those as
+  ties — it rejects a group only when a cube still shows something
+  strictly greater.  If the game demands a strict maximum the live rate
+  is about **56%**; if it accepts the tie, near 100%.  Both clear the 50%
+  bar, so the attempt is worth making, and a much lower live rate would
+  instead expose a real emulator gap on this level, which is worth
+  knowing either way.
+- Suggested live test: five attempts, about 12 s each.  Record every win
+  and loss; three or more wins supports the Solutions50+ row.  The one
+  unmodelled risk is seven workers converging on the single shredder,
+  where the model shows no crowding trouble.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)

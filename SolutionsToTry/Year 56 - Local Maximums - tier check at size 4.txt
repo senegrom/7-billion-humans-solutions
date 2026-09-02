@@ -1,0 +1,8 @@
+-- 7 Billion Humans (2214M) --
+-- 56: Local Maximums --
+-- Size 4 Speed 12 --
+
+pickup nw
+write 99
+mem1 = nearest shredder
+giveto mem1
