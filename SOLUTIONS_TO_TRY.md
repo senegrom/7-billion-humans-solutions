@@ -20,6 +20,16 @@ tie-break below therefore requires a live incumbent control run first;
 discard the candidate on any displayed-speed regression.  Win/loss and
 size evidence is unaffected.
 
+**Screen-evidence correction (2026-09-02):** every "jittered" figure
+quoted here before today was taken with a search binary built three days
+before the shuffled-dispatch screen existed, so the env switch did
+nothing and the run was a plain re-run.  All four candidates below were
+re-screened with the build that implements it; the Year 26 numbers held,
+Year 13's did not (85% claimed, 78.5% measured).  Rates are quoted at
+the live 1,400 s clock, which is also what the search re-evaluates at —
+a rate measured at a tighter search cap reads far lower and means
+nothing here.
+
 Every entry links a **paste-ready program file** in
 [SolutionsToTry/](SolutionsToTry/) — open it, select all, copy, and paste
 into the level's editor.  Recipes and evidence below describe how each
@@ -58,7 +68,8 @@ ask for that tier again.
   (about 670 s of game time, well inside the clock); **198/200 under the
   shuffled-dispatch screen** — order-robust.  A wrong-side shred spoils
   the run in the model, so the routing itself is sound.  Fallback:
-  810/1000 = 81%, 75/100 jittered.  Both found by mutation search
+  810/1000 = 81% (163/200 on the re-screen), 155/200 = 77.5% jittered.
+  Both found by mutation search
   (2026-08-30 / 09-01); the primary is the fallback hardened over ten
   generations.
 - **Caution (give-lists past holes):** both forms rely on the game trying
@@ -100,7 +111,9 @@ ask for that tier again.
   row's own; there are no direction lists on item commands anywhere, so
   the Year 60 list-stall class does not apply.
 - Emulator evidence: **331/400 = 83%** at ~39,000 frames (about 630 s of
-  game time); **85/100 under the shuffled-dispatch screen**; the
+  game time), 168/200 on the re-screen; **157/200 = 78.5% under the
+  shuffled-dispatch screen** — several points under its plain rate, so
+  this one is mildly order-sensitive and a first attempt can miss; the
   published low-percent row measures 83/200 = 41.5% on the same model,
   and the pickup-before-drop ordering of the same idea 71%.  Found by the
   tier-upgrade hardening search 2026-09-02; a list-free hardening run
