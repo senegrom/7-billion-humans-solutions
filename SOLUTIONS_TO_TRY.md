@@ -99,11 +99,13 @@ ask for that tier again.
   the commands fail most of the time, and the failures are what pace the
   program.  Found 2026-09-03 by shrinking the five and then hardening
   the result.
-- Emulator evidence: **992/1000 plain and 395/400 under the
-  shuffled-dispatch screen** at the live cap, about 47,300 frames (some
-  758 s of game time).  The fallback keeps `e` in the step list and
-  measures 977/1000 and 392/400 at 53,100 frames; the queued form drops
-  `e`, which is worth roughly a point and a half.
+- Emulator evidence: **995/1000 plain and 396/400 under the
+  shuffled-dispatch screen** at the live cap, about 48,100 frames (some
+  770 s of game time).  The fallback is the same program over seven
+  directions instead of six and measures 992/1000 and 395/400; the
+  eight-direction version measures 977/1000.  Trimming the step list is
+  what carried this form over 99%: each direction removed sends the
+  crowd back across the cube field more often.
 - Both item commands name a single cardinal direction, so neither the
   give-list fall-through nor the diagonal machine contact applies.  The
   search's own best four reached 99.8% using `giveto se,s` — a list

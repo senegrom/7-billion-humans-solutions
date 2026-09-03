@@ -3,7 +3,7 @@
 -- Size 4 Speed TBD --
 
 a:
-step nw,n,w,sw,s,ne,e,se
+step nw,n,w,sw,s,ne,se
 pickup n
 giveto s
 jump a
