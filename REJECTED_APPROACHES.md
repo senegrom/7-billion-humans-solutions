@@ -840,3 +840,17 @@ rather than reliability: putting the give **inside** the guard runs in
 in 38,600 and does hand into walls at the room's bottom edge, which the
 published six's `se != wall` clause exists to prevent.  The inside form
 is the one queued.
+
+## Year 62 at size 10 — the neighbourhood is mined out (2026-09-02)
+
+The published 50%+ ten measures 88.5% against a 99%+ row of twelve, so
+lifting it to 99% would have been a two-size promotion, the largest on
+offer from the tier audit.  A hardening search ran 1,200 generations
+over 144,000 distinct programs and moved it once, to 89.5%, then
+stopped moving.  The shape of the failure is the informative part: the
+best kid in a generation wins **none** of its twelve screening runs, not
+some of them, so these are not near misses being filtered out — every
+single-edit neighbour of this program is broken.  A rigid program with a
+dead neighbourhood will not yield to more of the same search, so the
+slot was spent elsewhere.  Year 62 at 10 needs a different design, not a
+longer run.
