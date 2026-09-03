@@ -768,6 +768,19 @@ one tile where the count can start:
 So neither the gate nor the walk is the lever on this row.  What is left
 is a different program, not a tuning of this one.
 
+A third attempt closed the same way.  The hardening search reported a
+seven at 56.0% over 200 runs, which would have cleared the bar, and it
+differed from the published row by a three-direction `pickup` list and a
+reordered step list.  Re-measured over 400 runs it is **50.2%**, and the
+list is inert: the same program with the pickup written five different
+ways — one direction, two, or the original three — returns byte
+identical results, because the pickup only ever fires on a tile whose
+cube is already there, so the list never falls through.  The 56% was
+noise.  Two hundred runs cannot separate 50% from 56%, so a tier
+decision needs 400 at minimum and 1000 to state, which is what the
+published row's own 49.1% rests on.  Year 53 at 7 sits on the bar, and
+nothing tried so far moves it off.
+
 ## Year 15 — how much the repeated direction was worth (2026-09-02)
 
 Measured over 400 runs each, holding the published six's body fixed and
