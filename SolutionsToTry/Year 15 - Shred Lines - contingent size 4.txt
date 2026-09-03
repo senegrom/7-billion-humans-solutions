@@ -1,0 +1,9 @@
+-- 7 Billion Humans (2214M) --
+-- 15: Shred Lines --
+-- Size 4 Speed TBD --
+
+a:
+step nw,n,w,sw,s,ne,se
+pickup n
+giveto s
+jump a

@@ -39,11 +39,12 @@ file was derived and verified.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 15 shredder-step discriminator, then the size 5** — two runs
-   of a few seconds each that cannot win, then the candidate itself.
-   The community six's own 16-of-25 live wins already point to the
-   fence reading, so expect to paste the five in the same session; it
-   is a size 5 against a record of 8.
+1. **Year 15 shredder-step discriminator, then the five, then the four**
+   — two runs of a few seconds each that cannot win, then the two
+   candidates.  The community six's own 16-of-25 live wins already point
+   to the fence reading, so expect to paste both in the same session.
+   The five is the safer program and wins every run in the model; the
+   four is the bigger record, four sizes under the current 8.
 2. **Year 26 size 6** — paste the primary, then run Arm B once regardless
    (the diagonal-give discriminator), then the 81% fallback only if the
    primary stalled cleanly.  Record editor size and completion for each.
@@ -83,6 +84,37 @@ ask for that tier again.
   distinction the live report and the published six disagree about.
 - Neither program can win.  The result to record is what happens to the
   workers, not the completion panel.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 15 - Shred Lines - contingent size 4 (paste only if the step is a fence)
+
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - contingent size 4.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 4.txt>)
+- **Fallback (also size 4):** [SolutionsToTry/Year 15 - Shred Lines - contingent size 4 fallback.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 4 fallback.txt>)
+- Goal: size **4** against a 99%+ record of **8** — a four-size gain, and
+  two sizes below the published 50%+ six.
+- Mechanism: there is no condition at all.  Workers wander, each one
+  lifts whatever sits to its north and hands whatever it holds to its
+  south, forever.  Cubes migrate down the room through the crowd and
+  fall into the shredder row from the tile directly above it.  Most of
+  the commands fail most of the time, and the failures are what pace the
+  program.  Found 2026-09-03 by shrinking the five and then hardening
+  the result.
+- Emulator evidence: **992/1000 plain and 395/400 under the
+  shuffled-dispatch screen** at the live cap, about 47,300 frames (some
+  758 s of game time).  The fallback keeps `e` in the step list and
+  measures 977/1000 and 392/400 at 53,100 frames; the queued form drops
+  `e`, which is worth roughly a point and a half.
+- Both item commands name a single cardinal direction, so neither the
+  give-list fall-through nor the diagonal machine contact applies.  The
+  search's own best four reached 99.8% using `giveto se,s` — a list
+  whose first target is a diagonal at a machine — and is deliberately
+  not queued; it is archived instead.
+- **Same contingency as the five below, and the same reasoning.**  Under
+  the fatal reading it measures 0/200, as every program in this family
+  does.  Run the discriminator first.
+- The give is unguarded here, so at the room's bottom edge a worker can
+  hand into a wall.  The five guards against that and is the safer
+  paste; this four is the bigger record.  Try the five first, then this.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 15 - Shred Lines - contingent size 5 (paste only if the step is a fence)

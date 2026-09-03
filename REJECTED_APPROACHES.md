@@ -854,3 +854,36 @@ single-edit neighbour of this program is broken.  A rigid program with a
 dead neighbourhood will not yield to more of the same search, so the
 slot was spent elsewhere.  Year 62 at 10 needs a different design, not a
 longer run.
+
+## Year 15 size 4 — the list forms score higher and are still not queued (2026-09-03)
+
+Shrinking the five produced two fours, and the one the search liked best
+is the one that cannot be trusted:
+
+    a: / step nw,n,w,sw,s,ne,e,se / pickup nw / giveto se,s / jump a
+
+It measures 99.8% plain and 99.8% screened, and the sibling with the
+list written `s,se` reaches 100%.  Both are rejected on construction
+rather than on score.  The give is a **list**, whose fall-through past an
+unavailable target has never been verified live, and its first target is
+a **diagonal at a machine**, which is the walk-in death that refuted the
+Year 21 candidate.  Stacking both on top of an unconditional pickup is
+three unverified things at once for a two-point gain.
+
+The list is worth about two points and nothing else.  Measured over 400
+runs each, plain and under the shuffled-dispatch screen:
+
+| four | plain | screened |
+| --- | --- | --- |
+| `pickup nw` + `giveto s,se` | 99.8% | 100.0% |
+| `pickup nw` + `giveto se,s` | 99.8% | 99.8% |
+| `pickup nw` + `giveto s` | 96.2% | 98.5% |
+| `pickup n` + `giveto s` | 97.8% | 98.0% |
+| `pickup w` + `giveto s` | 90.5% | 91.0% |
+| `pickup nw` + `giveto se` | 75.0% | 74.8% |
+
+Hardening the list-free `pickup n` + `giveto s` form closed the gap
+anyway: dropping `e` from its step list lifts it to 992/1000 and 395/400
+screened, which is the version now queued.  Every four above, list or
+not, measures 0/400 under the fatal-shredder rule, so none of this is
+decided until the discriminator runs.
