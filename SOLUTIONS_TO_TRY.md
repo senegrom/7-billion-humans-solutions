@@ -279,8 +279,10 @@ ask for that tier again.
   and the `step e` cancel (identical endpoint), so both are deleted; the
   fallback deletes only the `step w`.
 - Emulator evidence: 199/200 wins at 606 frames versus the incumbent's
-  620 (the fallback: 200/200 at 614).  Item-action count identical;
-  100/100 under the shuffled-dispatch screen.
+  620 (the fallback: 200/200 at 614).  Item-action count identical.
+  Re-screened 2026-09-03 with the build that implements the screen:
+  199/200 for the candidate and 200/200 for the fallback, frames and
+  item counts unchanged.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
@@ -303,8 +305,9 @@ ask for that tier again.
   now removes the pair.  (Standing rule for deletion candidates: a deleted
   jump takes its label with it.)
 - Emulator evidence (corpus deletion sweep, re-run on the fixed file):
-  100/100 wins at exactly the incumbent's 230.0 frames.  100/100 under
-  the shuffled-dispatch screen.  The only live risk
+  100/100 wins at exactly the incumbent's 230.0 frames, and 200/200
+  under the shuffled-dispatch screen re-taken 2026-09-03.  The only
+  live risk
   is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
@@ -321,7 +324,8 @@ ask for that tier again.
 - Emulator evidence: 300/300 wins, deterministic at 455 frames versus the
   incumbent's 447 — 8 frames slower in the model, so the displayed speed
   needs the live A/B (control run first, discard on regression).
-  Item-action count identical; 100/100 under the shuffled-dispatch screen.
+  Item-action count identical; 200/200 under the shuffled-dispatch
+  screen re-taken 2026-09-03, at the same 455 frames.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
@@ -340,7 +344,7 @@ ask for that tier again.
   tell-only rungs needing an independent test.
 - Live ladder: run the incumbent size-172/speed-16 program as control, then 171,
   then 170.  Stop at the first failure or displayed speed above 16.
-- Live result at 12x: _inconclusive_.  The published size-172 control failed
+- Result: _live attempt inconclusive_.  The published size-172 control failed
   all three attempts in this session, so it did not establish a passing
   baseline.  The correctly pasted size-171 rung then failed its one attempt;
   size 170 was not run under the stop-on-failure rule.  Keep this queued for a
@@ -432,16 +436,24 @@ ask for that tier again.
   Solutions50+ below our size-8 main row (found in the 2026-08-17 source
   audit; it was never in our tables).
 - Public evidence: abfipes12 reports 16/25 real-game wins (64%) at about
-  950 seconds.  Local emulator: 47/50 wins, average 56,503 frames — same
-  ballpark, though Year 15's model is known to diverge on gated forms.
+  950 seconds.  **That report is the anchor for the whole Year 15
+  family**: those wins are impossible if a step aimed at a shredder kills
+  the worker, which is what the discriminator at the top of the queue
+  goes to settle.
+- Measured here 2026-09-03: **382/400 plain, 199/200 under the
+  shuffled-dispatch screen**, about 54,600 frames — and 0/400 with the
+  step treated as fatal, exactly like our own five and four.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
-  refuted Year 15 gated-form class does not apply; random steps fence at
-  machine rows live (the Year 42 precedent).
+  refuted Year 15 gated-form class does not apply.
 - Expected editor size: **6**; paste-only (multi-direction random step).
-- Suggested live test: a few full-length runs — wins are SLOW (near 1,000
-  seconds), so let each run reach the game's own cutoff.
-- Result: _not yet tested locally in the game_.
+- **Superseded as a paste target.**  Our own five wins every run at half
+  the game time and our four is two sizes smaller, so there is no reason
+  to spend attempts confirming a six.  Keep it for one purpose: if the
+  discriminator fences but our candidates then fail live, pasting this
+  known-good six separates "our program is wrong" from "the level
+  diverges from the model".
+- Result: _not tested locally; retained as a control_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - community speed 6-7 at size 122
 
