@@ -807,13 +807,18 @@ rule turned on:
 | the published speed 42 | 100% | 100% |
 
 So the candidate and the published six stand or fall together, and only
-the two deterministic published programs survive either reading.  A
-maintainer's live run of an earlier random-walk five reported "again all
-workers die", yet the six is a recorded row doing the same thing, so the
-two pieces of live evidence contradict each other and no simulator
-result can break the tie.  Two one-line programs are queued to settle
-it; until they are run, no random-walk candidate on Shred Lines should
-be pasted, and the size row stays 8.
+the two deterministic published programs survive either reading.  The
+live record looked contradictory — a maintainer's run of an earlier five
+reported "again all workers die" — until the community six's own numbers
+were read alongside it: abfipes12 reports 16 wins in 25 real-game
+attempts on a random seven-direction walk that starts on the shredder
+row's north edge.  Workers walking into the blades cannot win 64% of the
+time, so the fence reading is what the live record supports.  The two
+reports differ in the step they use: the refuted program stepped `n,s`,
+where south is nothing but shredder, while the six picks from seven, so
+the rule may depend on the step it is given.  Two one-line programs are
+queued to settle that in seconds, and the five is queued behind them
+rather than in place of them.
 
 Two side results from the same batch, both size 5 and all 400/400 plain
 and jittered, so the choice between them is about exposure and speed

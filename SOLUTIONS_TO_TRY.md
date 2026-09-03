@@ -39,10 +39,11 @@ file was derived and verified.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 15 shredder-step discriminator** — two runs of a few seconds
-   each, and neither can win.  It decides whether a size-5 candidate for
-   a record that stands at 8 is real or dead, and whether the published
-   50%+ six on that level should be there at all.
+1. **Year 15 shredder-step discriminator, then the size 5** — two runs
+   of a few seconds each that cannot win, then the candidate itself.
+   The community six's own 16-of-25 live wins already point to the
+   fence reading, so expect to paste the five in the same session; it
+   is a size 5 against a record of 8.
 2. **Year 26 size 6** — paste the primary, then run Arm B once regardless
    (the diagonal-give discriminator), then the 81% fallback only if the
    primary stalled cleanly.  Record editor size and completion for each.
@@ -64,12 +65,15 @@ ask for that tier again.
   worker starts directly north of a shredder.  Does a step aimed at a
   shredder tile get **refused**, so the worker fences off the machine
   row, or is it **taken and fatal**?
-- Why it is open: a maintainer's live run of an earlier random-walk five
-  reported "again all workers die", which is why the model treats the
-  death as opt-in screening.  But the published 50%+ six on this very
-  level is itself a random walk starting on that same row, and it is a
-  recorded row.  Both readings cannot be true, and everything on this
-  level depends on which one is.
+- Why it is open: a maintainer's live run of an earlier five reported
+  "again all workers die", which is why the model treats the death as
+  opt-in screening.  Against that, abfipes12 reports 16 wins in 25 live
+  attempts on the published six, which walks the same row in seven
+  random directions — impossible if those steps were fatal.  The two
+  reports differ in one visible way: the refuted program stepped
+  `n,s`, where south is nothing but shredder, while the six picks from
+  seven.  So the live rule may well depend on the step it is given, and
+  these two runs say which.
 - Discriminator 1 is `step s` in a loop.  Under fencing the crew stands
   still until the clock runs out, which is a failure with everyone
   alive; under the fatal reading they walk into the blades within
@@ -98,11 +102,19 @@ ask for that tier again.
   (roughly 372 s of game time), against the published six's 95.5% at
   54,600 frames.  The step list names all eight directions once each, so
   it is not the repeated-direction artefact archived the same day.
-- **Do not paste this before the discriminator above.**  Under the fatal
-  reading it measures 0/200 — and so does the published six, while the
-  published eight and the speed 42 survive both readings.  That is
-  exactly why the rule has to be settled first: this candidate is only
-  meaningful if the step is a fence.
+- **The contingency, and why it is probably already resolved.**  Under
+  the fatal reading this measures 0/200 — and so does the published six,
+  while the published eight and the speed 42 survive both.  But
+  abfipes12 reports **16 wins in 25 real-game attempts** on that six
+  (the community entry further down), and that six is itself a random
+  seven-direction walk starting on the shredder row's north edge.  A
+  program whose workers walked into the blades could not win 64% of the
+  time, so the fence reading is what the live record actually supports,
+  and this five is the same shape with one more direction.  The
+  discriminator above still comes first because it costs seconds and
+  settles the rule for every machine level at once, but on current
+  evidence expect it to fence — in which case paste this in the same
+  session.
 - The give sits inside the guard, so a worker never hands into a wall.
   It can still hand into empty floor while holding a cube, which the
   published six does too.  A variant with the give outside the guard
