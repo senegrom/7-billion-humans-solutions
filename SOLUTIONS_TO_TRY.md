@@ -99,14 +99,16 @@ ask for that tier again.
   the commands fail most of the time, and the failures are what pace the
   program.  Found 2026-09-03 by shrinking the five and then hardening
   the result.
-- Emulator evidence: **995/1000 plain and 400/400 under the
-  shuffled-dispatch screen** at the live cap, about 47,500 frames (some
-  760 s of game time), with the list written in the game's own slot
-  order.  The fallback is the same program over six directions instead
-  of seven and measures 994/1000 and 396/400; the eight-direction
-  version measures 977/1000.  Trimming the step list is what carried
-  this form over 99%: each direction removed sends the crowd back across
-  the cube field more often.
+- Emulator evidence: **997/1000 plain and 398/400 under the
+  shuffled-dispatch screen** at the live cap, about 45,600 frames (some
+  731 s of game time), with the list written in the game's own slot
+  order.  The step list keeps the four diagonals plus north and south
+  and drops both horizontal moves.  The fallback keeps `w` and measures
+  995/1000 and 400/400 at 760 s — statistically the same program, so
+  the primary is chosen on its extra half-minute of clock margin, not on
+  its rate.  The eight-direction version measures 977/1000.  Trimming
+  the step list is what carried this design over 99%: each direction
+  removed sends the crowd back across the cube field more often.
 - Every direction list in this file is written in the order the game
   stores them (`nw, w, sw, n, c, s, ne, e, se`, filtered).  A program
   cannot express any other order, so this is what the editor will show
@@ -117,8 +119,10 @@ ask for that tier again.
   whose first target is a diagonal at a machine — and is deliberately
   not queued; it is archived instead.
 - **Same contingency as the five below, and the same reasoning.**  Under
-  the fatal reading it measures 0/200, as every program in this family
-  does.  Run the discriminator first.
+  the fatal reading this form measures 1/200 — the first non-zero on
+  the level, and at that rate a lucky world rather than a mechanism —
+  and every other program in the family measures 0.  Run the
+  discriminator first.
 - The give is unguarded here, so at the room's bottom edge a worker can
   hand into a wall.  The five guards against that and is the safer
   paste; this four is the bigger record.  Try the five first, then this.
