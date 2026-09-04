@@ -1,4 +1,4 @@
 a:
-step s,sw,se,e
-pickup c,s,se,sw,e,w,n,ne
+step sw,s,e,se
+pickup w,sw,n,c,s,ne,e,se
 jump a

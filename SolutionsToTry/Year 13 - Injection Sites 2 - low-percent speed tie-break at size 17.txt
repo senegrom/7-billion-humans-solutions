@@ -8,7 +8,7 @@ step s
 step s
 if ne != datacube or
  sw != datacube:
-	step ne,sw
+	step sw,ne
 	drop
 endif
 step se

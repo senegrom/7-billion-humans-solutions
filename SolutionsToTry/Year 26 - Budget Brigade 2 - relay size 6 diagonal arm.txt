@@ -6,9 +6,9 @@ a:
 if myitem == nothing or
  myitem < 50 and
  s != shredder:
-	giveto sw,w,s
+	giveto w,sw,s
 	takefrom s,ne
 endif
 giveto n,s
-takefrom ne,w
+takefrom w,ne
 jump a

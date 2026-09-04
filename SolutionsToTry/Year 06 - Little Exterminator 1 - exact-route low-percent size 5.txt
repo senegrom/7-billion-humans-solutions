@@ -1,6 +1,6 @@
 a:
 pickup w
 step s,se
-step e,sw
+step sw,e
 step sw,se
 jump a

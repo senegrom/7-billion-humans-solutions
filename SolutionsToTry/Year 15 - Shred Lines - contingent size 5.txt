@@ -3,7 +3,7 @@
 -- Size 5 Speed TBD --
 
 a:
-step nw,n,w,sw,s,ne,e,se
+step nw,w,sw,n,s,ne,e,se
 if nw == datacube or
  s == shredder:
 	pickup nw

@@ -99,13 +99,18 @@ ask for that tier again.
   the commands fail most of the time, and the failures are what pace the
   program.  Found 2026-09-03 by shrinking the five and then hardening
   the result.
-- Emulator evidence: **995/1000 plain and 396/400 under the
-  shuffled-dispatch screen** at the live cap, about 48,100 frames (some
-  770 s of game time).  The fallback is the same program over seven
-  directions instead of six and measures 992/1000 and 395/400; the
-  eight-direction version measures 977/1000.  Trimming the step list is
-  what carried this form over 99%: each direction removed sends the
-  crowd back across the cube field more often.
+- Emulator evidence: **995/1000 plain and 400/400 under the
+  shuffled-dispatch screen** at the live cap, about 47,500 frames (some
+  760 s of game time), with the list written in the game's own slot
+  order.  The fallback is the same program over six directions instead
+  of seven and measures 994/1000 and 396/400; the eight-direction
+  version measures 977/1000.  Trimming the step list is what carried
+  this form over 99%: each direction removed sends the crowd back across
+  the cube field more often.
+- Every direction list in this file is written in the order the game
+  stores them (`nw, w, sw, n, c, s, ne, e, se`, filtered).  A program
+  cannot express any other order, so this is what the editor will show
+  after pasting; two spellings of one set are one program.
 - Both item commands name a single cardinal direction, so neither the
   give-list fall-through nor the diagonal machine contact applies.  The
   search's own best four reached 99.8% using `giveto se,s` — a list
@@ -166,7 +171,7 @@ ask for that tier again.
 - Mechanism: a bidirectional relay with no steps at all (the no-walk rule
   is met trivially).  Empty or small-holding workers push left with
   `giveto w,s` and refill with `takefrom s,ne` (the middle chain pulls
-  prints up); every worker's `takefrom ne,w` pulls the large cubes
+  prints up); every worker's `takefrom w,ne` pulls the large cubes
   rightward, and the unconditional `giveto n,s` serves whichever shredder
   sits below the end workers.  The `s != shredder` guard keeps
   shredder-adjacent workers out of the push branch.  All machine contact
@@ -188,7 +193,7 @@ ask for that tier again.
   the first target instead, the relay jams visibly within a minute.
 - **Arm B — the diagonal-give discriminator:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt>)
   differs from the primary by exactly one thing: the push list is
-  `giveto sw,w,s`, so the worker in column 3 feeds the left shredder
+  `giveto w,sw,s`, so the worker in column 3 feeds the left shredder
   DIAGONALLY every time it holds a small cube.  In the model this is the
   strongest form of all — **999/1000, 199/200 jittered** — but it is the
   construct the Year 21 refutation blamed for a "walk-in" death, a
@@ -1165,7 +1170,7 @@ a:
 ```text
 a:
 takefrom s,e
-giveto n,w,s
+giveto w,n,s
 jump a
 ```
 

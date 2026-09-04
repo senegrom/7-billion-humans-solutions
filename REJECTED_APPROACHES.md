@@ -887,3 +887,35 @@ anyway: dropping `e` from its step list lifts it to 992/1000 and 395/400
 screened, which is the version now queued.  Every four above, list or
 not, measures 0/400 under the fatal-shredder rule, so none of this is
 decided until the discriminator runs.
+
+## Direction order is not part of a program (2026-09-03)
+
+A hardening run reported a Year 15 four at 100% one generation after the
+same search had reported 99.5%, and the two programs turn out to be the
+same one: identical direction sets, written in a different order.  Every
+multi-direction list in the published corpus — 27 of them across all
+three tiers — is in one fixed order, `nw, w, sw, n, c, s, ne, e, se`,
+which is a column-major scan of the eight tiles around a worker.  That
+is the order the game stores them in, one slot per direction, so a
+program cannot express an order at all and two spellings of the same set
+are one program in the editor.
+
+Our draw picks uniformly among whichever named tiles are free, so the
+order does not change the distribution either — but it does change which
+dice get spent on rejected picks, and every worker shares one stream.  A
+reordering is therefore a different sequence of worlds for the same
+program, and across a few hundred trials that reads as a one-point
+improvement out of nowhere.  The searcher now sorts every list into slot
+order, so one program has one spelling, and the queued Year 15 files are
+written that way.
+
+## Year 43 at size 8 — its pickup list is inert too (2026-09-03)
+
+Same shape as Year 53.  The hardening search reported a size-8 form at
+98.0% over 200 runs using `pickup c,se`.  Over 400 runs it is 97.5%, and
+writing that pickup four different ways — with `se`, with `s`, with `e`,
+or as a bare `pickup c` — returns byte-identical results, because the
+guard already requires a cube on the worker's own tile so the list can
+never fall through.  The published incumbent measures 96.8% on the same
+400 runs, so the whole gain is inside the noise.  Year 43 needs 99% for
+its promotion and is not meaningfully closer than when it started.

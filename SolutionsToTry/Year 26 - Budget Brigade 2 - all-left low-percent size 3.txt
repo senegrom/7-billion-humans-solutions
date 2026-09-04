@@ -1,4 +1,4 @@
 a:
 takefrom s,e
-giveto n,w,s
+giveto w,n,s
 jump a

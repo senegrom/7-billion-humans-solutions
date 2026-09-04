@@ -10,5 +10,5 @@ if myitem == nothing or
 	takefrom s,ne
 endif
 giveto n,s
-takefrom ne,w
+takefrom w,ne
 jump a
