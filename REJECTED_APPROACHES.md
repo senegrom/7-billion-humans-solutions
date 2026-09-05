@@ -919,3 +919,56 @@ guard already requires a cube on the worker's own tile so the list can
 never fall through.  The published incumbent measures 96.8% on the same
 400 runs, so the whole gain is inside the noise.  Year 43 needs 99% for
 its promotion and is not meaningfully closer than when it started.
+
+## Hand-designed candidates, 2026-09-05 — what the levels actually enforce
+
+A round of candidates built by reading each level's rules rather than by
+search.  One improved a row's reliability; the rest failed on mechanics
+the published records had already encoded, and each failure pins down a
+rule worth knowing before the next attempt.
+
+**Year 30, Fill the Floor — better four, same size.**  The published
+50%+ four refills only when a worker stands on one of three diagonal
+neighbours of the printer.  Naming all eight sides on the take lifts it
+from 61.2% to **92.5% over 1000 runs** (94.5% screened) at the same size
+4; cardinals alone collapse to 10.8%, and adding a northward step to the
+walk costs 17 points.  Not a new row (same size, same tier), but a much
+stronger paste and the seed for a top-tier four if hardening reaches 99%.
+
+**Year 13, Injection Sites 2 — what "fill the gaps" means.**  A row
+passes when the span between its outermost cubes contains no empty
+floor; emptied rows impose nothing.  So the 84% six never fills a gap:
+it *pushes* each gap west, one tile per visit, until it falls off the
+row's end, and its guard cube is exactly the cube it re-picks, which is
+why its carriers are never empty-handed.  Two designs died on this:
+- a **five** that drops only where cubes sit on both sides and never
+  re-picks — right about the room, wrong about the walk: any walk that
+  can revisit rows 9 and 11 also reaches the hole row and a worker's
+  death loses a cube for good; any walk that cannot scores 0/400 (best
+  15%);
+- a **six** re-picking from the far side to reverse the drift (17.5%,
+  mirror 14.8%): an empty worker standing on a gap cannot drop but still
+  executes the pickup, steals a cube, and gaps multiply.
+
+**Year 31, Checkerboard — parity does not survive a machine.**  A
+diagonal-only walk keeps a worker's tile parity, and the printer's
+diagonal neighbours have the target parity, so a diagonal-only take
+should arm only the right half of the crew and a four should fill the
+board.  Every variant scored 0/400, and the position log shows why: a
+`takefrom` from a diagonal walks the worker to the printer's front, a
+cardinal move that flips parity, after which the crew dies in the
+odd-parity holes.  This is the same walk-in that refuted the Year 21
+candidate live.  The record's guarded `step w,e` is the parity restore
+after that walk-in, and it must be guarded because unguarded it flips
+parity every loop — so six is the floor for this mechanism.
+
+**Year 23, Sorting Hall — one guard is not two.**  Replacing the
+record's two guarded single steps with one guard and a two-direction
+step (four commands) scores 0/400 against the record's 400/400: a pair
+that steps apart instead of swapping leaves both comparisons reading
+empty tiles, and the line freezes scrambled.
+
+**Re-derived as tight by hand:** Years 14, 18, 21, 25, 29, 32, 33, 41
+and 50 — in each, every command of the record does something no smaller
+program in that palette can replace (a second traversal step, a
+serialisation loop, a stashed value, a parity fix, a timing guard).
