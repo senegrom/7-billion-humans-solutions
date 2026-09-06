@@ -1,0 +1,9 @@
+-- 7 Billion Humans (2214M) --
+-- 30: Fill the Floor --
+-- Size 4 Speed TBD --
+
+a:
+step nw,w,sw,s,ne,e,se
+drop
+takefrom nw,w,sw,n,s,ne,e,se
+jump a

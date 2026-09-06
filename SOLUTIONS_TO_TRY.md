@@ -42,15 +42,41 @@ file was derived and verified.
 1. **Year 26 size 6** — see the entry below; the give-list forms are
    refuted, so this is now a single careful attempt on the cardinal
    primary only, and only if you want to re-check it.
-2. **Year 13 size 6** — two or three attempts; the attempt count is the
+2. **Year 30 size 4** — the same size as the published row but 92.5%
+   against its 61%; a few runs confirm it.
+3. **Year 13 size 6** — two or three attempts; the attempt count is the
    tier evidence.
-3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
+4. **Year 56 size 4** — five quick attempts (about 12 s each) on the
    community's published four.  Cheapest entry in the queue and the
    largest tier gain: its 99+ size row is 7.
-4. The speed tie-breaks below, each with the incumbent control run first.
+5. The speed tie-breaks below, each with the incumbent control run first.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
+
+### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
+- Goal: not a new row — the published 50%+ row is already a four — but a
+  far more reliable one, and the seed for a top-tier four if hardening
+  reaches 99% against the 99%+ record of **5**.
+- Mechanism: identical to the published four except for one list.  That
+  one refills only when the worker happens to stand on three of the
+  printer's eight sides; this one names all eight, so every worker beside
+  the machine reloads instead of one in three.  Nothing else changes.
+- Emulator evidence: **925/1000 plain and 378/400 under the
+  shuffled-dispatch screen**, against the published four's 245/400 on the
+  same measure — 61% to 92.5% for one edit.  Cardinals alone collapse to
+  10.8%, so the diagonal sides carry the refill; adding a northward step
+  to the walk costs 17 points.
+- Unaffected by the 2026-09-06 machine rules: the program only ever
+  *takes* from the printer and never gives to one, and its rate is
+  identical before and after that change.  There is no shredder in the
+  room, so the empty-handed give cannot bite either.
+- Suggested live test: paste, confirm editor size 4, and run it a few
+  times — wins take about 930 s of game time, so let each run go to the
+  clock rather than restarting early.
+- Result: _not yet tested in the game_.
 
 ### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
 
