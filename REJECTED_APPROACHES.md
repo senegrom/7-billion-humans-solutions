@@ -972,3 +972,51 @@ empty tiles, and the line freezes scrambled.
 and 50 — in each, every command of the record does something no smaller
 program in that palette can replace (a second traversal step, a
 serialisation loop, a stashed value, a parity fix, a timing guard).
+
+## Refuted live 2026-09-06 — machines kill in two ways the model did not know
+
+Five programs went into the game and settled three rules at once.  The
+emulator now carries all three, and its census over every published
+solution is unchanged in every row, so nothing else rested on the old
+behaviour.
+
+**A step aimed at a machine is refused, not fatal.**  Two one-line
+programs decided it.  `step s`, from the row directly north of Shred
+Lines' shredders, leaves the whole crew standing still; `step n,s` just
+wanders.  Nobody dies either way.  The fatal-step reading — carried since
+a maintainer reported a crew wiping out on this level — is dead, and
+with it the screening rule built on it.
+
+**An empty-handed give hands the worker over.**  A `giveto` aimed at a
+shredder with nothing in hand feeds the *worker* to it.  That is what
+killed the crew in the old report, and it is what kills these two:
+
+- **Year 15 size 4** (`step … / pickup n / giveto s / jump a`), 997/1000
+  in the model, refuted live — the give runs every loop and most loops
+  the pickup found nothing.
+- **Year 15 size 5**, 1000/1000 in the model, refuted live for the same
+  reason: its guard admits `s == shredder` with empty hands.
+
+Handing yourself over means walking into the maw, so a room that forbids
+walking cannot kill you this way — Budget Brigade 2's published record
+gives empty-handed at a shredder every run and its crew survives.  That
+asymmetry is what pins the rule down.
+
+**A printer takes nothing, and feeding it a cube destroys it.**  Year
+26's relay six — 993/1000, the flagship candidate for weeks — was
+refuted live when its `giveto n,s` fell through onto the printer and
+ended the run.  So give-list fall-through is real, exactly as the queue
+warned, and the hazard is what the list falls *onto*.  All three Year 26
+relay forms are withdrawn: the primary and the diagonal arm both name a
+direction that can resolve to the printer, and the fallback measures
+1/20 under the corrected rules.
+
+What this costs: the Year 15 size row stays 8 and Year 26 stays 7.  What
+it buys is a model that predicts the one program on Shred Lines with a
+real live rate — the community six wins 16 of 25 attempts and now models
+at 75%, where before it read 95.5%.
+
+**Rule for future candidates:** never queue a program that can reach a
+`giveto` empty-handed beside a shredder in a room where walking is
+allowed, and never queue a give whose direction list can resolve onto a
+printer.

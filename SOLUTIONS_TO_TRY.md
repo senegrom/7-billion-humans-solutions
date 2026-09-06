@@ -39,180 +39,18 @@ file was derived and verified.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 15 shredder-step discriminator, then the five, then the four**
-   — two runs of a few seconds each that cannot win, then the two
-   candidates.  The community six's own 16-of-25 live wins already point
-   to the fence reading, so expect to paste both in the same session.
-   The five is the safer program and wins every run in the model; the
-   four is the bigger record, four sizes under the current 8.
-2. **Year 26 size 6** — paste the primary, then run Arm B once regardless
-   (the diagonal-give discriminator), then the 81% fallback only if the
-   primary stalled cleanly.  Record editor size and completion for each.
-3. **Year 13 size 6** — two or three attempts; the attempt count is the
+1. **Year 26 size 6** — see the entry below; the give-list forms are
+   refuted, so this is now a single careful attempt on the cardinal
+   primary only, and only if you want to re-check it.
+2. **Year 13 size 6** — two or three attempts; the attempt count is the
    tier evidence.
-4. **Year 56 size 4** — five quick attempts (about 12 s each) on the
+3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
    community's published four.  Cheapest entry in the queue and the
    largest tier gain: its 99+ size row is 7.
-5. The speed tie-breaks below, each with the incumbent control run first.
+4. The speed tie-breaks below, each with the incumbent control run first.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
-
-### [ ] Year 15 - Shred Lines - settle the shredder-step rule (two runs of seconds each)
-
-- **Paste-ready programs:** [SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 1.txt](<SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 1.txt>) and [SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 2.txt](<SolutionsToTry/Year 15 - Shred Lines - shredder-step discriminator 2.txt>)
-- This settles an open question that gates a whole family, including a
-  size-5 candidate for a record that currently stands at 8.  Every
-  worker starts directly north of a shredder.  Does a step aimed at a
-  shredder tile get **refused**, so the worker fences off the machine
-  row, or is it **taken and fatal**?
-- Why it is open: a maintainer's live run of an earlier five reported
-  "again all workers die", which is why the model treats the death as
-  opt-in screening.  Against that, abfipes12 reports 16 wins in 25 live
-  attempts on the published six, which walks the same row in seven
-  random directions — impossible if those steps were fatal.  The two
-  reports differ in one visible way: the refuted program stepped
-  `n,s`, where south is nothing but shredder, while the six picks from
-  seven.  So the live rule may well depend on the step it is given, and
-  these two runs say which.
-- Discriminator 1 is `step s` in a loop.  Under fencing the crew stands
-  still until the clock runs out, which is a failure with everyone
-  alive; under the fatal reading they walk into the blades within
-  seconds.  The two outcomes look nothing alike, so one run answers it.
-- Discriminator 2 is `step n,s`, the random form, in case the game
-  treats a direction it chose differently from one it was given — the
-  distinction the live report and the published six disagree about.
-- Neither program can win.  The result to record is what happens to the
-  workers, not the completion panel.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 15 - Shred Lines - contingent size 4 (paste only if the step is a fence)
-
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - contingent size 4.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 4.txt>)
-- **Fallback (also size 4):** [SolutionsToTry/Year 15 - Shred Lines - contingent size 4 fallback.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 4 fallback.txt>)
-- Goal: size **4** against a 99%+ record of **8** — a four-size gain, and
-  two sizes below the published 50%+ six.
-- Mechanism: there is no condition at all.  Workers wander, each one
-  lifts whatever sits to its north and hands whatever it holds to its
-  south, forever.  Cubes migrate down the room through the crowd and
-  fall into the shredder row from the tile directly above it.  Most of
-  the commands fail most of the time, and the failures are what pace the
-  program.  Found 2026-09-03 by shrinking the five and then hardening
-  the result.
-- Emulator evidence: **997/1000 plain and 398/400 under the
-  shuffled-dispatch screen** at the live cap, about 45,600 frames (some
-  731 s of game time), with the list written in the game's own slot
-  order.  The step list keeps the four diagonals plus north and south
-  and drops both horizontal moves.  The fallback keeps `w` and measures
-  995/1000 and 400/400 at 760 s — statistically the same program, so
-  the primary is chosen on its extra half-minute of clock margin, not on
-  its rate.  The eight-direction version measures 977/1000.  Trimming
-  the step list is what carried this design over 99%: each direction
-  removed sends the crowd back across the cube field more often.
-- Every direction list in this file is written in the order the game
-  stores them (`nw, w, sw, n, c, s, ne, e, se`, filtered).  A program
-  cannot express any other order, so this is what the editor will show
-  after pasting; two spellings of one set are one program.
-- Both item commands name a single cardinal direction, so neither the
-  give-list fall-through nor the diagonal machine contact applies.  The
-  search's own best four reached 99.8% using `giveto se,s` — a list
-  whose first target is a diagonal at a machine — and is deliberately
-  not queued; it is archived instead.
-- **Same contingency as the five below, and the same reasoning.**  Under
-  the fatal reading this form measures 1/200 — the first non-zero on
-  the level, and at that rate a lucky world rather than a mechanism —
-  and every other program in the family measures 0.  Run the
-  discriminator first.
-- The give is unguarded here, so at the room's bottom edge a worker can
-  hand into a wall.  The five guards against that and is the safer
-  paste; this four is the bigger record.  Try the five first, then this.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 15 - Shred Lines - contingent size 5 (paste only if the step is a fence)
-
-- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - contingent size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - contingent size 5.txt>)
-- Goal: size **5** against a 99%+ record of **8** — a three-size gain,
-  and a tier above the published 50%+ six.
-- Mechanism: workers wander over all eight directions.  When the
-  north-west tile holds a cube, or the worker is standing on the north
-  edge of the shredder row, it lifts that cube and hands it south.  The
-  published six spends a six-clause condition keeping workers off the
-  map's edges; this drops that condition entirely and lets the same
-  two-branch guard carry the whole program.  Found by the hardening
-  search 2026-09-02.
-- Emulator evidence: **1000/1000 plain and 400/400 under the
-  shuffled-dispatch screen** at the live cap, in about 23,200 frames
-  (roughly 372 s of game time), against the published six's 95.5% at
-  54,600 frames.  The step list names all eight directions once each, so
-  it is not the repeated-direction artefact archived the same day.
-- **The contingency, and why it is probably already resolved.**  Under
-  the fatal reading this measures 0/200 — and so does the published six,
-  while the published eight and the speed 42 survive both.  But
-  abfipes12 reports **16 wins in 25 real-game attempts** on that six
-  (the community entry further down), and that six is itself a random
-  seven-direction walk starting on the shredder row's north edge.  A
-  program whose workers walked into the blades could not win 64% of the
-  time, so the fence reading is what the live record actually supports,
-  and this five is the same shape with one more direction.  The
-  discriminator above still comes first because it costs seconds and
-  settles the rule for every machine level at once, but on current
-  evidence expect it to fence — in which case paste this in the same
-  session.
-- The give sits inside the guard, so a worker never hands into a wall.
-  It can still hand into empty floor while holding a cube, which the
-  published six does too.  A variant with the give outside the guard
-  measures the same but runs 40% slower and does hand into walls, so it
-  is not the one queued.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 26 - Budget Brigade 2 - relay size 6 (99% primary, 81% fallback)
-
-- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6.txt>)
-- **Fallback (same size, 81% form):** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 fallback.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 fallback.txt>)
-- Goal: reduce the size record from **7** to **6** — the primary form is a
-  Solutions99+ candidate (99.3% in the model), the fallback a Solutions50+
-  one (81%).
-- Mechanism: a bidirectional relay with no steps at all (the no-walk rule
-  is met trivially).  Empty or small-holding workers push left with
-  `giveto w,s` and refill with `takefrom s,ne` (the middle chain pulls
-  prints up); every worker's `takefrom w,ne` pulls the large cubes
-  rightward, and the unconditional `giveto n,s` serves whichever shredder
-  sits below the end workers.  The `s != shredder` guard keeps
-  shredder-adjacent workers out of the push branch.  All machine contact
-  is cardinal.
-- Emulator evidence (primary): **993/1000 = 99.3%** at ~42,000 frames
-  (about 670 s of game time, well inside the clock); **198/200 under the
-  shuffled-dispatch screen** — order-robust.  A wrong-side shred spoils
-  the run in the model, so the routing itself is sound.  Fallback:
-  810/1000 = 81% (163/200 on the re-screen), 155/200 = 77.5% jittered.
-  Both found by mutation search
-  (2026-08-30 / 09-01); the primary is the fallback hardened over ten
-  generations.
-- **Caution (give-lists past holes):** both forms rely on the game trying
-  the next list entry when the first target is a hole or a full-handed
-  neighbour (`giveto n,s` reaches the shredders only by falling past the
-  hole to the north).  Live give-list fall-through has never been
-  verified in isolation (the Year 24 printer-return and Year 60
-  pickup-list stalls are the cautionary cousins).  If the game stalls on
-  the first target instead, the relay jams visibly within a minute.
-- **Arm B — the diagonal-give discriminator:** [SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - relay size 6 diagonal arm.txt>)
-  differs from the primary by exactly one thing: the push list is
-  `giveto w,sw,s`, so the worker in column 3 feeds the left shredder
-  DIAGONALLY every time it holds a small cube.  In the model this is the
-  strongest form of all — **999/1000, 199/200 jittered** — but it is the
-  construct the Year 21 refutation blamed for a "walk-in" death, a
-  mechanism never isolated since.  Running B after the primary settles
-  it: both win → diagonal machine gives are legal and a whole guarded
-  class reopens; primary wins and B loses (watch column 3's worker) →
-  the walk-in death is confirmed as a rule; both stall → give-list
-  fall-through is the live problem, not the diagonal.
-- Suggested live test: paste the primary, confirm editor size 6, run at
-  12x (~11 minutes of game time is under a minute of wall time).  A
-  first-try win is expected.  Then run Arm B once regardless of the
-  primary's outcome and report both — the pair is worth more than either
-  alone.  On a clean stall of the primary, the 81% fallback will stall
-  the same way; skip it.
-- Result: _not yet tested in the game_.
 
 ### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
 
