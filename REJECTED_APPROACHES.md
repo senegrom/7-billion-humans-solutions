@@ -1014,7 +1014,9 @@ direction that can resolve to the printer, and the fallback measures
 What this costs: the Year 15 size row stays 8 and Year 26 stays 7.  What
 it buys is a model that predicts the one program on Shred Lines with a
 real live rate — the community six wins 16 of 25 attempts and now models
-at 75%, where before it read 95.5%.
+at 82.5% over 400 runs, where before it read 95.5%.  A re-audit of every
+50%+ row on the corrected engine moved that row and no other, which is
+exactly where these rules should land.
 
 **Rule for future candidates:** never queue a program that can reach a
 `giveto` empty-handed beside a shredder in a room where walking is
