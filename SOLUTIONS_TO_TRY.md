@@ -37,19 +37,31 @@ file was derived and verified.
 
 ## Priority queue
 
+**Queue refresh (2026-09-14):** the search fleet is stopped.  Three days
+of the narrow mutation search on the fast engine (about 600,000 programs
+over the Year 30, 58 and 61 hardening runs and a full shrink pass over
+all nine machine levels) and a short run of a wider operator produced no
+new candidate, so the queue's content is unchanged; every figure below
+for the three size candidates was re-taken today on the current engine
+at 1,000 trials plain and 1,000 under the shuffled-dispatch screen.  The
+Year 26 six that used to head this list was refuted in the game on
+2026-09-06 and is archived in REJECTED_APPROACHES.md.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 26 size 6** — see the entry below; the give-list forms are
-   refuted, so this is now a single careful attempt on the cardinal
-   primary only, and only if you want to re-check it.
-2. **Year 30 size 4** — the same size as the published row but 92.5%
-   against its 61%; a few runs confirm it.
-3. **Year 13 size 6** — two or three attempts; the attempt count is the
-   tier evidence.
-4. **Year 56 size 4** — five quick attempts (about 12 s each) on the
-   community's published four.  Cheapest entry in the queue and the
-   largest tier gain: its 99+ size row is 7.
-5. The speed tie-breaks below, each with the incumbent control run first.
+1. **Year 30 size 4 (eight-sided take)** — a few runs, letting each go
+   to the clock.  Same size as the published row, but 925/1000 plain and
+   945/1000 shuffled against the published four's 618/1000 and 616/1000.
+2. **Year 13 size 6** — two or three attempts; 806/1000 plain, 770/1000
+   shuffled.  The attempt count is the tier evidence.
+3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
+   community's published four; 1000/1000 on both screens.  Cheapest
+   entry in the queue and the largest tier gain: its 99+ size row is 7.
+4. The speed tie-breaks below, each with the incumbent control run first:
+   Year 38 at 140, Year 09 at 14, Year 59 at 142, then the Year 68, 62,
+   65 and 67 ladders.
+5. Optional control: the Year 15 community six, already the Solutions50+
+   row on public evidence (16/25 live); 82.5% here.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -64,11 +76,17 @@ ask for that tier again.
   one refills only when the worker happens to stand on three of the
   printer's eight sides; this one names all eight, so every worker beside
   the machine reloads instead of one in three.  Nothing else changes.
-- Emulator evidence: **925/1000 plain and 378/400 under the
-  shuffled-dispatch screen**, against the published four's 245/400 on the
-  same measure — 61% to 92.5% for one edit.  Cardinals alone collapse to
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
+  against the published four's 618/1000 and 616/1000 on the same
+  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
   10.8%, so the diagonal sides carry the refill; adding a northward step
-  to the walk costs 17 points.
+  to the walk costs 17 points.  A hardening search over 720 generations
+  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
+  form with a five-direction step, measures 920/1000 and 935/1000.
+- Diagonal printer takes are live-proven: the published four takes only
+  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
+  machine-reach caution on the shredder side does not carry over here.
 - Unaffected by the 2026-09-06 machine rules: the program only ever
   *takes* from the printer and never gives to one, and its rate is
   identical before and after that change.  There is no shredder in the
@@ -90,14 +108,14 @@ ask for that tier again.
   instead of retiring after one.  The opener `pickup s` is the published
   row's own; there are no direction lists on item commands anywhere, so
   the Year 60 list-stall class does not apply.
-- Emulator evidence: **331/400 = 83%** at ~39,000 frames (about 630 s of
-  game time), 168/200 on the re-screen; **157/200 = 78.5% under the
-  shuffled-dispatch screen** — several points under its plain rate, so
-  this one is mildly order-sensitive and a first attempt can miss; the
-  published low-percent row measures 83/200 = 41.5% on the same model,
-  and the pickup-before-drop ordering of the same idea 71%.  Found by the
-  tier-upgrade hardening search 2026-09-02; a list-free hardening run
-  continues from this form.
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
+  **770/1000 under the shuffled-dispatch screen** — several points under
+  its plain rate, so this one is mildly order-sensitive and a first
+  attempt can miss; the published low-percent row measures 83/200 =
+  41.5% on the same model, and the pickup-before-drop ordering of the
+  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
+  no later hardening run improved on this form.
 - Suggested live test: paste, confirm editor size 6, run at 12x; two or
   three attempts should land a win.  Capture the completion panel — the
   attempt count is the tier evidence.
@@ -116,8 +134,9 @@ ask for that tier again.
   shows as it goes in rather than the number it started with, so
   overwriting makes the carried cube its group's maximum instead of
   finding it.
-- Emulator evidence: **400/400** at the live cap and **400/400 under the
-  shuffled-dispatch screen**, finishing in about 6 s of simulated time.
+- Emulator evidence: **1000/1000** at the live cap and **1000/1000 under
+  the shuffled-dispatch screen** (re-taken 2026-09-14 on the current
+  engine), finishing in about 6 s of simulated time.
 - Why it sits in the low-percent tier, and what the attempts measure:
   values are drawn 0..99, so a group can already hold a 99.  That happens
   in **44% of worlds** (measured over 200) and the model passes those as
@@ -309,24 +328,24 @@ ask for that tier again.
   Solutions50+ below our size-8 main row (found in the 2026-08-17 source
   audit; it was never in our tables).
 - Public evidence: abfipes12 reports 16/25 real-game wins (64%) at about
-  950 seconds.  **That report is the anchor for the whole Year 15
-  family**: those wins are impossible if a step aimed at a shredder kills
-  the worker, which is what the discriminator at the top of the queue
-  goes to settle.
-- Measured here 2026-09-03: **382/400 plain, 199/200 under the
-  shuffled-dispatch screen**, about 54,600 frames — and 0/400 with the
-  step treated as fatal, exactly like our own five and four.
+  950 seconds.  Those wins were the anchor for the Year 15 machine
+  rules, settled in the game on 2026-09-06: a step aimed at a shredder
+  is a fence (the worker stays put), and an empty-handed give at a
+  shredder hands the worker over.  Our own Year 15 four and five, which
+  relied on the old model, failed live that day and are archived in
+  REJECTED_APPROACHES.md; this six is now the level's smallest published
+  program.
+- Measured here under the machine rules: **82.5%** at the live cap
+  (95.5% before them), about 54,600 frames.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
 - Expected editor size: **6**; paste-only (multi-direction random step).
-- **Superseded as a paste target.**  Our own five wins every run at half
-  the game time and our four is two sizes smaller, so there is no reason
-  to spend attempts confirming a six.  Keep it for one purpose: if the
-  discriminator fences but our candidates then fail live, pasting this
-  known-good six separates "our program is wrong" from "the level
-  diverges from the model".
-- Result: _not tested locally; retained as a control_.
+- The Solutions50+ row already rests on the public evidence, so a local
+  confirmation is optional — after the three size candidates above.  A
+  shrink search for a five under the machine rules (300 narrow
+  generations, then a short run of the wider operator) found nothing.
+- Result: _not tested locally; the row stands on public evidence_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - community speed 6-7 at size 122
 
@@ -353,6 +372,9 @@ ask for that tier again.
   confirm that this belongs in Solutions50+, not Solutions99+.
 - Suggested live test: at least 10 runs.  A definitive frozen failure is all 20
   workers holding cubes while the level has not completed; capture the board.
+- A hardening search from this program (2026-09-11 to 14, 140
+  generations) found no more reliable four; the published program stands
+  at 195/200 here.
 - Result: **one live attempt (2026-08-17) looked like an infinite loop** and
   was abandoned before the 1,400-second cutoff.  That matches either the
   known ~2.5% emulator failure mode or a live/emulator divergence at
@@ -365,12 +387,15 @@ ask for that tier again.
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
   ~1211) below the size-5 main entry.
-- Machine-reach caution (added after the Year 21/24 live refutations):
-  this program takes from printers DIAGONALLY (`takefrom nw,sw,ne`).
-  Diagonal SHREDDER gives proved fatal live (the giver walks in); if the
-  diagonal printer take behaves the same way, workers will die at the
-  printers and this row must be retracted.  Watch for exactly that on
-  the confirmation run.
+- **Superseded as a paste target (2026-09-14)** by the eight-sided four
+  at the top of the queue: same size, 925/1000 against this program's
+  618/1000 on the current engine.  Run this one only as the control if
+  you want the A/B, or to confirm the published row as it stands.
+- Machine-reach note: this program takes from printers DIAGONALLY
+  (`takefrom nw,sw,ne`).  Diagonal SHREDDER gives proved fatal live (the
+  giver walks in), but the 15/25 public wins of this very program show
+  that a diagonal printer take does not; the caution recorded here after
+  the Year 21/24 refutations is closed.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
 - Current capped-emulator evidence: 64/100 wins, average winning speed
   1,210.8, range 813-1,397.  The close agreement supports the 50+ tier, but
