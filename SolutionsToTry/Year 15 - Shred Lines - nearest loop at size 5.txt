@@ -1,0 +1,10 @@
+-- 7 Billion Humans (2214M) --
+-- 15: Shred Lines --
+-- Size 5 Speed TBD --
+
+mem2 = nearest shredder
+a:
+mem1 = nearest datacube
+pickup mem1
+giveto mem2
+jump a

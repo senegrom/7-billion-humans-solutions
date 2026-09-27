@@ -1,0 +1,6 @@
+-- 7 Billion Humans (2214M) --
+-- 23: Sorting Hall --
+-- Size 2 Speed TBD --
+
+pickup s
+write 0

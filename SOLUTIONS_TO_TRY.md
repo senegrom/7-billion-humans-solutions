@@ -37,88 +37,107 @@ file was derived and verified.
 
 ## Priority queue
 
-**Queue refresh (2026-09-14):** the search fleet is stopped.  Three days
-of the narrow mutation search on the fast engine (about 600,000 programs
-over the Year 30, 58 and 61 hardening runs and a full shrink pass over
-all nine machine levels) and a short run of a wider operator produced no
-new candidate, so the queue's content is unchanged; every figure below
-for the three size candidates was re-taken today on the current engine
-at 1,000 trials plain and 1,000 under the shuffled-dispatch screen.  The
-Year 26 six that used to head this list was refuted in the game on
-2026-09-06 and is archived in REJECTED_APPROACHES.md.
+**Queue refresh (2026-09-27):** the search fleet stays stopped.  One new
+test now heads the list: a single paste that decides whether the game
+keeps a command the level's editor does not offer.  If it does, two more
+size records follow directly below it.  After those, the order runs from
+the cheapest attempt to the most expensive.  The Year 26 six that used to
+head this list was refuted in the game on 2026-09-06 and is archived in
+REJECTED_APPROACHES.md.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
-1. **Year 30 size 4 (eight-sided take)** — a few runs, letting each go
-   to the clock.  Same size as the published row, but 925/1000 plain and
-   945/1000 shuffled against the published four's 618/1000 and 616/1000.
-2. **Year 13 size 6** — two or three attempts; 806/1000 plain, 770/1000
-   shuffled.  The attempt count is the tier evidence.
-3. **Year 56 size 4** — five quick attempts (about 12 s each) on the
-   community's published four; 1000/1000 on both screens.  Cheapest
-   entry in the queue and the largest tier gain: its 99+ size row is 7.
-4. The speed tie-breaks below, each with the incumbent control run first:
+1. **Year 23 paste test, size 2**: one paste and one look at the editor,
+   about a minute.  It decides whether the game keeps a command the
+   level's editor does not offer; if the run then completes, it is a
+   size-2 record against 6.
+2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
+   the Year 15 five (records 8 and 6), each a couple of short runs.
+3. **Year 56 size 4**: five quick attempts (about 12 s each) on the
+   community's published four; 1000/1000 on both screens.  The largest
+   tier gain in the queue: its 99+ size row is 7.
+4. **Year 13 size 6**: two or three attempts of about ten minutes each;
+   806/1000 plain, 770/1000 shuffled.  The attempt count is the tier
+   evidence.
+5. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
+   minutes, each to the clock; 925/1000 plain and 945/1000 shuffled
+   against the published four's 618/1000 and 616/1000.  Watch how any
+   loss looks (see the entry).
+6. The speed tie-breaks below, each with the incumbent control run first:
    Year 38 at 140, Year 09 at 14, Year 59 at 142, then the Year 68, 62,
    65 and 67 ladders.
-5. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); 82.5% here.
+7. Optional control: the Year 15 community six, already the Solutions50+
+   row on public evidence (16/25 live); 82.5% here.  Skip it if the
+   Year 15 five in item 2 completes.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
 
-### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
+### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
-- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
-- Goal: not a new row — the published 50%+ row is already a four — but a
-  far more reliable one, and the seed for a top-tier four if hardening
-  reaches 99% against the 99%+ record of **5**.
-- Mechanism: identical to the published four except for one list.  That
-  one refills only when the worker happens to stand on three of the
-  printer's eight sides; this one names all eight, so every worker beside
-  the machine reloads instead of one in three.  Nothing else changes.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
-  against the published four's 618/1000 and 616/1000 on the same
-  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
-  10.8%, so the diagonal sides carry the refill; adding a northward step
-  to the walk costs 17 points.  A hardening search over 720 generations
-  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
-  form with a five-direction step, measures 920/1000 and 935/1000.
-- Diagonal printer takes are live-proven: the published four takes only
-  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
-  machine-reach caution on the shredder side does not carry over here.
-- Unaffected by the 2026-09-06 machine rules: the program only ever
-  *takes* from the printer and never gives to one, and its rate is
-  identical before and after that change.  There is no shredder in the
-  room, so the empty-handed give cannot bite either.
-- Suggested live test: paste, confirm editor size 4, and run it a few
-  times — wins take about 930 s of game time, so let each run go to the
-  clock rather than restarting early.
+- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt](<SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt>)
+- Goal: settle a question that has never been tested, and take the size
+  record from **6** to **2** if the answer is yes.  The game is known to
+  keep things in a pasted program that its editor hides: Year 21's size
+  record pastes a `myitem` test the editor does not offer at that level.
+  Whether a paste also keeps a whole *command* the level's editor does
+  not offer is unknown.  This program uses `write`, which the editor
+  first offers at Year 28.  CONTRIBUTING.md already lists pasted programs
+  that use "a command the game's editor will not let you build at that
+  level", so a completion would count.
+- Mechanism: every worker lifts the cube below it and writes 0 on it.
+  All the held cubes then read 0, and a row of equal numbers is in order.
+- Emulator evidence, with the level's command palette lifted because
+  that is exactly the question: **1000/1000 plain and 1000/1000 under
+  the shuffled-dispatch screen**, finishing in about 1.5 s of game time.
+- Suggested live test:
+  1. Paste, then look at the editor *before* running.  If the `write 0`
+     line is missing, or the paste is refused, the game enforces the
+     palette on paste: mark this entry refuted and skip the next two.
+  2. If the line survived, run it.  A completion is a size-2 record.  If
+     it runs but never completes, the paste kept the command but the goal
+     wants more than equal numbers; try the next two entries anyway,
+     since neither relies on that.
+- Left out on purpose: the same trick also wins in the model on Budget
+  Brigade 2 at size 4 (the all-left relay plus `write 0`), but its give
+  list can land on a printer, which is how the relay six died in the
+  game.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
+### [ ] Year 16 - Little Exterminator 2 - nearest one-shot at size 4 📋
 
-- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
-- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
-  record of 7, and a tier above the existing low-percent 6.
-- Mechanism: the published low-percent six's random walk and gap-filling,
-  with one change — after dropping into a gap the worker immediately
-  re-picks the cube it just walked past (`pickup w` under the guard that
-  already vouches for `w == datacube`), so each worker chains fills
-  instead of retiring after one.  The opener `pickup s` is the published
-  row's own; there are no direction lists on item commands anywhere, so
-  the Year 60 list-stall class does not apply.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
-  **770/1000 under the shuffled-dispatch screen** — several points under
-  its plain rate, so this one is mildly order-sensitive and a first
-  attempt can miss; the published low-percent row measures 83/200 =
-  41.5% on the same model, and the pickup-before-drop ordering of the
-  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
-  no later hardening run improved on this form.
-- Suggested live test: paste, confirm editor size 6, run at 12x; two or
-  three attempts should land a win.  Capture the completion panel — the
-  attempt count is the tier evidence.
+- **Paste-ready program:** [SolutionsToTry/Year 16 - Little Exterminator 2 - nearest one-shot at size 4.txt](<SolutionsToTry/Year 16 - Little Exterminator 2 - nearest one-shot at size 4.txt>)
+- **Try this only if the Year 23 paste kept its command.**  It uses
+  `nearest`, which the editor first offers at Year 23.
+- Goal: size **4** against the record of 6, which is also the game's par.
+- Mechanism: Neural Pathways' published four, unchanged.  Each of the
+  three workers takes the nearest cube and feeds it to the nearest
+  shredder.  The room holds exactly three cubes, so one trip each
+  finishes the level.
+- Emulator evidence, level palette lifted: **1000/1000 plain and
+  1000/1000 shuffled**, about 5 s of game time.  The three workers always
+  pick three different cubes.
+- Suggested live test: paste, confirm editor size 4 with both `nearest`
+  lines present, and run it twice.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 15 - Shred Lines - nearest loop at size 5 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - nearest loop at size 5.txt](<SolutionsToTry/Year 15 - Shred Lines - nearest loop at size 5.txt>)
+- **Try this only if the Year 23 paste kept its command.**
+- Goal: size **5** against the 99%+ record of 8 and the Solutions50+ six.
+- Mechanism: the published five of My First Shredding Memory and
+  Biometric Access, unchanged.  Each worker remembers its nearest
+  shredder once, then keeps taking the nearest cube and feeding that
+  shredder.
+- Emulator evidence, level palette lifted: **1000/1000 plain and
+  1000/1000 shuffled**, about 22 s of game time.
+- Caution: a worker that loses a race for a cube still walks to its
+  shredder and, arriving empty-handed, is lost; that is the mechanism
+  behind the earlier Shred Lines failures.  In the model the other
+  workers always finish the job, but stop at the first failed run.
+- Suggested live test: paste, confirm editor size 5, and run it two or
+  three times.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 56 - Local Maximums - tier check at size 4
@@ -158,6 +177,69 @@ ask for that tier again.
   and loss; three or more wins supports the Solutions50+ row.  The one
   unmodelled risk is seven workers converging on the single shredder,
   where the model shows no crowding trouble.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
+- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
+  record of 7, and a tier above the existing low-percent 6.
+- Mechanism: the published low-percent six's random walk and gap-filling,
+  with one change — after dropping into a gap the worker immediately
+  re-picks the cube it just walked past (`pickup w` under the guard that
+  already vouches for `w == datacube`), so each worker chains fills
+  instead of retiring after one.  The opener `pickup s` is the published
+  row's own; there are no direction lists on item commands anywhere, so
+  the Year 60 list-stall class does not apply.
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
+  **770/1000 under the shuffled-dispatch screen** — several points under
+  its plain rate, so this one is mildly order-sensitive and a first
+  attempt can miss; the published low-percent row measures 83/200 =
+  41.5% on the same model, and the pickup-before-drop ordering of the
+  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
+  no later hardening run improved on this form.
+- Suggested live test: paste, confirm editor size 6, run at 12x; two or
+  three attempts should land a win.  Capture the completion panel — the
+  attempt count is the tier evidence.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
+- Goal: not a new row — the published 50%+ row is already a four — but a
+  far more reliable one, and the seed for a top-tier four if hardening
+  reaches 99% against the 99%+ record of **5**.
+- Mechanism: identical to the published four except for one list.  That
+  one refills only when the worker happens to stand on three of the
+  printer's eight sides; this one names all eight, so every worker beside
+  the machine reloads instead of one in three.  Nothing else changes.
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
+  against the published four's 618/1000 and 616/1000 on the same
+  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
+  10.8%, so the diagonal sides carry the refill; adding a northward step
+  to the walk costs 17 points.  A hardening search over 720 generations
+  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
+  form with a five-direction step, measures 920/1000 and 935/1000.
+- Diagonal printer takes are live-proven: the published four takes only
+  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
+  machine-reach caution on the shredder side does not carry over here.
+- Unaffected by the 2026-09-06 machine rules: the program only ever
+  *takes* from the printer and never gives to one, and its rate is
+  identical before and after that change.  There is no shredder in the
+  room, so the empty-handed give cannot bite either.
+- Suggested live test: paste, confirm editor size 4, and run it a few
+  times — wins take about 930 s of game time, so let each run go to the
+  clock rather than restarting early.
+- What to watch (added 2026-09-27): in the model every lost run is a
+  permanent freeze, not a slow run; giving it more than four times the
+  clock wins none of them back.  The losing world traced ended with every
+  floor square covered except the top-left corner while all seven workers
+  held a cube.  If a run freezes like that, it is a genuine loss: note it
+  and move on.  If none of your runs ever freezes, the model is wrong
+  about this level and the four becomes a candidate for the 99%+ record
+  of **5**.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
