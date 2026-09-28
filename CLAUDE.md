@@ -32,10 +32,9 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
 - Machine reach differs from the simulator: worker-to-worker gives reach
-  diagonally, but machine gives serve cardinally/at the front. A diagonal
-  shredder give walks the giver in (death); a give-list falling through a
-  machine square can be accepted by the game and ruled illegal. Never
-  queue candidates whose safety depends on either.
+  diagonally, but machine gives serve cardinally, at the machine's front.
+  A diagonal shredder give killed its givers live (Year 21), so never
+  queue a merge that turns a machine give diagonal.
 - Simulator frame evidence remains valid for WIN/FAIL and for size.
 
 ## Candidate screening rules (learned live, 2026-08-19)
@@ -44,7 +43,28 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   emulator's item-action count matches the incumbent's.  Fewer frames
   plus fewer items = a different choreography that one scheduler order
   happened to survive (Year 20's live infinite loop).
-- **Jitter rule:** screen every candidate with `EMU_JITTER=1` (shuffled
-  per-frame worker dispatch).  Interpret comparatively: the candidate
-  must not do materially worse than the incumbent under the same
-  screen; absolute 100% is only demanded where the incumbent holds it.
+- **Jitter rule:** screen every candidate under the shuffled-dispatch
+  screen (the worker dispatch order shuffled every frame).  Interpret
+  comparatively: the candidate must not do materially worse than the
+  incumbent under the same screen; absolute 100% is only demanded where
+  the incumbent holds it.  Levels whose published programs the model
+  cannot reproduce cannot be screened; their entries are live-only and
+  say so.
+
+## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
+
+- A step aimed at a shredder is refused: the worker stays put.
+- An empty-handed give at a shredder feeds the worker to it, in any room
+  where walking is allowed.  Never queue a program that can reach such a
+  give, unless losing that worker cannot fail the level and the model,
+  which includes the loss, still wins every run; the entry must say so.
+- A give whose direction list resolves onto a printer destroys it and
+  ends the run.  Give-list fall-through is real, so never queue a give
+  list that can land on a printer.
+- A pickup list does not skip an empty listed square (Year 60), so never
+  rely on one doing so.
+- A direction list is a set, stored in the slot order
+  nw,w,sw,n,c,s,ne,e,se: a direction cannot be named twice, and the
+  order in which a list is written carries no meaning.
+- A label must be some jump's destination: deleting a jump deletes its
+  label too, or the game refuses the paste.
