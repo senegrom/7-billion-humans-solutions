@@ -20,15 +20,9 @@ tie-break below therefore requires a live incumbent control run first;
 discard the candidate on any displayed-speed regression.  Win/loss and
 size evidence is unaffected.
 
-**Screen-evidence correction (2026-09-02):** every "jittered" figure
-quoted here before today was taken with a search binary built three days
-before the shuffled-dispatch screen existed, so the env switch did
-nothing and the run was a plain re-run.  All four candidates below were
-re-screened with the build that implements it; the Year 26 numbers held,
-Year 13's did not (85% claimed, 78.5% measured).  Rates are quoted at
-the live 1,400 s clock, which is also what the search re-evaluates at —
-a rate measured at a tighter search cap reads far lower and means
-nothing here.
+Rates are quoted at the live 1,400 s clock, measured plain and under the
+shuffled-dispatch screen (the worker dispatch order shuffled every
+frame).
 
 Every entry links a **paste-ready program file** in
 [SolutionsToTry/](SolutionsToTry/) — open it, select all, copy, and paste
@@ -37,13 +31,17 @@ file was derived and verified.
 
 ## Priority queue
 
-**Queue refresh (2026-09-27):** the search fleet stays stopped.  One new
-test now heads the list: a single paste that decides whether the game
-keeps a command the level's editor does not offer.  If it does, two more
-size records follow directly below it.  After those, the order runs from
-the cheapest attempt to the most expensive.  The Year 26 six that used to
-head this list was refuted in the game on 2026-09-06 and is archived in
-REJECTED_APPROACHES.md.
+**Queue refresh (2026-09-28):** the search fleet stays stopped.  A repo
+review corrected two things.  The model had been silently ending every
+run at the 1,400 s clock even when asked to run longer, so yesterday's
+note that the Year 30 four only ever loses to a permanent freeze was
+wrong: with the clock lifted it wins all 1000 test worlds, so its losses
+are simply slow runs (its entry is corrected).  And the order below now
+runs from the cheapest attempt to the most expensive, with the optional
+items last, so the quick speed tie-breaks moved above the two long size
+candidates.  The
+Year 26 six that used to head this list was refuted in the game on
+2026-09-06 and is archived in REJECTED_APPROACHES.md.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
@@ -54,21 +52,26 @@ REJECTED_APPROACHES.md.
 2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Year 56 size 4**: five quick attempts (about 12 s each) on the
-   community's published four; 1000/1000 on both screens.  The largest
-   tier gain in the queue: its 99+ size row is 7.
-4. **Year 13 size 6**: two or three attempts of about ten minutes each;
+   community's published four; 1000/1000 on both screens.  A three-size
+   gain in its tier: the 99+ size row is 7.
+4. **Speed tie-breaks**, each with the incumbent control run first, every
+   run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
+   then the Year 68, 62, 65 and 67 ladders.
+5. **Year 13 size 6**: two or three attempts of about ten minutes each;
    806/1000 plain, 770/1000 shuffled.  The attempt count is the tier
    evidence.
-5. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
+6. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
    minutes, each to the clock; 925/1000 plain and 945/1000 shuffled
-   against the published four's 618/1000 and 616/1000.  Watch how any
-   loss looks (see the entry).
-6. The speed tie-breaks below, each with the incumbent control run first:
-   Year 38 at 140, Year 09 at 14, Year 59 at 142, then the Year 68, 62,
-   65 and 67 ladders.
+   against the published four's 618/1000 and 616/1000.
 7. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); 82.5% here.  Skip it if the
    Year 15 five in item 2 completes.
+8. Optional confirmations of published rows, for a patient session: the
+   Year 38 community speed 6-7, the Year 58 four, the Year 30
+   probabilistic four and the Year 30 alternate five.
+9. **Housekeeping, one minute:** check in the editor which early levels
+   let one command take two directions (the last entry of this section);
+   it settles several README paste markers.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -82,7 +85,7 @@ ask for that tier again.
   record pastes a `myitem` test the editor does not offer at that level.
   Whether a paste also keeps a whole *command* the level's editor does
   not offer is unknown.  This program uses `write`, which the editor
-  first offers at Year 28.  CONTRIBUTING.md already lists pasted programs
+  first offers at Year 32.  CONTRIBUTING.md already lists pasted programs
   that use "a command the game's editor will not let you build at that
   level", so a completion would count.
 - Mechanism: every worker lifts the cube below it and writes 0 on it.
@@ -108,7 +111,7 @@ ask for that tier again.
 
 - **Paste-ready program:** [SolutionsToTry/Year 16 - Little Exterminator 2 - nearest one-shot at size 4.txt](<SolutionsToTry/Year 16 - Little Exterminator 2 - nearest one-shot at size 4.txt>)
 - **Try this only if the Year 23 paste kept its command.**  It uses
-  `nearest`, which the editor first offers at Year 23.
+  `nearest`, which the editor first offers at Year 25.
 - Goal: size **4** against the record of 6, which is also the game's par.
 - Mechanism: Neural Pathways' published four, unchanged.  Each of the
   three workers takes the nearest cube and feeds it to the nearest
@@ -135,7 +138,10 @@ ask for that tier again.
 - Caution: a worker that loses a race for a cube still walks to its
   shredder and, arriving empty-handed, is lost; that is the mechanism
   behind the earlier Shred Lines failures.  In the model the other
-  workers always finish the job, but stop at the first failed run.
+  workers always finish the job, but stop at the first failed run.  It
+  is queued under the exception in the working rules: losing a worker
+  cannot fail this level, and the model, which includes the loss, wins
+  every run.
 - Suggested live test: paste, confirm editor size 5, and run it two or
   three times.
 - Result: _not yet tested in the game_.
@@ -177,69 +183,6 @@ ask for that tier again.
   and loss; three or more wins supports the Solutions50+ row.  The one
   unmodelled risk is seven workers converging on the single shredder,
   where the model shows no crowding trouble.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
-
-- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
-- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
-  record of 7, and a tier above the existing low-percent 6.
-- Mechanism: the published low-percent six's random walk and gap-filling,
-  with one change — after dropping into a gap the worker immediately
-  re-picks the cube it just walked past (`pickup w` under the guard that
-  already vouches for `w == datacube`), so each worker chains fills
-  instead of retiring after one.  The opener `pickup s` is the published
-  row's own; there are no direction lists on item commands anywhere, so
-  the Year 60 list-stall class does not apply.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
-  **770/1000 under the shuffled-dispatch screen** — several points under
-  its plain rate, so this one is mildly order-sensitive and a first
-  attempt can miss; the published low-percent row measures 83/200 =
-  41.5% on the same model, and the pickup-before-drop ordering of the
-  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
-  no later hardening run improved on this form.
-- Suggested live test: paste, confirm editor size 6, run at 12x; two or
-  three attempts should land a win.  Capture the completion panel — the
-  attempt count is the tier evidence.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
-- Goal: not a new row — the published 50%+ row is already a four — but a
-  far more reliable one, and the seed for a top-tier four if hardening
-  reaches 99% against the 99%+ record of **5**.
-- Mechanism: identical to the published four except for one list.  That
-  one refills only when the worker happens to stand on three of the
-  printer's eight sides; this one names all eight, so every worker beside
-  the machine reloads instead of one in three.  Nothing else changes.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
-  against the published four's 618/1000 and 616/1000 on the same
-  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
-  10.8%, so the diagonal sides carry the refill; adding a northward step
-  to the walk costs 17 points.  A hardening search over 720 generations
-  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
-  form with a five-direction step, measures 920/1000 and 935/1000.
-- Diagonal printer takes are live-proven: the published four takes only
-  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
-  machine-reach caution on the shredder side does not carry over here.
-- Unaffected by the 2026-09-06 machine rules: the program only ever
-  *takes* from the printer and never gives to one, and its rate is
-  identical before and after that change.  There is no shredder in the
-  room, so the empty-handed give cannot bite either.
-- Suggested live test: paste, confirm editor size 4, and run it a few
-  times — wins take about 930 s of game time, so let each run go to the
-  clock rather than restarting early.
-- What to watch (added 2026-09-27): in the model every lost run is a
-  permanent freeze, not a slow run; giving it more than four times the
-  clock wins none of them back.  The losing world traced ended with every
-  floor square covered except the top-left corner while all seven workers
-  held a cube.  If a run freezes like that, it is a genuine loss: note it
-  and move on.  If none of your runs ever freezes, the model is wrong
-  about this level and the four becomes a candidate for the 99%+ record
-  of **5**.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
@@ -285,7 +228,8 @@ ask for that tier again.
   is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
-- Result: _not yet tested in the game_.
+- Result: _first paste refused (orphaned label, 2026-08-17); the fixed
+  file has not been run yet_.
 
 ### [ ] Year 59 - Glory Hole - speed tie-break at size 142
 
@@ -354,9 +298,6 @@ ask for that tier again.
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
   stop at the first regression and capture each completion panel and editor
   size.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 65 - Defrag Ordered - live-only speed tie-break at size 120
@@ -369,13 +310,10 @@ ask for that tier again.
   `comment 1` followed directly by `step e`.
 - Why it may be safe: `mem3` is never read, and the loop body is empty; its only
   effect is seven iterations of cadence delay.
-- Fidelity caveat: the current extracted model does not reproduce the published
+- Fidelity caveat: the current model does not reproduce the published
   incumbent, so this timing edit is live-only and has no emulator verdict.
 - Suggested live test: run the incumbent as a loading/control check, then the
   candidate; capture both completion panels and editor size.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 208/209)
@@ -392,21 +330,82 @@ ask for that tier again.
   and the program contains no `listenfor`; all five deleted commands are
   cadence only.  Size 208 deletes one store and one tell; the conservative
   tell-only fallback is size 209.
-- Timing caveat: candidate and incumbent both fail the current extracted-level
-  model, so it cannot referee either edit; this remains live-only.
+- Timing caveat: candidate and incumbent both fail in the current model, so
+  it cannot referee either edit; this remains live-only.
 - Expected editor size: **205**; expected displayed speed: **41**.
 - Suggested live test: run the incumbent, size 209, size 208, and finally size
   205.  Stop the ladder at the first failure or displayed-speed regression and
   retain the last successful form.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
+
+### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
+
+- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
+- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
+  record of 7, and a tier above the existing low-percent 6.
+- Mechanism: the published low-percent six's random walk and gap-filling,
+  with one change — after dropping into a gap the worker immediately
+  re-picks the cube it just walked past (`pickup w` under the guard that
+  already vouches for `w == datacube`), so each worker chains fills
+  instead of retiring after one.  The opener `pickup s` is the published
+  row's own; there are no direction lists on item commands anywhere, so
+  the Year 60 list-stall class does not apply.
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
+  **770/1000 under the shuffled-dispatch screen** — several points under
+  its plain rate, so this one is mildly order-sensitive and a first
+  attempt can miss; the published low-percent row measures 83/200 =
+  41.5% on the same model, and the pickup-before-drop ordering of the
+  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
+  no later hardening run improved on this form.
+- Suggested live test: paste, confirm editor size 6, run at 12x; two or
+  three attempts should land a win.  Capture the completion panel — the
+  attempt count is the tier evidence.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
+- Goal: not a new row — the published 50%+ row is already a four — but a
+  far more reliable one, and the seed for a top-tier four if hardening
+  reaches 99% against the 99%+ record of **5**.
+- Mechanism: identical to the published four except for one list.  That
+  one refills only when the worker happens to stand on three of the
+  printer's eight sides; this one names all eight, so every worker beside
+  the machine reloads instead of one in three.  Nothing else changes.
+- Emulator evidence (re-taken 2026-09-14 on the current engine):
+  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
+  against the published four's 618/1000 and 616/1000 on the same
+  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
+  10.8%, so the diagonal sides carry the refill; adding a northward step
+  to the walk costs 17 points.  A hardening search over 720 generations
+  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
+  form with a five-direction step, measures 920/1000 and 935/1000.
+- Diagonal printer takes are live-proven: the published four takes only
+  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
+  machine-reach caution on the shredder side does not carry over here.
+- Unaffected by the 2026-09-06 machine rules: the program only ever
+  *takes* from the printer and never gives to one, and its rate is
+  identical before and after that change.  There is no shredder in the
+  room, so the empty-handed give cannot bite either.
+- Suggested live test: paste, confirm editor size 4, and run it a few
+  times — wins take about 930 s of game time, so let each run go to the
+  clock rather than restarting early.
+- What to watch (corrected 2026-09-28): every lost run in the model is
+  simply slow.  With the clock lifted, all 1000 test worlds finish,
+  averaging about 62,000 frames against the 87,500-frame clock, so a
+  loss in the game should look like a floor still a few squares short
+  when time runs out, not a frozen crew.  The note this replaces said
+  the losses were permanent freezes; that rested on a measurement the
+  model had silently capped at the clock.  Since the losses are only
+  slowness, a faster walk at the same size is the lever toward the 99%+
+  record of **5**.
+- Result: _not yet tested in the game_.
 
 ### [ ] Year 15 - Shred Lines - community size 6 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - community size 6.txt](<SolutionsToTry/Year 15 - Shred Lines - community size 6.txt>)
-- Goal: locally confirm abfipes12's public size-6 program, newly imported to
+- Goal: locally confirm abfipes12's public size-6 program, imported to
   Solutions50+ below our size-8 main row (found in the 2026-08-17 source
   audit; it was never in our tables).
 - Public evidence: abfipes12 reports 16/25 real-game wins (64%) at about
@@ -424,7 +423,7 @@ ask for that tier again.
   refuted Year 15 gated-form class does not apply.
 - Expected editor size: **6**; paste-only (multi-direction random step).
 - The Solutions50+ row already rests on the public evidence, so a local
-  confirmation is optional — after the three size candidates above.  A
+  confirmation is optional — after the size candidates above.  A
   shrink search for a five under the machine rules (300 narrow
   generations, then a short run of the wider operator) found nothing.
 - Result: _not tested locally; the row stands on public evidence_.
@@ -433,7 +432,7 @@ ask for that tier again.
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - community speed 6-7.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - community speed 6-7.txt>)
 - Goal: locally confirm abfipes12 and commonnickname's public speed
-  program, newly imported to Solutions50+ below our 9-10 main speed row
+  program, imported to Solutions50+ below our 9-10 main speed row
   (found in the 2026-08-17 source audit; it was never in our tables).
 - Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
 - Local emulator: 36/50 wins, average 423.6 frames (win/fail evidence
@@ -457,10 +456,13 @@ ask for that tier again.
 - A hardening search from this program (2026-09-11 to 14, 140
   generations) found no more reliable four; the published program stands
   at 195/200 here.
+- Measured again 2026-09-28: 942/1000 at the live clock and 961/1000 with
+  the clock lifted, so 39 of its losses are genuinely stuck worlds (the
+  frozen failure described above) and the rest are slow runs.
 - Result: **one live attempt (2026-08-17) looked like an infinite loop** and
   was abandoned before the 1,400-second cutoff.  That matches either the
   known ~2.5% emulator failure mode or a live/emulator divergence at
-  contended machines; the winning tail is slow (emulator range 85-1,379
+  contended cubes; the winning tail is slow (emulator range 85-1,379
   seconds), so a run only counts as failed at the cutoff or visibly frozen.
   Low priority until a patient full-length session.
 
@@ -470,31 +472,22 @@ ask for that tier again.
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
   ~1211) below the size-5 main entry.
 - **Superseded as a paste target (2026-09-14)** by the eight-sided four
-  at the top of the queue: same size, 925/1000 against this program's
-  618/1000 on the current engine.  Run this one only as the control if
+  in item 6: same size, 925/1000 against this program's 618/1000 on the
+  current engine.  Run this one only as the control if
   you want the A/B, or to confirm the published row as it stands.
-- Machine-reach note: this program takes from printers DIAGONALLY
-  (`takefrom nw,sw,ne`).  Diagonal SHREDDER gives proved fatal live (the
-  giver walks in), but the 15/25 public wins of this very program show
-  that a diagonal printer take does not; the caution recorded here after
-  the Year 21/24 refutations is closed.
+- Machine-reach note: this program takes from printers diagonally
+  (`takefrom nw,sw,ne`), and its 15/25 public wins show that a diagonal
+  printer take is safe, unlike the diagonal shredder give that killed
+  Year 21's givers.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current capped-emulator evidence: 64/100 wins, average winning speed
-  1,210.8, range 813-1,397.  The close agreement supports the 50+ tier, but
-  successful runs often finish only just before the game deadline.
+- Current emulator evidence: 618/1000 plain and 616/1000 shuffled
+  (2026-09-14).  Winning runs average about 1,211 s, so they often finish
+  only just before the game deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
   game's own deadline.
 - Result: _not yet tested locally in the game_.
-
-```text
-a:
-step nw,w,sw,s,ne,e,se
-drop
-takefrom nw,sw,ne
-jump a
-```
 
 ### [ ] Year 30 - Fill the Floor - alternate size 5
 
@@ -508,69 +501,19 @@ jump a
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
 
-```text
-mem1 = nearest printer
-a:
-takefrom mem1
-step nw,sw,n,e,se
-drop
-jump a
-```
+### [ ] Housekeeping - which levels let the editor give one command two directions
 
-### Commit `c7112a1`
-
-- [ ] Y10 speed
-- [ ] Y11 speed
-- [ ] Y12 size
-- [ ] Y20 speed
-- [ ] Y21 size, speed, and Solutions50+ speed
-- [ ] Y22 speed
-- [ ] Y31 size
-- [ ] Y32 size
-- [ ] Y39 size
-- [ ] Y40 size
-- [ ] Y41 speed
-- [ ] Y42 speed
-- [ ] Y50 size
-- [ ] Y51 speed
-- [ ] Y52 speed
-- [ ] Y60 size and speed
-- [ ] Y62 Solutions99+ size and Solutions50+ size
-- [ ] Y65 speed
-- [ ] Y67 speed
-
-### Commit `412d9d1`
-
-- [ ] Y09 speed
-- [ ] Y16 size
-- [ ] Y18 size
-- [ ] Y22 size
-- [ ] Y23 speed
-- [ ] Y34 size and speed
-- [ ] Y37 size
-- [ ] Y38 size and speed
-- [ ] Y57 size
-- [ ] Y58 size
-- [ ] Y68 size
-
-### Current all-level audit
-
-- [ ] Y05 low-percent size
-- [ ] Y06 low-percent size
-- [ ] Y13 low-percent size
-- [ ] Y30 Solutions50+ size
-- [ ] Y34 Solutions50+ speed
-- [ ] Y43 Solutions50+ size
-- [ ] Y44 low-percent size
-- [ ] Y53 low-percent size
-- [ ] Y54 Solutions50+ speed
-
-Current-audit evidence: Y30 is 15/25 in the public header and 64/100 in the
-capped emulator; Y34 is 79/100; Y43 is 144/150 publicly and 18/20 locally
-(winning emulator range 639-1,349 seconds); Y53 is 46/100 and was demoted from
-Solutions50+; Y54 is 64/120.  The public Y44 size-4 header is arithmetically
-inconsistent, and its incidental speed is still `TBD` until a live win is
-captured.
+- No paste file: this is a look at the editor, not a program.
+- Why: the README's paste marker is inconsistent for direction lists.
+  Year 6's record (`pickup c,s`) carries it; Year 4's (`pickup c,e`),
+  Year 10's size row (`step n,s`) and Year 12's speed row (four step
+  lists) do not; and this queue calls Year 13's and Year 22's step lists
+  paste-only.  An open report on the upstream repository says Year 4's
+  list cannot be built in the editor.
+- What to do: open the editor on Years 4, 10 and 13, add a `step` or a
+  `pickup`, and try to select two directions on it.  Note for each level
+  whether the editor allows it; the README markers follow from that.
+- Result: _not yet checked_.
 
 ## Low-percent leads (parked — 50%+ only for now)
 
@@ -588,7 +531,7 @@ kept intact so nothing is rediscovered.
   The rendezvous pins the supervisor through its empty-pickup error, after
   which its `giveto w,s` selects the cardinal south shredder.
 - The level wins exactly when the one relayed cube is a weak global minimum.
-  The intended random-state model gives about **2.23%** wins; a source-exact
+  The intended random-state model gives about **2.23%** wins; an exact
   2,000,000-state spot check produced 2.23085%.
 - Expected editor size: **3**; the multi-direction `giveto` syntax is already
   established in exported solutions.
@@ -596,18 +539,12 @@ kept intact so nothing is rediscovered.
   completion and editor size.  Do not substitute diagonal `giveto sw`.
 - Local-emulator cross-check (2026-08-22): 53/3,000 = **1.77%** against the
   2.23% claim — the same order of magnitude in a second model, still above
-  the queue floor.  One mechanism caution: live pickup-lists were proven
-  NOT to skip an ineligible square (Year 60 — the worker stalls); if
-  give-lists behave the same way, the supervisor's `w,s` fall-through
-  stalls instead of selecting the shredder.  The cheap live attempts
-  double as the discriminator for that rule.
+  the queue floor.
+- Caution (2026-09-06 machine rules): the supervisor's give runs straight
+  after its empty pickup, so if the relay's timing slips it gives
+  empty-handed beside the shredder and is lost.  Both rates predate those
+  rules; re-screen before any live attempt.
 - Result: _not yet tested locally in the game_.
-
-```text
-step nw
-pickup ne
-giveto w,s
-```
 
 ### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
 
@@ -627,15 +564,6 @@ giveto w,s
   static classification immediately.
 - Result: _not yet tested locally in the game_.
 
-```text
-if ne != wall and
- sw != wall or
- n != datacube:
-	mem1 = calc 0 / 0
-endif
-pickup s
-```
-
 ### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5
 
 - **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt>)
@@ -644,7 +572,7 @@ pickup s
 - Mechanism: six required binary moves reach the lower funnel with probability
   1/64; seven of the eight three-step tails then reach a position whose west
   pickup takes the cube.  Every earlier deviation falls into a hole.
-- Exact full-state density: `7 * 2^23 / (2^32 - 1)`, or
+- Exact density over the level's random start states:
   **1.367187500318%**.  There is one absorbing losing tail at `(7,10)`.
 - Expected editor size: **5**; the label is free and the program has one
   pickup, three steps, and one jump.  Paste is required for the direction
@@ -655,15 +583,6 @@ pickup s
 - Local-emulator cross-check (2026-08-22): 36/3,000 = **1.20%**, within one
   sigma of the exact 1.367% claim — the rate is confirmed by a second model.
 - Result: _not yet tested locally in the game_.
-
-```text
-a:
-pickup w
-step s,se
-step e,sw
-step sw,se
-jump a
-```
 
 ### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
 
@@ -734,9 +653,6 @@ jump a
 - Expected editor size: **83**; expected displayed speed: **about 6**.
 - Suggested live test: run repeated candidate attempts until it wins, then
   capture the completion panel and editor size.
-- Live-speed caution: frame-based evidence no longer establishes
-  displayed speed (Years 39/40 regressed 36→41 live).  Run the
-  incumbent as control first; discard on regression.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 44 - Unique Fashion Party - low-percent size 4
@@ -753,15 +669,6 @@ jump a
 - Suggested live test: 10-20 runs; capture the final cube/worker arrangement on
   every failure.
 - Result: _not yet tested locally in the game_.
-
-```text
-pickup s
-if w != wall:
-    a:
-    step s,e,se
-    jump a
-endif
-```
 
 ### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
 
@@ -783,12 +690,6 @@ endif
   are unbiased.  Capture the first completion panel.
 - Result: _not yet tested locally in the game_.
 
-```text
-a:
-step w,e
-jump a
-```
-
 ### [ ] Year 13 - Injection Sites 2 - recoverable low-percent size 5
 
 - **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt>)
@@ -809,17 +710,6 @@ jump a
   more practical than the rarer one-shot entries below.
 - Result: _not yet tested locally in the game_.
 
-```text
-pickup s
-a:
-step w,sw,n,s,e,se
-if c == nothing and
- w == datacube:
-    drop
-endif
-jump a
-```
-
 ### [ ] Year 22 - Number Royale - survivor low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt](<SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt>)
@@ -839,13 +729,6 @@ jump a
   editor size 3.
 - Result: _not yet tested locally in the game_.
 
-```text
-pickup s
-a:
-step n,s
-jump a
-```
-
 ### [ ] Year 54 - Terrain Leveler - constant-average low-percent size 5
 
 - **Paste-ready program:** [SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt](<SolutionsToTry/Year 54 - Terrain Leveler - constant-average low-percent size 5.txt>)
@@ -864,15 +747,6 @@ jump a
   the first completion panel with editor size 5.
 - Result: _not yet tested locally in the game_.
 
-```text
-a:
-step n
-pickup c
-write 3
-drop
-jump a
-```
-
 ### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt>)
@@ -886,14 +760,10 @@ jump a
 - Expected editor size: **4**; all commands are available in Year 38.
 - Suggested live test: 50-100 fresh runs; each attempt ends within a few
   seconds, so reset immediately after an explicit failure.
+- Caution (2026-09-06 machine rules): a worker that loses the race for a
+  cube still gives, empty-handed, at the shredder and is lost.  The rate
+  predates those rules; re-screen before any live attempt.
 - Result: _not yet tested locally in the game_.
-
-```text
-mem1 = nearest datacube
-pickup mem1
-mem1 = nearest shredder
-giveto mem1
-```
 
 ## Parked long shots (win rate below 1 in 100)
 
@@ -914,18 +784,13 @@ higher-rate variant is found.  Nothing below this line needs game time.
   dies.  A win occurs when exactly seven south denominators are nonzero and
   the corresponding seven held labels are the complete set 0-6.
 - Probability evidence: 131/200,000 faithful modeled states won (0.0655%);
-  the iid calculation is 0.072778626%.  Initial xorshift state `0xa84e338f`
-  is a concrete finite-state witness.
+  the iid calculation is 0.072778626%, and a concrete winning start state
+  exists in the model.
 - Expected editor size: **2**.  Size 1 cannot both acquire cubes and remove
   redundant workers.
 - Suggested live test: none under the current cutoff; retain for a future
   reproducible RNG harness or a lucky natural completion.
 - Result: _not yet tested locally in the game_.
-
-```text
-pickup n
-mem1 = calc 0 / s
-```
 
 ### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
 
@@ -941,19 +806,12 @@ mem1 = calc 0 / s
   routes, leaving a nonempty exactly-seven window.  Conditional on a fixed
   last-seven set, value uniqueness has probability `7! / 7^7`, about 0.612%.
 - Fidelity caveat: the current Year 44 emulator loses even the public size-4
-  program and is not a trustworthy large-crowd oracle.  This is a live-only
+  program and is not a trustworthy judge of large crowds.  This is a live-only
   candidate with a positive finite schedule, not a measured success rate.
 - Expected editor size: **3**; paste-only because of `step s,e,se`.
 - Suggested live test: repeated fresh runs, capturing every exactly-seven
   survivor pattern and the first completion panel.
 - Result: _not yet tested locally in the game_.
-
-```text
-pickup s
-a:
-step s,e,se
-jump a
-```
 
 ### [ ] Year 12 - Unzip - one-shot low-percent size 3
 
@@ -971,12 +829,6 @@ jump a
   attempts, so this is lower priority than the main-tier candidates.
 - Result: _not yet tested locally in the game_.
 
-```text
-pickup c
-step n,s
-drop
-```
-
 ### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
@@ -991,17 +843,12 @@ drop
 - Expected editor size: **3**.
 - Entry method: paste the text; the four-direction random step and eight-target
   pickup are not constructible from Year 06's normal editor controls.
+- Caution: the eight-target pickup has to skip empty squares, which the
+  game does not do (Year 60), so the model's rate is not trustworthy.
 - Suggested live test: repeated quick resets only if pursuing a very rare
   record.  The observed rate implies thousands of attempts per win, so this is
   lower priority than the deterministic and main-tier candidates.
 - Result: _not yet tested locally in the game_.
-
-```text
-a:
-step s,sw,se,e
-pickup c,s,se,sw,e,w,n,ne
-jump a
-```
 
 ### [ ] Year 52 - The Mode Code - one-shot low-percent size 6
 
@@ -1014,7 +861,8 @@ jump a
 - Exact probability: conditioning on the six sampled cubes and the remaining
   58 independent uniform draws gives `2.90709234823e-6`, or about one win in
   343,986 worlds.
-- RNG/emulator witness: an independent exact RNG search predicted the first
+- Witness: an independent exact search of the model's random worlds
+  predicted the first
   winning world at seed 69,510 with counts `[13,9,11,11,12,8]` and samples
   `[5,1,3,3,4,0]`.  The capped emulator then found exactly 1/69,510 wins, at
   that final seed, completing in 342 frames with displayed speed 6.
@@ -1023,15 +871,6 @@ jump a
   practical manual campaign.  Preserve it for a lucky natural run or a future
   reproducible live-game RNG harness; capture the completion panel if tested.
 - Result: _not yet tested locally in the game_.
-
-```text
-mem2 = set s
-step n
-mem1 = calc n + 8
-pickup mem2
-write mem1
-drop
-```
 
 ### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
 
@@ -1045,25 +884,20 @@ drop
 - Exact probability: one eight-value ring sums to 36 with probability
   `4,816,030 / 10^8`; all five do so with probability
   `2.5908717630610564e-7`, or about one in 3,859,705.
-- RNG/emulator witness: an independent xorshift search found seed 3,868,438.
+- Witness: an independent search of the model's random worlds found seed
+  3,868,438.
   All five eight-value groups sum to 36, and the isolated seed-offset emulator
   won in 2,099 frames with displayed speed 34 and 172 item actions.
 - Expected editor size: **5**.
 - Entry method: paste the text because the ordered multi-target `pickup c,s`
   is not constructible from Year 55's normal editor controls.
+- Caution: `pickup c,s` has to skip the empty centre to reach the petal,
+  and the game does not skip an empty listed square (Year 60), so this
+  program most likely stalls in the game.
 - Suggested live test: natural manual verification is impractical without a
   reproducible RNG-start method.  Capture the completion panel if the matching
   world can be reproduced.
 - Result: _not yet tested locally in the game_.
-
-```text
-a:
-step n
-pickup c,s
-write 36
-drop
-jump a
-```
 
 ### [ ] Year 56 - Local Maximums - one-shot low-percent size 3
 
@@ -1077,7 +911,8 @@ jump a
 - Exact probability: each selected value is maximal with probability
   `sum(k^7, k=1..100) / 100^8`; across seven independent groups the win rate
   is `6.2945867338e-7`, or about one in 1,588,667.
-- RNG/emulator witness: an independent xorshift search found seed 3,281,406.
+- Witness: an independent search of the model's random worlds found seed
+  3,281,406.
   Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
   group.  An isolated seed-offset emulator run then won in 310 frames with
   displayed speed 5 and 14 item actions.
@@ -1086,12 +921,6 @@ jump a
   natural manual verification is impractical without a reproducible RNG-start
   method.  Capture the completion panel if the matching world occurs.
 - Result: _not yet tested locally in the game_.
-
-```text
-pickup nw
-mem1 = nearest shredder
-giveto mem1
-```
 
 ### [ ] Year 62 - The Sorting Floor - initially sorted size 0
 
@@ -1103,8 +932,8 @@ giveto mem1
   first frame is processed.
 - Exact probability: `C(108, 9) / 100^9 = 3.9113958819e-6`, or about one win
   in 255,663 worlds.
-- RNG/emulator witness: an independent xorshift search found seed 239,189.
-  Its constructor values become row-major
+- Witness: an independent search of the model's random worlds found seed
+  239,189, whose values in row-major order are
   `[10,14,18,41,62,69,80,88,95]`; the isolated seed-offset emulator accepted
   the label-only program at frame 0 with size 0 and displayed speed 0.
 - Expected editor size: **0**; the free label is present only to make the text
@@ -1113,41 +942,6 @@ giveto mem1
   reproducible live-game RNG-start method becomes available, paste the free
   label, run the matching world, and capture the immediate completion panel.
 - Result: _not yet tested locally in the game_.
-
-```text
-a:
-```
-
-### [ ] Year 26 - Budget Brigade 2 - all-left low-percent size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 26 - Budget Brigade 2 - all-left low-percent size 3.txt](<SolutionsToTry/Year 26 - Budget Brigade 2 - all-left low-percent size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the size-7 main
-  entry.
-- Mechanism: the vertical printer chain relays every sheet north, the top
-  worker turns it west, and the horizontal chain relays it to the left-hand
-  low-value shredder.  The strict split goal wins exactly when the first 20
-  sheets all have values below 50.
-- Exact probability: the first printer sheet is always 0, leaving 19 uniform
-  binary threshold outcomes, so success is `2^-19 = 1 / 524,288`.
-- RNG/emulator witness: seed 945,093 wins the strict extracted goal in 10,574
-  frames with modelled speed 170 and 1,932 item actions.  Canonical counting
-  confirms size 3.
-- Minimality: a loop is necessary to request at least 20 sheets from the single
-  printer, and separate take/give actions are necessary to relay and shred
-  them.  Thus no size-2 program can satisfy this no-walking level.
-- Expected editor size: **3**; the multi-target take/give lists are legal in
-  Year 26 and do not require a paste-only marker.
-- Suggested live test: natural manual verification is impractical without a
-  reproducible RNG-start method; capture the completion panel if the witness
-  world can be reproduced.
-- Result: _not yet tested locally in the game_.
-
-```text
-a:
-takefrom s,e
-giveto w,n,s
-jump a
-```
 
 ### [ ] Year 33 - Data Backup Day - one-shot low-percent size 5
 
@@ -1164,14 +958,6 @@ jump a
   observed win is plausible, but record the actual tie behavior.
 - Result: _not yet tested locally in the game_.
 
-```text
-mem1 = set e
-mem2 = nearest datacube
-pickup mem2
-write mem1
-drop
-```
-
 ### [ ] Year 34 - Seek and Destroy 1 - one-shot low-percent size 4
 
 - **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt>)
@@ -1186,17 +972,7 @@ drop
 - Expected editor size: **4**; all commands are available in Year 34.
 - Suggested live test: this may require thousands of quick resets.  Confirm
   that each successful run reports all four per-column minima before promotion.
+- Caution (2026-09-06 machine rules): a worker that loses the race for a
+  cube still gives, empty-handed, at the shredder and is lost.  The rate
+  predates those rules; re-screen before any live attempt.
 - Result: _not yet tested locally in the game_.
-
-```text
-mem1 = nearest datacube
-pickup mem1
-mem1 = nearest shredder
-giveto mem1
-```
-
-## Recently imported community programs
-
-These already have public real-game evidence and are committed to `master`.
-Local smoke-testing is optional, but unchecked items have not yet been
-personally reproduced in this game installation.

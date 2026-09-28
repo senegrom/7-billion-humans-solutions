@@ -1,6 +1,6 @@
 -- 7 Billion Humans (2214M) --
 -- 59: Glory Hole --
--- Size 142 Speed 12s --
+-- Size 142 Speed TBD --
 
 mem1 = nearest datacube
 if mem1 == 2:

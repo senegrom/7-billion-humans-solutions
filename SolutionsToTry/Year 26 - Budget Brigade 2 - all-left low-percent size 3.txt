@@ -1,4 +1,0 @@
-a:
-takefrom s,e
-giveto w,n,s
-jump a
