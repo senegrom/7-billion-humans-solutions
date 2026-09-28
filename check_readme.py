@@ -29,6 +29,7 @@ LABEL_PATTERN = re.compile(r"^[A-Za-z_]\w*:$")
 COMMENT_COMMAND_PATTERN = re.compile(r"^comment \d+$")
 CONDITION_PATTERN = re.compile(r"^if\b")
 ELSE_PATTERN = re.compile(r"^else:?$")
+JUMP_PATTERN = re.compile(r"^jump\s+(\w+)$")
 
 # What the game's editor will not build at a level, so a solution using it has to be pasted in and carries the
 # paste marker (the rules are in COMMANDS.md).
@@ -120,6 +121,29 @@ def solution_size(path: Path) -> int:
         The number of commands in the solution.
     """
     return sum(1 for statement in read_statements(path) if not is_free(statement))
+
+
+def unreached_labels(statements: List[str]) -> List[str]:
+    """
+    Finds the labels in a solution that no jump leads to.
+
+    In the game a label is only ever the far end of a jump arrow, so it refuses to paste a program with a label that
+    nothing jumps to.
+
+    Args:
+        statements: The solution's statements.
+
+    Returns:
+        The names of the labels no jump leads to, in the order they appear.
+    """
+    targets = {match.group(1) for match in map(JUMP_PATTERN.match, statements) if match}
+    return [
+        statement[:-1]
+        for statement in statements
+        if LABEL_PATTERN.match(statement)
+        and not ELSE_PATTERN.match(statement)
+        and statement[:-1] not in targets
+    ]
 
 
 def cell_value(cell: str) -> Optional[int]:
@@ -241,6 +265,11 @@ def check_rows(rows: List[Row]) -> List[str]:
                 f"expected {expected_directory}"
             )
             continue
+        stranded = unreached_labels(read_statements(row.path))
+        if stranded:
+            problems.append(
+                f"{where}: no jump leads to the label {stranded[0]}:, and the game refuses such a paste"
+            )
         size = cell_value(row.size)
         actual_size = solution_size(row.path)
         if size is None:
