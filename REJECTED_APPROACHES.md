@@ -34,8 +34,8 @@ for records.  Candidates that still need live-game verification remain in
 - Y12 speed size-16 random final-direction fusion: 0/100 while the incumbent
   was 100/100 in 197 frames; endpoint motion changes later branch entrants.
 - Y14 pickup-first size 4: the existing live size-4 and this permutation both
-  retain the cube-less worker's failed pickup/give path.  Disassembly shows no
-  action-animation saving, and the corrected emulator makes them exactly tied
+  retain the cube-less worker's failed pickup/give path.  There is no
+  action-animation saving to gain, and the corrected emulator makes them exactly tied
   at 97 frames even though it misreports the incumbent's live timing.  It is
   therefore expected to retain the live score of 4, not challenge speed 2.
 - Y18 random-fan size 4: 0/100 capped emulator wins; the workers do not fan out
@@ -65,7 +65,7 @@ for records.  Candidates that still need live-game verification remain in
   129 seconds and the proposed unconditional-tail form is about 30 commands at
   the same speed.  Both are dominated by the local size-9/live-129 endpoint,
   and neither challenges the size-5 row.
-- Y26 size 6: invalid for the split-50 goal; the old loader ignored that rule.
+- Y26 size 6: invalid for the split-50 goal; the old model ignored that rule.
 - Y26 size-5 ordered take/give fusion: three distinct routing predicates each
   failed 0/100 at the 1,400-second cap; the mechanism stalls the feeder chain.
 - Y20 speed size-36 ordered-pickup fusion: 0/1 while the incumbent won; the
@@ -199,8 +199,8 @@ for records.  Candidates that still need live-game verification remain in
   the simulator (avg 24.9, same distribution) — the community's real-game
   gain lives in machine-serve timing the simulator does not yet model, so a
   simulator-relative -1.5 s no longer supports an improvement claim against
-  the new record.  Re-running the merge transform on the imported bases
-  instead.
+  the new record.  The merge transform was then re-run on the imported
+  bases (next entry).
 - Y21 one-walk imported-record reach merge at editor size 40: 400/400 and faster
   than the size-41 base, but initially superseded by the position-preserving
   size-39 fusion, which removed both walks and won 100/100 with a better model
@@ -210,10 +210,13 @@ for records.  Candidates that still need live-game verification remain in
   jump a`): rate-optimized across 45 pickup-target and 50 step-list
   variants; the best, `step n,s / pickup c,s`, measures 120/1,200 = 10.0%
   with winning runs averaging 94.5 s (fastest 32 s).  Superseded by the
-  hole-dive size 3 in the live queue: despite the lower 8.4% rate, its
-  wins land in 5-34 s and its losses self-terminate, so expected
-  wall-clock per witnessed completion is far lower.  KEPT AS FALLBACK if
-  the hole-dive's live rate disappoints.
+  hole-dive size 3 (now parked in the queue's low-percent section):
+  despite the lower 8.4% rate, its wins land in 5-34 s and its losses
+  self-terminate, so expected wall-clock per witnessed completion is far
+  lower.  KEPT AS FALLBACK if the hole-dive's live rate disappoints,
+  with one caution added later: `pickup c,s` relies on the list skipping
+  an empty square, which the game does not do (Year 60), so its live
+  rate is likely below the model's.
 - Y58 size-4 top-tier promotion: the 50+ entry measures 384/400 = 96.0%
   at the real 1,400-second clock, losses all clock-outs (slowest win
   1,379 s).  Both improvement axes are exhausted: eleven step-list
@@ -222,7 +225,10 @@ for records.  Candidates that still need live-game verification remain in
   variants (the published sw/e/se nothing-triple is best, 146/150; every
   relaxation fires wrong picks and lowers the rate).  The program is
   locally optimal at ~96% -- correctly tiered in Solutions50+; no 99+
-  claim exists in this neighborhood.
+  claim exists in this neighborhood.  (The order comparison was written
+  before direction order turned out not to be part of a program: the
+  published list is already in slot order, so its 146 and the 140 of the
+  reordered spelling are one program on two trial streams.)
 - Y21 speed position-preserving reach merge (final inner-loop `step w;
   giveto s; step e; takefrom s` -> `giveto sw; takefrom s`, size 41 -> 39):
   REFUTED LIVE by the maintainer -- "most of the times the humans get
@@ -231,6 +237,9 @@ for records.  Candidates that still need live-game verification remain in
   its model lets a give that BEGINS within diagonal reach toss from where
   it stands.  The game instead walks the giver in to deliver and the
   shredder destroys the worker; the rare clean runs fit a frame race.
+  (2026-09-06: a step at a shredder turned out to be refused, so this
+  walk-in reading of the death is unconfirmed; the observation itself,
+  givers lost at a diagonal shredder give, stands.)
   RULE CORRECTION this refutation establishes: diagonal reach is fine for
   worker-to-worker gives (the published Year 19 relay does exactly that),
   but a SHREDDER give serves cardinally/at the machine front -- a diagonal
@@ -248,9 +257,11 @@ for records.  Candidates that still need live-game verification remain in
   and the long-standing Y24 3-command false win: DIRECTIONAL-GIVE TARGET
   SEMANTICS AT MACHINES are wrong in the simulator (it politely skips
   targets the game happily mis-serves, and vice versa).  Until that
-  subsystem is read out of a live witness, no candidate whose safety
+  subsystem is settled by a live witness, no candidate whose safety
   argument depends on a give-list falling through a machine square, or on
-  any non-cardinal machine give, should be queued.
+  any non-cardinal machine give, should be queued.  (Settled on
+  2026-09-06: fall-through is real, and a list that lands on a printer
+  destroys it; see the last section.)
 - THE FRAME-IDENTICAL CLAIM CLASS AND THE DIAGONAL TRANSFORM, refuted
   live on Years 39 and 40 (maintainer A/Bs, same machine, same session):
   Y39 diagonal-stack+end-drop (size 167) ran 41 s against the incumbent's
@@ -285,14 +296,17 @@ for records.  Candidates that still need live-game verification remain in
   fatal arrival): the candidate measures 0/100 and the published size-8
   stays 100/100.  Any candidate whose random step list can reach a
   square adjacent to a shredder is in this class -- audit step lists
-  against machine adjacency before queueing.
+  against machine adjacency before queueing.  SUPERSEDED 2026-09-06: a
+  step at a shredder is refused, and the deaths were empty-handed gives
+  (see the last section); the refutation of this program stands.
 - Y15 stochastic size 4 (random `step n,s` walk family): retracted with
   the event-gated size 5 -- the live report "again all workers die"
   refutes the whole random-step-on-Shred-Lines class (the map's only
   death is the shredder row, so the crew walked into the blades).  Under
-  EMU_STEPDEATH=1 screening both members measure 0/50; the published
-  size-8 stays 100/100 in either mode.  DISCRIMINATING EXPERIMENTS still
-  wanted from the live game: on Year 15, paste (a) `a:/step s/jump a`
+  the since-retired fatal-step screening both members measure 0/50; the
+  published size-8 stays 100/100 in either mode.  DISCRIMINATING
+  EXPERIMENTS (run on 2026-09-06, see the last section): on Year 15,
+  paste (a) `a:/step s/jump a`
   and (b) `a:/step n,s/jump a` for one run each -- whether the crew dies
   or fences against the shredder row under a SINGLE-direction step vs a
   RANDOM step decides the true rule, because several verified solutions
@@ -310,10 +324,9 @@ for records.  Candidates that still need live-game verification remain in
   deletion that keeps the incumbent's separate pickups loses 0/300, and
   the reordered list `pickup se,w` also loses 0/300 even under the
   simulator's own first-found semantics.  No size-8 exists in this
-  neighborhood; the size-9 record stands.  Optional live diagnostic if
-  ever curious: run the `pickup se,w` variant once -- identical leftmost
-  starvation would indicate the game picks randomly among listed squares,
-  while a totally different failure supports ordered first-found.
+  neighborhood; the size-9 record stands.  The live observation behind
+  this refutation, a worker stalled at the empty west square, is recorded
+  in the Year 60 section below.
 - CONTAMINATED-RUN AUDIT (maintainer insight): `myitem` conditions cannot
   be TYPED before Year 22, so live tests that retyped programs with
   substitutions tested DIFFERENT programs.  Three refutations reopened as
@@ -323,8 +336,8 @@ for records.  Candidates that still need live-game verification remain in
   verified record random-walks a shreddered level live, so random steps
   onto shredders appear fenced — removing the only death mechanism the
   Y15 map offered and undermining the step-death reading of the original
-  "all workers die" report.  The step-death stays available as opt-in
-  screening until the 30-second single-step discriminator settles it.
+  "all workers die" report.  The single-step discriminator ran on
+  2026-09-06: steps at a shredder are refused (see the last section).
   Refutations that STAND (paste-verified or no untypable constructs):
   Y21 reach-merge (diagonal shredder give), Y60 ordered-pickup (leftmost
   starvation; repair space exhausted), Y39/Y40 diagonal stacks and the
@@ -333,8 +346,8 @@ for records.  Candidates that still need live-game verification remain in
   - Y15 event-gated size 5 and Y24 one-sided relay size 4: retested
     PASTE-VERBATIM and still fail the same ways.  The contamination
     theory is dead for both; the original refutations stand FINAL.
-    (The Y42-random-walk fence contradiction remains an open mechanic
-    question, but no Y15 candidate survives it either way.)
+    (The Y42 random-walk fence contradiction was settled on 2026-09-06:
+    a step at a shredder is refused.)
   - Y47 size 33: fails live.  Mechanism: the deleted always-true
     `if myitem == myitem` was load-bearing WALL-TIME -- it delays the
     eastmost worker's greeting so the west-to-east chain lands in order;
@@ -360,8 +373,8 @@ for records.  Candidates that still need live-game verification remain in
     a queue."  Same signature as Y29: the final gives at a contended
     machine never land in the game while the simulator serves them.
     The incumbent's terminal cleanup exists precisely to handle this.
-    FINAL at size 6; the machine-serve read (front/arrival/failure
-    rules) is the emulator work that would reopen this class.  This did
+    FINAL at size 6; the machine-serve rules (front, arrival, failure)
+    are the emulator work that would reopen this class.  This did
     not predict the size-8 unconditional-give form, which retains that
     cleanup and completed live; that separate form was rejected only because
     its 134-second average was slower than the size-9 incumbent's 130.
@@ -436,8 +449,9 @@ pickup list scans for the first listed square that has a cube; the live
 game evidently does not skip an empty listed square that way.  Year 16's
 published record types the same `pickup w,se` and works — there both
 squares hold cubes when the command runs, so it never discriminates.
-Standing rule: **no candidate may depend on a pickup/give direction list
-skipping an empty square.**  The Year 60 size row stays 9.
+Standing rule: **no candidate may depend on a pickup list skipping an
+empty square.**  (Give lists do fall through, as settled on 2026-09-06;
+the hazard there is what they land on.)  The Year 60 size row stays 9.
 
 ## Conditional-to-direction-list collapse (whole class) — closed 2026-08-17
 
@@ -470,21 +484,9 @@ Curation rule: before queueing a "new" candidate, check every tier's
 rows INCLUDING (both) files — a (size)-only glob misses them.
 
 **Re-opened 2026-09-02 for a measured test.**  The withdrawal above
-inferred the live rate from the tier label alone ("seven workers
-converging on one shredder fail often enough to sit under 50%"), and
-that inference now has evidence against it: the program wins 400/400 in
-the model both plain and under the shuffled-dispatch screen, in about
-six seconds, so converging on the shredder is not a failure mode in
-anything we model.  What the model does gloss is the tie: values run
-0..99, 44% of worlds already contain a 99 somewhere, and our check
-rejects a group only when a cube still shows something strictly
-greater.  So the model's 100% is really 56% of worlds won outright plus
-44% won on a tie, and the live rate is about 56% if the game wants a
-strict maximum, near 100% if it does not — both above the bar.  Five
-twelve-second attempts separate those, and a much lower result would
-instead expose a real gap on this level.  Queued in
-[SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md); the tier label stays the
-reason to test it rather than to claim it.
+inferred the live rate from the tier label alone; the measurement and
+the tie analysis that reopened it are in the queue entry in
+[SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md).
 
 ## Exhaustive synthesis closures (2026-08-18) — do not re-derive
 
@@ -559,7 +561,7 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
 - Year 39 at 6: tight probe at size 5 completed 2026-08-25 — 134,865
   programs over its 9-command vocabulary plus its condition, zero
   winners.  (A first run had inflated the vocabulary with multi-line
-  condition fragments and was discarded; the loader now joins split
+  condition fragments and was discarded; the probe now joins split
   conditions before harvesting.)
 - Year 68 at 6: tight probe at size 5 completed 2026-08-25 — 290,000
   programs, zero winners.  This finishes the small-row probe program:
@@ -596,8 +598,11 @@ maximum distance.  A win costs about 7,300 item actions of relaxation
 churn; the ~6% losses are the random-mixing tail not finishing under
 the office clock.  Within this design family the ceiling is ~94%; a
 99% seven needs propagation that is systematic rather than stochastic,
-and no seven-command form of that is known.  The search continues in
-the background; treat 93.5% as the family's measured best.
+and no seven-command form of that is known.  That 93.5% was later
+voided (its step list named `n` twice; see the repeated-directions
+section below), leaving the published seven's rate as the family's
+best.  (Confirmed 2026-09-28: with the clock lifted, the published seven
+finishes all 1000 test worlds, so its losses are purely slowness.)
 
 A frames-versus-displayed survey of every speed row found the apparent
 slack (Years 17, 19, 47, 49, 50, 56) is all cadence-bound — greeting
@@ -637,15 +642,15 @@ through the size-5 tier — zero hits.  No trivial low-percent cheese
 hides under any large record.  Stated limit: the 8-trial gate
 under-samples sub-10-percent rates; it is a net for big cheese only.
 
-Two emulator blind spots mapped while measuring incumbents (also in
-the private notes): Year 44 is unscorable as a WHOLE LEVEL (its
+Two emulator blind spots mapped while measuring incumbents: Year 44 is
+unscorable as a WHOLE LEVEL (its
 low-percent 4, the 99+ size 5 and the 99+ speed 17 all score 0/50 at
 full cap — the fashion mechanic is not modelled; every emulator result
 on Year 44 is void, including this sweep's).  Year 34 is blind on its
 SIZE ROW ONLY: the level models fine (speed row 50/50), but the size-7
 record leans on comparison semantics of a nearest-result register
 (`c < mem1`, `mem1 == something`) the emulator gets wrong.  Never
-seed or screen candidates from either until those are read out live.
+seed or screen candidates from either until those are settled live.
 
 Also closed: a frame-minimizing mutation search over the Year 15 speed
 row (96,000 mutants at size <=42, full-win gate) found nothing below
@@ -658,8 +663,8 @@ Two live runs killed the whole direct-arrival family and corrected the
 model.  The Year 66 "deterministic size 7" (place 1 and 2 on the outer
 sensors, one press showing 1,000,002) and the Year 67 size-5 all-nines
 press (9,999,999 at one press, target 8,388,608) both FAILED in the
-game, despite the first scoring 200/200 locally and carrying a
-primary-code acceptance claim from the parallel analysis.
+game, despite the first scoring 200/200 locally and carrying an
+acceptance claim from the parallel analysis.
 
 What the failures prove, combined with the records that DO win live:
 the Year 66 record counts 999,981 → 1,000,002 in exactly 22 clean +1
@@ -678,7 +683,7 @@ refusal.
 Withdrawn with this: the Year 66 adjacent-pickup low-percent 6 (same
 one-press arrival shape, same death) and every other direct-arrival
 idea on the three counter levels.  The parallel analysis's "accepts
-direct arrival" primary-code claim is falsified — its other leads
+direct arrival" claim is falsified — its other leads
 stand on separate mechanisms but lose their claimed evidence tier.
 
 ## Goal-audit round two: spawn luck, held-cube exemptions (2026-08-23)
@@ -806,6 +811,11 @@ knowing before reading any single result on this level as structural.
 
 ## Year 15 size 5 — held back until the shredder-step rule is settled (2026-09-02)
 
+*Superseded 2026-09-06: the discriminators ran, a step at a shredder
+turned out to be refused, and the five was refuted live for a different
+reason, an empty-handed give (see the last section).  Kept as the record
+of how it was screened.*
+
 The hardening search produced a five that wins **1000/1000** plain and
 **400/400** under the shuffled-dispatch screen, against a size record of
 8.  It is not queued as a record, because it belongs to the family this
@@ -829,9 +839,9 @@ row's north edge.  Workers walking into the blades cannot win 64% of the
 time, so the fence reading is what the live record supports.  The two
 reports differ in the step they use: the refuted program stepped `n,s`,
 where south is nothing but shredder, while the six picks from seven, so
-the rule may depend on the step it is given.  Two one-line programs are
-queued to settle that in seconds, and the five is queued behind them
-rather than in place of them.
+the rule may depend on the step it is given.  Two one-line programs were
+queued to settle that in seconds (they ran on 2026-09-06), with the five
+behind them rather than in place of them.
 
 Two side results from the same batch, both size 5 and all 400/400 plain
 and jittered, so the choice between them is about exposure and speed
@@ -839,7 +849,7 @@ rather than reliability: putting the give **inside** the guard runs in
 23,200 frames and never hands into a wall, while leaving it outside runs
 in 38,600 and does hand into walls at the room's bottom edge, which the
 published six's `se != wall` clause exists to prevent.  The inside form
-is the one queued.
+was the one queued.
 
 ## Year 62 at size 10 — the neighbourhood is mined out (2026-09-02)
 
@@ -865,9 +875,9 @@ is the one that cannot be trusted:
 It measures 99.8% plain and 99.8% screened, and the sibling with the
 list written `s,se` reaches 100%.  Both are rejected on construction
 rather than on score.  The give is a **list**, whose fall-through past an
-unavailable target has never been verified live, and its first target is
-a **diagonal at a machine**, which is the walk-in death that refuted the
-Year 21 candidate.  Stacking both on top of an unconditional pickup is
+unavailable target had not been verified live then, and its first target
+is a **diagonal at a machine**, the shape of the give that killed the
+Year 21 candidate's givers.  Stacking both on top of an unconditional pickup is
 three unverified things at once for a two-point gain.
 
 The list is worth about two points and nothing else.  Measured over 400
@@ -884,9 +894,10 @@ runs each, plain and under the shuffled-dispatch screen:
 
 Hardening the list-free `pickup n` + `giveto s` form closed the gap
 anyway: dropping `e` from its step list lifts it to 992/1000 and 395/400
-screened, which is the version now queued.  Every four above, list or
-not, measures 0/400 under the fatal-shredder rule, so none of this is
-decided until the discriminator runs.
+screened.  The four finally taken to the game was a 997/1000 form of the
+same family, refuted live on 2026-09-06 (see the last section); the
+fatal-shredder rule these fours were also screened under has since been
+retired.
 
 ## Direction order is not part of a program (2026-09-03)
 
@@ -1022,3 +1033,26 @@ exactly where these rules should land.
 `giveto` empty-handed beside a shredder in a room where walking is
 allowed, and never queue a give whose direction list can resolve onto a
 printer.
+
+## Year 9 at size 4 — the rising diagonal does not count (refuted live 2026-08-14)
+
+The exhaustive search's one hit on Dynamic Angles,
+`a: / step ne,sw / pickup e / drop / jump a`, scored 74% in the model at
+the time: each touch moves a cube one square west, and the anti-diagonal
+walk confines every worker to one line, so the cubes pile onto a diagonal
+through the anchor cube.  In the game it built exactly that line, rising
+to the right, and the level stayed open: the game only accepts the line
+that descends to the right from the anchor, which is the one the
+published five builds.  The model now requires that slope and scores
+this four 0/1000.  (This entry was missing from the ledger until
+2026-09-28.)
+
+## Year 26 all-left low-percent size 3 — withdrawn under the 2026-09-06 printer rule
+
+`a: / takefrom s,e / giveto w,n,s / jump a` relays every sheet to the
+left-hand shredder and wins when the first 20 sheets are all below 50,
+about one world in 524,288.  Its give list names the printer's own
+square, so whenever the preferred receivers are busy the list falls
+through onto the printer and destroys it, which is exactly how the relay
+six died in the game.  Its evidence also predates that rule.  Withdrawn
+from the parked list on 2026-09-28, and its paste file deleted.
