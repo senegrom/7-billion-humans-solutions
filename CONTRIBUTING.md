@@ -17,7 +17,7 @@ the [Steam thread](https://steamcommunity.com/app/792100/discussions/0/173996849
 python check_names.py && python check_readme.py
 ```
 
-Both run automatically on every pull request.
+Both run automatically, with the linters, on every pull request and every push to master.
 
 ## Which folder
 
