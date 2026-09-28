@@ -31,17 +31,9 @@ file was derived and verified.
 
 ## Priority queue
 
-**Queue refresh (2026-09-28):** the search fleet stays stopped.  A repo
-review corrected two things.  The model had been silently ending every
-run at the 1,400 s clock even when asked to run longer, so yesterday's
-note that the Year 30 four only ever loses to a permanent freeze was
-wrong: with the clock lifted it wins all 1000 test worlds, so its losses
-are simply slow runs (its entry is corrected).  And the order below now
-runs from the cheapest attempt to the most expensive, with the optional
-items last, so the quick speed tie-breaks moved above the two long size
-candidates.  The
-Year 26 six that used to head this list was refuted in the game on
-2026-09-06 and is archived in REJECTED_APPROACHES.md.
+**Queue refresh (2026-09-28):** the search fleet stays stopped, and the
+list below runs from the cheapest attempt to the most expensive, with the
+optional items last.
 
 **Paste markers settled (2026-09-28):** the editor's limits are now
 known from the game itself (see COMMANDS.md): several directions on
@@ -231,9 +223,8 @@ ask for that tier again.
   jump takes its label with it.)
 - Emulator evidence (corpus deletion sweep, re-run on the fixed file):
   100/100 wins at exactly the incumbent's 230.0 frames, and 200/200
-  under the shuffled-dispatch screen re-taken 2026-09-03.  The only
-  live risk
-  is that the three extra tests cost wall time on the longest route
+  under the shuffled-dispatch screen re-taken 2026-09-03.  The only live
+  risk is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
 - Result: _first paste refused (orphaned label, 2026-08-17); the fixed
@@ -270,8 +261,10 @@ ask for that tier again.
   tell-only rungs needing an independent test.
 - Live ladder: run the incumbent size-172/speed-16 program as control, then 171,
   then 170.  Stop at the first failure or displayed speed above 16.
+- Live-only: the model does not reproduce the incumbent (0/40 worlds), so
+  no emulator screen applies to these rungs.
 - Result: _live attempt inconclusive_.  The published size-172 control failed
-  all three attempts in this session, so it did not establish a passing
+  all three attempts on 2026-08-22, so it did not establish a passing
   baseline.  The correctly pasted size-171 rung then failed its one attempt;
   size 170 was not run under the stop-on-failure rule.  Keep this queued for a
   future session that first obtains a successful control run.
@@ -291,16 +284,16 @@ ask for that tier again.
 - Why it may be safe: neither saved value is read before that worker's exit;
   only the two synchronization delays can matter.
 - Fallback emulator A/B evidence: the size-215 candidate and incumbent both
-  win seed 1 in exactly 836 frames.  Across the same 100 model worlds each wins
-  36, with modelled
-  speed 12.3 and nearly identical average frames (734.9 versus 735.0).
+  win seed 1 in exactly 836 frames.  Across the same 100 model worlds each
+  wins 36, with modelled speed 12.3 and nearly identical average frames
+  (734.9 versus 735.0).
 - Size-214 bounded gate: 9/20 model worlds won, with modelled speed averaging
   10.9 (range 6-14), winning frames averaging 648.0 (range 371-836), and 40.4
   average item actions.  The observed 45% is encouraging but not statistically
   decisive against the established 36/100 baseline.
-- Fidelity caveat: the current model badly under-reproduces the published
-  incumbent reliability, so those paired aggregates support equivalence but
-  cannot establish live reliability or timing.
+- Live-only: the model under-reproduces the published incumbent (15/40
+  worlds), so those paired aggregates support equivalence but cannot
+  establish live reliability or timing.
 - Expected editor size: **214** if the extra cadence cut survives; otherwise
   use the tested **215** fallback.
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
@@ -352,10 +345,11 @@ ask for that tier again.
 - Goal: a new Solutions50+ row at size **6** — one below the 99+ size
   record of 7, and a tier above the existing low-percent 6.
 - Mechanism: the published low-percent six's random walk and gap-filling,
-  with one change — after dropping into a gap the worker immediately
-  re-picks the cube it just walked past (`pickup w` under the guard that
-  already vouches for `w == datacube`), so each worker chains fills
-  instead of retiring after one.  The opener `pickup s` is the published
+  with three changes: the `step se` after the opening pickup goes, `s`
+  leaves the walk (`step w,sw,n,e,se`), and after dropping into a gap the
+  worker immediately re-picks the cube it just walked past (`pickup w`
+  under the guard that already vouches for `w == datacube`), so each
+  worker chains fills instead of retiring after one.  The opener `pickup s` is the published
   row's own; there are no direction lists on item commands anywhere, so
   the Year 60 list-stall class does not apply.
 - Emulator evidence (re-taken 2026-09-14 on the current engine):
@@ -432,8 +426,7 @@ ask for that tier again.
 - Expected editor size: **6**; paste-only (multi-direction random step).
 - The Solutions50+ row already rests on the public evidence, so a local
   confirmation is optional — after the size candidates above.  A
-  shrink search for a five under the machine rules (300 narrow
-  generations, then a short run of the wider operator) found nothing.
+  mutation search for a five under the machine rules found nothing.
 - Result: _not tested locally; the row stands on public evidence_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - community speed 6-7 at size 122
@@ -456,20 +449,17 @@ ask for that tier again.
 - **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
 - Goal: live-validate the existing
   [Solutions50+ entry](<Solutions50+/Year 58 - Good Neighbors (size).txt>).
-- Current capped-emulator evidence: 195/200 wins at the real 87,500-frame
-  deadline, average winning speed 483.3, range 85-1,379.  The five failures
-  confirm that this belongs in Solutions50+, not Solutions99+.
+- Emulator evidence (2026-09-28): 942/1000 at the live clock and 961/1000
+  with the clock lifted, so 39 losses are genuinely stuck worlds (the frozen
+  failure below) and the rest are slow runs; winning runs range from about
+  85 to 1,379 seconds.  That is Solutions50+, not Solutions99+.
 - Suggested live test: at least 10 runs.  A definitive frozen failure is all 20
   workers holding cubes while the level has not completed; capture the board.
-- A hardening search from this program (2026-09-11 to 14, 140
-  generations) found no more reliable four; the published program stands
-  at 195/200 here.
-- Measured again 2026-09-28: 942/1000 at the live clock and 961/1000 with
-  the clock lifted, so 39 of its losses are genuinely stuck worlds (the
-  frozen failure described above) and the rest are slow runs.
+- A hardening search from this program (2026-09-11 to 14) found no more
+  reliable four.
 - Result: **one live attempt (2026-08-17) looked like an infinite loop** and
   was abandoned before the 1,400-second cutoff.  That matches either the
-  known ~2.5% emulator failure mode or a live/emulator divergence at
+  model's stuck worlds (about 4%) or a live/emulator divergence at
   contended cubes; the winning tail is slow (emulator range 85-1,379
   seconds), so a run only counts as failed at the cutoff or visibly frozen.
   Low priority until a patient full-length session.
@@ -501,7 +491,10 @@ ask for that tier again.
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - alternate size 5.txt](<SolutionsToTry/Year 30 - Fill the Floor - alternate size 5.txt>)
 - Goal: tie the size-5 record with a faster typical run.
-- Emulator A/B evidence over the same 100 seeds: candidate 100/100, average
+- Exact edit: in the size-5 record, change the step set
+  `nw,w,sw,s,ne,e,se` to `nw,sw,n,e,se`.
+- Emulator A/B evidence (frame-derived, so it cannot settle displayed
+  speed; the live A/B below decides) over the same 100 seeds: candidate 100/100, average
   602.7 seconds, range 372-1,277; incumbent 100/100, average 635.1 seconds.
   The incumbent's actual game score is about 588, so the emulator improvement
   may not carry over.
@@ -586,8 +579,10 @@ kept intact so nothing is rediscovered.
   size from 23 to **19** (n05ucc4u's program; keep the credit).
 - Exact edits: delete the two three-line re-check tails — in the `> 49`
   branch `if w > myitem: jump d / endif` and in the `else` branch
-  `if e < myitem: jump h / endif`.  The size-21 fallback deletes only the
-  first of them.
+  `if e < myitem: jump h / endif` — and the labels `d:` and `h:` they
+  leave unused (the game refuses a paste with a label no jump leads to;
+  labels are free, so the sizes stand).  The size-21 fallback deletes only
+  the first tail and `d:`.
 - Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
   16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
   16.2.  The win rate drops from about 52% to about 38-45% (still the
@@ -802,7 +797,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Fidelity caveat: the current Year 44 emulator loses even the public size-4
   program and is not a trustworthy judge of large crowds.  This is a live-only
   candidate with a positive finite schedule, not a measured success rate.
-- Expected editor size: **3**; paste-only because of `step s,e,se`.
+- Expected editor size: **3**.
 - Suggested live test: repeated fresh runs, capturing every exactly-seven
   survivor pattern and the first completion panel.
 - Result: _not yet tested locally in the game_.
@@ -856,8 +851,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   58 independent uniform draws gives `2.90709234823e-6`, or about one win in
   343,986 worlds.
 - Witness: an independent exact search of the model's random worlds
-  predicted the first
-  winning world at seed 69,510 with counts `[13,9,11,11,12,8]` and samples
+  predicted the first winning world at seed 69,510 with counts `[13,9,11,11,12,8]` and samples
   `[5,1,3,3,4,0]`.  The capped emulator then found exactly 1/69,510 wins, at
   that final seed, completing in 342 frames with displayed speed 6.
 - Expected editor size: **6**; every command is available in Year 52.
@@ -879,8 +873,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   `4,816,030 / 10^8`; all five do so with probability
   `2.5908717630610564e-7`, or about one in 3,859,705.
 - Witness: an independent search of the model's random worlds found seed
-  3,868,438.
-  All five eight-value groups sum to 36, and the isolated seed-offset emulator
+  3,868,438.  All five eight-value groups sum to 36, and the isolated seed-offset emulator
   won in 2,099 frames with displayed speed 34 and 172 item actions.
 - Expected editor size: **5**.
 - Entry method: paste the text because the ordered multi-target `pickup c,s`
@@ -906,8 +899,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   `sum(k^7, k=1..100) / 100^8`; across seven independent groups the win rate
   is `6.2945867338e-7`, or about one in 1,588,667.
 - Witness: an independent search of the model's random worlds found seed
-  3,281,406.
-  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
+  3,281,406.  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
   group.  An isolated seed-offset emulator run then won in 310 frames with
   displayed speed 5 and 14 item actions.
 - Expected editor size: **3**; all commands are available in Year 56.
@@ -929,12 +921,14 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Witness: an independent search of the model's random worlds found seed
   239,189, whose values in row-major order are
   `[10,14,18,41,62,69,80,88,95]`; the isolated seed-offset emulator accepted
-  the label-only program at frame 0 with size 0 and displayed speed 0.
-- Expected editor size: **0**; the free label is present only to make the text
-  pasteable and does not count as a command.
+  the empty program at frame 0 with size 0 and displayed speed 0.
+- Expected editor size: **0**.  The paste file holds only the header lines,
+  so pasting it (or clearing the program by hand) leaves nothing to run; a
+  lone label would not do, since the game refuses a label no jump leads to.
 - Suggested live test: natural manual verification is impractical.  If a
-  reproducible live-game RNG-start method becomes available, paste the free
-  label, run the matching world, and capture the immediate completion panel.
+  reproducible live-game RNG-start method becomes available, clear the
+  program, run the matching world, and capture the immediate completion
+  panel.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 33 - Data Backup Day - one-shot low-percent size 5

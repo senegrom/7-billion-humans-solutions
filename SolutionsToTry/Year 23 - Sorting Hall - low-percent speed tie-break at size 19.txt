@@ -8,7 +8,6 @@ if myitem > 49:
 	endif
 	c:
 	if w > myitem:
-		d:
 		step w
 		jump c
 	endif
@@ -24,7 +23,6 @@ else:
 	endif
 	g:
 	if e < myitem:
-		h:
 		step e
 		jump g
 	endif
