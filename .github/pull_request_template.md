@@ -10,4 +10,4 @@
 - [ ] The README row is updated, with the size and speed the game reports
 - [ ] `python check_names.py` and `python check_readme.py` both pass
 - [ ] Marked 📋 if the solution has to be pasted in because the editor cannot build it at that level
-- [ ] Credited to the right person (see [CONTRIBUTING.md](../CONTRIBUTING.md))
+- [ ] Credited to the right person (see [CONTRIBUTING.md](https://github.com/senegrom/7-billion-humans-solutions/blob/master/CONTRIBUTING.md))

@@ -27,8 +27,8 @@ Both run automatically on every pull request.
 | `Solutions50+`          | 50% to 99%   | Solutions that beat the `Solutions99+` entry but do not always succeed.   |
 | `SolutionsLowPercent`   | under 50%    | Solutions that beat the entries above but only succeed occasionally.      |
 
-A less reliable solution is only listed if it is strictly better than the entry above it: fewer commands, or fewer
-steps. A solution that only ties is not listed, because the more reliable solution is already the better answer.
+A less reliable solution is only listed if it is strictly better than the entry above it: fewer commands, or a
+faster reported speed. A solution that only ties is not listed, because the more reliable solution is already the better answer.
 
 ## How size and speed are measured
 
@@ -37,7 +37,7 @@ steps. A solution that only ties is not listed, because the more reliable soluti
 and a condition split over several lines still only costs one. `check_readme.py` counts this for you and fails if the
 README disagrees with the file.
 
-**Speed** is the number of steps the game reports when the solution finishes. Solutions that rely on randomness do not
+**Speed** is the time in seconds the game reports when the solution finishes. Solutions that rely on randomness do not
 have a fixed speed, so their value is written with a `~` prefix (`~155`) for a typical run, or as a range (`10-11`)
 when it varies between a couple of values.
 
@@ -66,7 +66,8 @@ elsewhere first.
 If you know of an earlier public posting of a solution, open an issue with a dated link to it (a Steam thread, a
 Twitch VOD, a forum post) and the credit will be updated.
 
-Each row names one contributor: the person who produced the current record.  When an existing solution is improved
-(for example fewer commands at the same reported speed), the improver becomes the contributor.
+Each row names the people who produced the current record.  When an existing solution is improved (for example
+fewer commands at the same reported speed), the improver is credited, alongside the original authors when the
+improvement builds directly on their program.
 
 If you would rather be credited under a different name or link, say so in your pull request or open an issue.

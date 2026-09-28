@@ -23,7 +23,7 @@ the [Steam thread](https://steamcommunity.com/app/792100/discussions/0/173996849
 | **SolutionsLowPercent** | under 50%    | Solutions that beat the entries above but only succeed occasionally.            |
 
 A solution only belongs in **Solutions50+** or **SolutionsLowPercent** if it is strictly better (fewer commands, or
-fewer steps) than the entry in the folder above it. If it merely ties, the more reliable solution wins and the less
+a faster reported speed) than the entry in the folder above it. If it merely ties, the more reliable solution wins and the less
 reliable one is not listed.
 
 ###### File Naming Rule
@@ -34,7 +34,7 @@ Year `NUM` - `NAME` (`TYPE`).txt
 
 `NAME` = The puzzle's name
 
-`TYPE` = Speed, Size or Both
+`TYPE` = speed, size or both
 
 Run [check_names.py](https://github.com/senegrom/7-billion-humans-solutions/blob/master/check_names.py) to confirm, and
 [check_readme.py](https://github.com/senegrom/7-billion-humans-solutions/blob/master/check_readme.py)
@@ -47,8 +47,8 @@ for how sizes and speeds are measured, how solutions are ranked and how credit i
 
 ###### +99% Solutions
 
-**Size** is the number of commands in the solution and **Speed** is the number of steps it takes to run; a `~`
-prefix means the solution is random and the value varies. The value a solution is optimised for is shown in **bold**
+**Size** is the number of commands in the solution and **Speed** is the time in seconds the game reports for the
+run; a `~` prefix means the solution is random and the value varies. The value a solution is optimised for is shown in **bold**
 and carries a marker comparing it with the shortest/fastest known solution on
 the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansStats/):
 
@@ -91,7 +91,7 @@ the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansSta
 | Year 20 | [Reverse Line](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2020%20-%20Reverse%20Line%20(size).txt)                                         | [hingston](https://github.com/hingston/)                                                                         | **9** ✔  | 11          |
 | Year 20 | [Reverse Line](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2020%20-%20Reverse%20Line%20(speed).txt)                                        | [landfillbaby](https://github.com/landfillbaby), [ansvonwa](https://github.com/ansvonwa), [abfipes12](https://github.com/abfipes12) | 38       | **4** ✔     |
 | Year 21 | [Big Data](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2021%20-%20Big%20Data%20(size).txt) 📋                                              | [commonnickname](https://github.com/commonnickname), [H-J-Granger](https://github.com/H-J-Granger)               | **5** ➕  | 21-26       |
-| Year 21 | [Big Data](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2021%20-%20Big%20Data%20(speed).txt)                                                | [commonnickname](https://github.com/commonnickname), [abfipes12](https://github.com/abfipes12)                    | 41       | **16-22** ➕ |
+| Year 21 | [Big Data](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2021%20-%20Big%20Data%20(speed).txt) 📋                                              | [commonnickname](https://github.com/commonnickname), [abfipes12](https://github.com/abfipes12)                    | 41       | **16-22** ➕ |
 | Year 22 | [Number Royale](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2022%20-%20Number%20Royale%20(size).txt)                                       | [martinez8859](https://github.com/martinez8859), [abfipes12](https://github.com/abfipes12)                        | **5** ✔  | 8-10        |
 | Year 22 | [Number Royale](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2022%20-%20Number%20Royale%20(speed).txt)                                      | [abfipes12](https://github.com/abfipes12), [martinez8859](https://github.com/martinez8859)                        | 20       | **5-6** ➕   |
 | Year 23 | [Sorting Hall](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2023%20-%20Sorting%20Hall%20(size).txt)                                         | [hingston](https://github.com/hingston/)                                                                         | **6** ✔  | 23-25       |
@@ -184,7 +184,7 @@ the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansSta
 | Year    | Name                                                                                                                                                                                  | Contributor                                                                  | Size    | Speed     |
 |:--------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:-----------------------------------------------------------------------------|:--------|:----------|
 | Year 15 | [Shred Lines](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2015%20-%20Shred%20Lines%20(size).txt) 📋                                        | [abfipes12](https://github.com/abfipes12)                                    | **6** ➕ | ~950      |
-| Year 21 | [Big Data](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2021%20-%20Big%20Data%20(speed).txt)                                                | [yifeixuer](https://steamcommunity.com/profiles/76561198831890282), [commonnickname](https://github.com/commonnickname), [abfipes12](https://github.com/abfipes12) | 53      | **14-17** ➕ |
+| Year 21 | [Big Data](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2021%20-%20Big%20Data%20(speed).txt) 📋                                              | [yifeixuer](https://steamcommunity.com/profiles/76561198831890282), [commonnickname](https://github.com/commonnickname), [abfipes12](https://github.com/abfipes12) | 53      | **14-17** ➕ |
 | Year 22 | [Number Royale](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2022%20-%20Number%20Royale%20(speed).txt)                                      | [senegrom](https://github.com/senegrom)                                          | 6       | **2** ➕   |
 | Year 30 | [Fill the Floor](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2030%20-%20Fill%20the%20Floor%20(size).txt) 📋                                | [abfipes12](https://github.com/abfipes12), [martinez8859](https://github.com/martinez8859) | **4** ➕ | ~1211     |
 | Year 34 | [Seek and Destroy 1](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions50%2B/Year%2034%20-%20Seek%20and%20Destroy%201%20(speed).txt)                        | [commonnickname](https://github.com/commonnickname), [abfipes12](https://github.com/abfipes12) | 53      | **7** ➕   |

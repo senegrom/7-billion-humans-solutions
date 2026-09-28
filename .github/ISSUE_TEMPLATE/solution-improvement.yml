@@ -29,7 +29,7 @@ body:
     attributes:
       label: Size and speed
       description: The numbers the game reports when the solution finishes.
-      placeholder: 7 commands, 890 steps
+      placeholder: 7 commands, speed 890
     validations:
       required: true
   - type: input
