@@ -507,8 +507,8 @@ if-block over all conditions; palettes' own commands only, plus
 nearest/mem1 forms where available).  Zero winners in every case, so
 these size records are optimal within those grammars:
 
-- Year 02 at 3 (324 programs), Year 04 at 3 (341) — no if/jump palettes,
-  fully closed.
+- Year 02 at 3 (324 programs) and Year 04 at 3 (341) — no `if` in either
+  palette, fully closed.
 - Year 03 at 5 (105k) — no if in palette, fully closed.
 - Year 07 at 4 (6.5k + 168k stage 2) — fully closed.
 - Year 14 at 4 (21k + 377k stage 2) — fully closed.
@@ -902,6 +902,10 @@ runs each, plain and under the shuffled-dispatch screen:
 | `pickup n` + `giveto s` | 97.8% | 98.0% |
 | `pickup w` + `giveto s` | 90.5% | 91.0% |
 | `pickup nw` + `giveto se` | 75.0% | 74.8% |
+
+The first two rows are one program written two ways (a direction list is
+a set; see the next section), measured on two trial streams by the parser
+of the day.
 
 Hardening the list-free `pickup n` + `giveto s` form closed the gap
 anyway: dropping `e` from its step list lifts it to 992/1000 and 395/400

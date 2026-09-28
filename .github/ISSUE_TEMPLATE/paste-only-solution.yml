@@ -6,7 +6,7 @@ body:
     attributes:
       value: |
         Solutions that can only be entered by pasting the text in are marked 📋 in the tables.
-        The level a command becomes available at is easy to get wrong, so please say what you checked.
+        What the editor refuses, and from which year, is in [COMMANDS.md](https://github.com/senegrom/7-billion-humans-solutions/blob/master/COMMANDS.md#several-directions-on-one-command); please say what you checked.
   - type: input
     id: level
     attributes:

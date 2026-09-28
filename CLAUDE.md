@@ -21,7 +21,7 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
 - Rejected and superseded experiments go to `REJECTED_APPROACHES.md` with
   the reason, so no effort repeats.
 - Sizes quoted anywhere must be canonical editor sizes
-  (`check_readme.solution_size`), not the emulator's counter.
+  (`check_readme.solution_size`; the emulator counts the same way).
 - Run `python check_readme.py` before pushing README or solution changes.
 
 ## Speed-evidence rules (learned live, 2026-08-15)
