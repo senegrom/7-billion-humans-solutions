@@ -328,8 +328,10 @@ for records.  Candidates that still need live-game verification remain in
   this refutation, a worker stalled at the empty west square, is recorded
   in the Year 60 section below.
 - CONTAMINATED-RUN AUDIT (maintainer insight): `myitem` conditions cannot
-  be TYPED before Year 22, so live tests that retyped programs with
-  substitutions tested DIFFERENT programs.  Three refutations reopened as
+  be TYPED before Year 22 (Year 21 in fact;
+  corrected 2026-09-28, which changes none of the verdicts below), so
+  live tests that retyped programs with substitutions tested DIFFERENT
+  programs.  Three refutations reopened as
   paste-verbatim retests: Y15 event-gated size 5, Y24 one-sided relay
   size 4, and Y15 deterministic size 7 (its "runs forever" came from a
   confirmed `c == nothing` substitution).  Supporting evidence: Year 42's
@@ -404,6 +406,15 @@ for records.  Candidates that still need live-game verification remain in
   a pure step/pickup program with no myitem — completed at 11 and is
   published, so the divergence is specific to the gated forms, not to
   pasting on Year 15.)
+  Follow-up (2026-09-28): Year 21 turned out to be the level where the
+  editor first offers `myitem`, so its paste confirmation never covered
+  a level before the unlock, and Year 15 is one.  The current model,
+  machine rules included, still wins this program every run.  It fails
+  the way the live run did only if the `myitem` test never comes true:
+  the workers step south into the shredder row (refused), give
+  empty-handed and are shredded.  The likeliest reading is that a
+  pasted `myitem` does not work before Year 21, so this refutation
+  stands and no `myitem` candidate goes in the queue for Years 2-20.
 - Corpus deletion sweep (2026-08-17, every published solution, singles +
   if/endif pairs + all-pairs on small size rows + greedy chains, 4→25→200
   emulator gates): survivors held back from the queue, with reasons —

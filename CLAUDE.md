@@ -68,3 +68,15 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   order in which a list is written carries no meaning.
 - A label must be some jump's destination: deleting a jump deletes its
   label too, or the game refuses the paste.
+
+## Editor limits and the paste marker (settled 2026-09-28)
+
+- The editor gives `step` several directions only from Year 30, and
+  never gives them to `pickup`, `giveto`, `takefrom` or `set`; such
+  lists still work pasted in, on any level.  `myitem` is offered from
+  Year 21; a pasted `myitem` on Year 15 did not work, so never queue a
+  `myitem` program for Years 2-20.  Compound conditions (`and`/`or`)
+  work wherever `if` does.
+- A README row carries 📋 exactly when its program breaks one of these
+  limits; `check_readme.py` enforces it, and queue entries follow the
+  same rule in their headings.  COMMANDS.md has the details.

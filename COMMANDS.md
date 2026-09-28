@@ -82,12 +82,36 @@ fixed rules:
 - `num` (numeric literals) appears in condition and calc contexts.
 - `everyone` exists only as a tell target.
 - `mem1`-`mem4` appear once memory commands are introduced.
-- **`myitem` unlocks as a condition subject at Number Royale
-  (Year 22) and stays available afterwards.**  Before that level it
-  cannot be typed -- but the game's paste importer accepts it on
-  every level, which is how several published records on earlier
-  levels exist (they carry the paste marker).
+- **`myitem` unlocks at Big Data (Year 21) and stays available
+  afterwards.**  Before that level it cannot be typed, and no
+  published record uses it there.  Pasting it in does not seem to
+  help: the one live attempt, a Year 15 program gated on
+  `myitem == nothing`, failed the way it would if the test never
+  came true.
 
-Practical rule for queue entries: a program using `myitem` in a
-condition is editor-constructible only from Year 22 onward;
-elsewhere mark it paste-only.
+Practical rule for queue entries: use `myitem` only from Year 21
+onward.
+
+## Several directions on one command
+
+The editor's direction picker takes one direction, except:
+
+- `foreachdir` always takes several.
+- `step` takes several from Fill the Floor (Year 30) on, and the
+  worker picks one of them at random.  The level announces it: "You
+  can now select MULTIPLE directions inside your STEP command!"
+- `pickup`, `giveto`, `takefrom` and `set` never take several.
+
+A list the editor refuses still works when pasted in, on any level:
+several published records rely on one, and the Year 15 community
+six, a random multi-direction step, is reported at 16/25 live.
+Those rows carry the README's paste marker (📋), and
+`check_readme.py` fails any row whose marker disagrees with these
+rules.
+
+A condition with several terms (the button on the right of an `if`,
+which joins them with `and`/`or`) is offered wherever `if` is;
+Injection Sites 1 (Year 11) only points the button out.
+
+These limits follow the level being edited, not how far a profile
+has got: finishing the game does not lift them on earlier levels.

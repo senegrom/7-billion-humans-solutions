@@ -50,12 +50,15 @@ optimised, the one that is better in the other column wins, and if they tie in b
 
 ## Solutions that have to be pasted in
 
-Some solutions use a command the game's editor will not let you build at that level, so they can only be entered by
-pasting the text in. Those rows are marked with 📋 in the README so you can tell before you try to reproduce them.
+Some solutions use a command the game's editor will not let you build at that level, or give a command several
+directions where the editor allows only one, so they can only be entered by pasting the text in. Those rows are marked
+with 📋 in the README so you can tell before you try to reproduce them.
+[COMMANDS.md](COMMANDS.md#several-directions-on-one-command) lists what the editor refuses where, and
+`check_readme.py` checks every marker against it.
 
 If you submit a solution that has to be pasted in, please say so in your pull request and add the marker. If you spot
-a listed solution that should be marked, open an issue or a pull request; the level a command becomes available at is
-easy to get wrong, so please say which command is not available and where you checked.
+a marker that looks wrong, open an issue or a pull request and say which command you could or could not build, and at
+which level.
 
 ## Credit
 

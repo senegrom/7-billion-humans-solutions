@@ -30,6 +30,17 @@ COMMENT_COMMAND_PATTERN = re.compile(r"^comment \d+$")
 CONDITION_PATTERN = re.compile(r"^(if|while)\b")
 ELSE_PATTERN = re.compile(r"^else:?$")
 
+# What the game's editor will not build at a level, so a solution using it has to be pasted in and carries the
+# paste marker (the rules are in COMMANDS.md).
+PASTE_MARKER = "📋"
+ONE_DIRECTION_COMMAND_LIST_PATTERN = re.compile(
+    r"^(pickup|giveto|takefrom|\w+\s*=\s*set)\s+\w+(,\w+)+$"
+)
+STEP_DIRECTION_LIST_PATTERN = re.compile(r"^step\s+\w+(,\w+)+$")
+MYITEM_PATTERN = re.compile(r"\bmyitem\b")
+FIRST_YEAR_WITH_STEP_DIRECTION_LISTS = 30
+FIRST_YEAR_WITH_MYITEM = 21
+
 
 class Row(NamedTuple):
     """One solution row of one of the README tables."""
@@ -42,6 +53,7 @@ class Row(NamedTuple):
     url: str
     size: str
     speed: str
+    pasted: bool
 
 
 def read_statements(path: Path) -> List[str]:
@@ -192,6 +204,7 @@ def parse_readme() -> List[Row]:
                 url=link.group(2),
                 size=cells[3],
                 speed=cells[4],
+                pasted=PASTE_MARKER in cells[1],
             )
         )
     return rows
@@ -280,6 +293,61 @@ def check_files_are_listed(rows: List[Row]) -> List[str]:
     return problems
 
 
+def paste_only_reason(year: int, statements: List[str]) -> Optional[str]:
+    """
+    Finds the first statement of a solution that the game's editor will not build at the solution's level.
+
+    Args:
+        year: The level's Year number.
+        statements: The solution's statements.
+
+    Returns:
+        Why that statement has to be pasted in, or None if the whole solution can be typed in the editor.
+    """
+    for statement in statements:
+        if ONE_DIRECTION_COMMAND_LIST_PATTERN.match(statement):
+            return f"`{statement}` names several directions, which the editor only allows on step and foreachdir"
+        if (
+            year < FIRST_YEAR_WITH_STEP_DIRECTION_LISTS
+            and STEP_DIRECTION_LIST_PATTERN.match(statement)
+        ):
+            return (
+                f"`{statement}` names several directions, which the editor only allows on step from "
+                f"Year {FIRST_YEAR_WITH_STEP_DIRECTION_LISTS}"
+            )
+        if year < FIRST_YEAR_WITH_MYITEM and MYITEM_PATTERN.search(statement):
+            return f"`{statement}` uses myitem, which the editor only offers from Year {FIRST_YEAR_WITH_MYITEM}"
+    return None
+
+
+def check_paste_markers(rows: List[Row]) -> List[str]:
+    """
+    Checks that a row carries the paste marker exactly when the editor cannot build its solution.
+
+    Args:
+        rows: The rows read from the README.
+
+    Returns:
+        A list of problem descriptions, empty if every marker is right.
+    """
+    problems: List[str] = []
+    for row in rows:
+        year = re.match(r"^Year (\d+)$", row.year)
+        if row.path is None or not row.path.is_file() or not year:
+            continue  # check_rows reports the broken link
+        reason = paste_only_reason(int(year.group(1)), read_statements(row.path))
+        where = f'README.md:{row.line_number} "{row.year} {row.name}"'
+        if reason and not row.pasted:
+            problems.append(
+                f"{where}: {reason}, so the row needs the {PASTE_MARKER} marker"
+            )
+        elif row.pasted and not reason:
+            problems.append(
+                f"{where}: carries the {PASTE_MARKER} marker but the editor can build all of it"
+            )
+    return problems
+
+
 def check_lower_percent_rows_are_better(rows: List[Row]) -> List[str]:
     """
     Checks that a less reliable solution is only listed if it beats the more reliable one.
@@ -332,6 +400,7 @@ def main() -> None:
         check_rows(rows)
         + check_files_are_listed(rows)
         + check_lower_percent_rows_are_better(rows)
+        + check_paste_markers(rows)
     )
     if not problems:
         print(f"Finished! Checked {len(rows)} solutions and there are no issues :)")

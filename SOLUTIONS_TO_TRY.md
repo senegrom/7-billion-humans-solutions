@@ -43,12 +43,22 @@ candidates.  The
 Year 26 six that used to head this list was refuted in the game on
 2026-09-06 and is archived in REJECTED_APPROACHES.md.
 
+**Paste markers settled (2026-09-28):** the editor's limits are now
+known from the game itself (see COMMANDS.md): several directions on
+`step` only from Year 30, never on `pickup`, `giveto`, `takefrom` or
+`set`, and `myitem` from Year 21, one level earlier than these notes
+used to say.  So the housekeeping look at the editor is dropped, every
+entry below that has to be pasted now carries 📋, and the Year 23 paste
+test's reasoning is corrected: no operand or command missing from a
+level's editor had in fact been shown to survive a paste.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
    about a minute.  It decides whether the game keeps a command the
    level's editor does not offer; if the run then completes, it is a
-   size-2 record against 6.
+   size-2 record against 6.  Expect a no: the one hidden feature
+   pasted before (`myitem` on Year 15) did not work.
 2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Year 56 size 4**: five quick attempts (about 12 s each) on the
@@ -69,9 +79,6 @@ Year 26 six that used to head this list was refuted in the game on
 8. Optional confirmations of published rows, for a patient session: the
    Year 38 community speed 6-7, the Year 58 four, the Year 30
    probabilistic four and the Year 30 alternate five.
-9. **Housekeeping, one minute:** check in the editor which early levels
-   let one command take two directions (the last entry of this section);
-   it settles several README paste markers.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -80,14 +87,15 @@ ask for that tier again.
 
 - **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt](<SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt>)
 - Goal: settle a question that has never been tested, and take the size
-  record from **6** to **2** if the answer is yes.  The game is known to
-  keep things in a pasted program that its editor hides: Year 21's size
-  record pastes a `myitem` test the editor does not offer at that level.
-  Whether a paste also keeps a whole *command* the level's editor does
-  not offer is unknown.  This program uses `write`, which the editor
-  first offers at Year 32.  CONTRIBUTING.md already lists pasted programs
-  that use "a command the game's editor will not let you build at that
-  level", so a completion would count.
+  record from **6** to **2** if the answer is yes.  Pasted direction
+  lists work on every level, but a list is only a form the editor's
+  picker refuses.  Whether a paste keeps a whole *command* the level's
+  editor does not offer is still open, and the one hidden operand
+  tried so far did not work (`myitem` on Year 15, before its
+  Year 21 unlock; see REJECTED_APPROACHES.md).  This program uses
+  `write`, which the editor first offers at Year 32.  CONTRIBUTING.md
+  already lists pasted programs that use "a command the game's editor
+  will not let you build at that level", so a completion would count.
 - Mechanism: every worker lifts the cube below it and writes 0 on it.
   All the held cubes then read 0, and a row of equal numbers is in order.
 - Emulator evidence, with the level's command palette lifted because
@@ -338,7 +346,7 @@ ask for that tier again.
   retain the last successful form.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6
+### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
 - Goal: a new Solutions50+ row at size **6** — one below the 99+ size
@@ -363,7 +371,7 @@ ask for that tier again.
   attempt count is the tier evidence.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 30 - Fill the Floor - eight-sided take at size 4
+### [ ] Year 30 - Fill the Floor - eight-sided take at size 4 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
 - Goal: not a new row — the published 50%+ row is already a four — but a
@@ -466,7 +474,7 @@ ask for that tier again.
   seconds), so a run only counts as failed at the cutoff or visibly frozen.
   Low priority until a patient full-length session.
 
-### [ ] Year 30 - Fill the Floor - probabilistic size 4
+### [ ] Year 30 - Fill the Floor - probabilistic size 4 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
@@ -501,26 +509,12 @@ ask for that tier again.
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
 
-### [ ] Housekeeping - which levels let the editor give one command two directions
-
-- No paste file: this is a look at the editor, not a program.
-- Why: the README's paste marker is inconsistent for direction lists.
-  Year 6's record (`pickup c,s`) carries it; Year 4's (`pickup c,e`),
-  Year 10's size row (`step n,s`) and Year 12's speed row (four step
-  lists) do not; and this queue calls Year 13's and Year 22's step lists
-  paste-only.  An open report on the upstream repository says Year 4's
-  list cannot be built in the editor.
-- What to do: open the editor on Years 4, 10 and 13, add a `step` or a
-  `pickup`, and try to select two directions on it.  Note for each level
-  whether the editor allows it; the README markers follow from that.
-- Result: _not yet checked_.
-
 ## Low-percent leads (parked — 50%+ only for now)
 
 Valid candidates below the Solutions50+ bar.  Not for the next session;
 kept intact so nothing is rediscovered.
 
-### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3
+### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
 - Goal: establish a size-**3** SolutionsLowPercent row below the size-8
@@ -564,7 +558,7 @@ kept intact so nothing is rediscovered.
   static classification immediately.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5
+### [ ] Year 06 - Little Exterminator 1 - exact-route low-percent size 5 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - exact-route low-percent size 5.txt>)
 - Goal: establish a practical size-**5** SolutionsLowPercent row below the
@@ -670,7 +664,7 @@ kept intact so nothing is rediscovered.
   every failure.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 05 - An Important Decision - absorbing low-percent size 2
+### [ ] Year 05 - An Important Decision - absorbing low-percent size 2 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt](<SolutionsToTry/Year 05 - An Important Decision - absorbing low-percent size 2.txt>)
 - Goal: establish a size-2 SolutionsLowPercent record below the existing
@@ -690,7 +684,7 @@ kept intact so nothing is rediscovered.
   are unbiased.  Capture the first completion panel.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 13 - Injection Sites 2 - recoverable low-percent size 5
+### [ ] Year 13 - Injection Sites 2 - recoverable low-percent size 5 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - recoverable low-percent size 5.txt>)
 - Goal: improve the existing size-6 SolutionsLowPercent entry to size 5.
@@ -710,7 +704,7 @@ kept intact so nothing is rediscovered.
   more practical than the rarer one-shot entries below.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 22 - Number Royale - survivor low-percent size 3
+### [ ] Year 22 - Number Royale - survivor low-percent size 3 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt](<SolutionsToTry/Year 22 - Number Royale - survivor low-percent size 3.txt>)
 - Goal: improve the existing size-4 SolutionsLowPercent entry to size 3.
@@ -813,7 +807,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   survivor pattern and the first completion panel.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 12 - Unzip - one-shot low-percent size 3
+### [ ] Year 12 - Unzip - one-shot low-percent size 3 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt](<SolutionsToTry/Year 12 - Unzip - one-shot low-percent size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the size-5 main
@@ -829,7 +823,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   attempts, so this is lower priority than the main-tier candidates.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3
+### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
 - Goal: establish a size-3 SolutionsLowPercent record below the existing
@@ -872,7 +866,7 @@ higher-rate variant is found.  Nothing below this line needs game time.
   reproducible live-game RNG harness; capture the completion panel if tested.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5
+### [ ] Year 55 - Data Flowers - constant-sum low-percent size 5 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 55 - Data Flowers - constant-sum low-percent size 5.txt](<SolutionsToTry/Year 55 - Data Flowers - constant-sum low-percent size 5.txt>)
 - Goal: establish a size-5 SolutionsLowPercent record below the size-7 main
