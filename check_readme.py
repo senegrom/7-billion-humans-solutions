@@ -24,10 +24,10 @@ FILE_TYPE_PATTERN = re.compile(r"\((speed|size|both)\)\.txt$", re.IGNORECASE)
 MARKERS = "❌✔➕➖📋"
 
 # Statements that the game does not count towards a solution's size.
-BLOCK_END_PATTERN = re.compile(r"^end(if|while|for)$")
+BLOCK_END_PATTERN = re.compile(r"^end(if|for)$")
 LABEL_PATTERN = re.compile(r"^[A-Za-z_]\w*:$")
 COMMENT_COMMAND_PATTERN = re.compile(r"^comment \d+$")
-CONDITION_PATTERN = re.compile(r"^(if|while)\b")
+CONDITION_PATTERN = re.compile(r"^if\b")
 ELSE_PATTERN = re.compile(r"^else:?$")
 
 # What the game's editor will not build at a level, so a solution using it has to be pasted in and carries the
@@ -110,7 +110,7 @@ def solution_size(path: Path) -> int:
     """
     Counts the commands in a solution, the way the game's size counter does.
 
-    Labels, block ends (`endif`, `endwhile`, `endfor`) and `comment` commands are free; everything else, including
+    Labels, block ends (`endif`, `endfor`) and `comment` commands are free; everything else, including
     `else` and `end`, costs one command.
 
     Args:
@@ -192,16 +192,14 @@ def parse_readme() -> List[Row]:
         if len(cells) < 5 or cells[0] == "Year" or set(cells[0]) <= set(":- "):
             continue  # heading or separator row
         link = LINK_PATTERN.search(cells[1])
-        if not link:
-            continue
         rows.append(
             Row(
                 line_number=line_number,
                 section=section,
                 year=cells[0],
-                name=link.group(1),
-                path=url_to_path(link.group(2)),
-                url=link.group(2),
+                name=link.group(1) if link else cells[1],
+                path=url_to_path(link.group(2)) if link else None,
+                url=link.group(2) if link else "",
                 size=cells[3],
                 speed=cells[4],
                 pasted=PASTE_MARKER in cells[1],
@@ -223,6 +221,9 @@ def check_rows(rows: List[Row]) -> List[str]:
     problems: List[str] = []
     for row in rows:
         where = f'README.md:{row.line_number} "{row.year} {row.name}"'
+        if not row.url:
+            problems.append(f"{where}: the Name cell does not link to a solution file")
+            continue
         if row.path is None:
             problems.append(
                 f"{where}: link does not point into this repository: {row.url}"

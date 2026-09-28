@@ -33,7 +33,7 @@ faster reported speed. A solution that only ties is not listed, because the more
 ## How size and speed are measured
 
 **Size** is the number of commands the game counts, which is what its editor shows. Labels (`a:`), block ends
-(`endif`, `endwhile`, `endfor`) and comments are free; every other line costs one command, including `else` and `end`,
+(`endif`, `endfor`) and comments are free; every other line costs one command, including `else` and `end`,
 and a condition split over several lines still only costs one. `check_readme.py` counts this for you and fails if the
 README disagrees with the file.
 

@@ -4,11 +4,10 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
-# Define the expected file name pattern and capture groups for year and type
-# Pattern: Year <year> - <description>(<type>).txt
-# Group 1: year (\d+)
-# Group 2: type (.*?)
-FILE_PATTERN = re.compile(r"^Year (\d+) - .*\((.*?)\)\.txt$")
+# Year <two-digit year> - <description> (<type>).txt: group 1 the year, group 2 the type
+FILE_PATTERN = re.compile(r"^Year (\d{2}) - .*\((.*?)\)\.txt$")
+# years with no OCD challenge, so no solutions (README, File Naming Rule)
+NO_CHALLENGE_YEARS = {8, 27, 45}
 
 
 def get_files_recursive(directories: List[str]) -> List[Path]:
@@ -54,9 +53,10 @@ def check_files(
     """
     issues: Dict[str, List[Path]] = {
         "Wrong extension (must be .txt):": [],
-        "File name must match pattern 'Year <year> - <description>(<type>).txt':": [],
+        "File name must match pattern 'Year <two-digit year> - <description>(<type>).txt':": [],
         f"Year must be between {min_year} and {max_year}:": [],
-        f"Solution type must be one of {sorted(list(allowed_solution_types))}:": [],
+        "Years 08, 27 and 45 have no challenge, so no solutions:": [],
+        f"Solution type must be one of {sorted(allowed_solution_types)}:": [],
     }
 
     for file_path in files:
@@ -66,34 +66,30 @@ def check_files(
         match = FILE_PATTERN.match(file_path.name)
         if not match:
             issues[
-                "File name must match pattern 'Year <year> - <description>(<type>).txt':"
+                "File name must match pattern 'Year <two-digit year> - <description>(<type>).txt':"
             ].append(file_path)
             continue  # No year or type to extract
         year_str, solution_type = match.groups()
-        try:
-            year = int(year_str)
-            if not (min_year <= year <= max_year):
-                issues[f"Year must be between {min_year} and {max_year}:"].append(
-                    file_path
-                )
-        except ValueError:
-            pass  # Already handled by regex match failure or will be if regex allows non-digits
+        year = int(year_str)
+        if not (min_year <= year <= max_year):
+            issues[f"Year must be between {min_year} and {max_year}:"].append(file_path)
+        elif year in NO_CHALLENGE_YEARS:
+            issues["Years 08, 27 and 45 have no challenge, so no solutions:"].append(
+                file_path
+            )
         if solution_type.lower() not in allowed_solution_types:
             issues[
-                f"Solution type must be one of {sorted(list(allowed_solution_types))}:"
+                f"Solution type must be one of {sorted(allowed_solution_types)}:"
             ].append(file_path)
     return {k: v for k, v in issues.items() if v}
 
 
 def print_results(results: Dict[str, List[Path]]) -> None:
     """
-    Prints the results of the file checks.
+    Prints the results of the file checks and exits non-zero if there are any.
 
     Args:
         results: A dictionary mapping issue descriptions to a list of file paths.
-
-    Raises:
-        ValueError: If one or more files are not formatted correctly.
     """
     if not results:
         print("Finished! There are no issues :)")
@@ -103,9 +99,7 @@ def print_results(results: Dict[str, List[Path]]) -> None:
             print(f"\n{issue}")
             for file_path in file_list:
                 print(f'- "{file_path}"')
-        raise ValueError(
-            "One or more files are not formatted correctly. Please check stdout for details!"
-        )
+        sys.exit(1)
 
 
 def main():
