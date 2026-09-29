@@ -7,7 +7,8 @@ the [Steam thread](https://steamcommunity.com/app/792100/discussions/0/173996849
 ## Submitting a solution
 
 1. Copy the solution out of the game and save it as a `.txt` file in the folder that matches how reliable it is
-   (see [Which folder](#which-folder)).
+   (see the [folder table](README.md#solutions-folders) in the README, which also says when a less reliable
+   solution is listed).
 2. Name the file `Year NUM - NAME (TYPE).txt`, where `NUM` is the two digit year, `NAME` is the puzzle's name and
    `TYPE` is `speed`, `size` or `both`.
 3. Add or update the row in the matching README table, keeping the rows in year order.
@@ -18,17 +19,6 @@ python check_names.py && python check_readme.py
 ```
 
 Both run automatically, with the linters, on every pull request and every push to master.
-
-## Which folder
-
-| Folder                  | Success rate | Contents                                                                  |
-|:------------------------|:-------------|:--------------------------------------------------------------------------|
-| `Solutions99+`          | 99% or more  | The main table.                                                           |
-| `Solutions50+`          | 50% to 99%   | Solutions that beat the `Solutions99+` entry but do not always succeed.   |
-| `SolutionsLowPercent`   | under 50%    | Solutions that beat the entries above but only succeed occasionally.      |
-
-A less reliable solution is only listed if it is strictly better than the entry above it: fewer commands, or a
-faster reported speed. A solution that only ties is not listed, because the more reliable solution is already the better answer.
 
 ## How size and speed are measured
 
