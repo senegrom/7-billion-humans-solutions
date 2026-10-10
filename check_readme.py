@@ -11,6 +11,7 @@ from typing import Dict, List, NamedTuple, Optional, Set
 
 REPO_ROOT = Path(__file__).parent
 README = REPO_ROOT / "README.md"
+COMMANDS = REPO_ROOT / "COMMANDS.md"
 BLOB_PREFIX = "https://github.com/senegrom/7-billion-humans-solutions/blob/master/"
 
 # Maps a README section heading to the folder its rows must link to.
@@ -42,6 +43,8 @@ ONE_DIRECTION_COMMAND_LIST_PATTERN = re.compile(
 )
 STEP_DIRECTION_LIST_PATTERN = re.compile(r"^step\s+\w+(,\w+)+$")
 MYITEM_PATTERN = re.compile(r"\bmyitem\b")
+ASSIGNMENT_PATTERN = re.compile(r"^mem\d\s*=\s*(\w+)")
+PALETTE_ROW_PATTERN = re.compile(r"^\|\s*\d+\s*\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|")
 FIRST_YEAR_WITH_STEP_DIRECTION_LISTS = 30
 FIRST_YEAR_WITH_MYITEM = 21
 
@@ -376,18 +379,65 @@ def check_files_are_listed(rows: List[Row]) -> List[str]:
     return problems
 
 
-def paste_only_reason(year: int, statements: List[str]) -> Optional[str]:
+@functools.lru_cache(maxsize=None)
+def palettes() -> Dict[int, Set[str]]:
+    """
+    Reads each level's command palette from the table in COMMANDS.md.
+
+    Returns:
+        The commands each Year's editor offers, keyed by Year number.
+    """
+    found: Dict[int, Set[str]] = {}
+    for line in COMMANDS.read_text(encoding="utf-8-sig").splitlines():
+        match = PALETTE_ROW_PATTERN.match(line)
+        if match:
+            found[int(match.group(1))] = set(match.group(2).split())
+    return found
+
+
+def statement_command(statement: str) -> Optional[str]:
+    """
+    Names the palette command a statement needs.
+
+    Args:
+        statement: A single statement of a solution.
+
+    Returns:
+        The command's name as the palette table spells it, or None for a statement that rides along with another
+        (labels, block ends, comments).
+    """
+    if ELSE_PATTERN.match(statement):
+        return "if"
+    if is_free(statement):
+        return None
+    assignment = ASSIGNMENT_PATTERN.match(statement)
+    word = assignment.group(1) if assignment else statement.split()[0]
+    return "listen" if word == "listenfor" else word
+
+
+def paste_only_reason(
+    year: int, statements: List[str], palette: Optional[Set[str]] = None
+) -> Optional[str]:
     """
     Finds the first statement of a solution that the game's editor will not build at the solution's level.
 
     Args:
         year: The level's Year number.
         statements: The solution's statements.
+        palette: The commands the level's editor offers, if known.
 
     Returns:
         Why that statement has to be pasted in, or None if the whole solution can be typed in the editor.
     """
     for statement in statements:
+        command = statement_command(statement)
+        if (
+            palette is not None
+            and command is not None
+            and command not in palette
+            and not (command in ("set", "calc") and palette & {"set", "calc"})
+        ):
+            return f"`{statement}` uses {command}, which the Year {year} editor does not offer"
         if ONE_DIRECTION_COMMAND_LIST_PATTERN.match(statement):
             return f"`{statement}` names several directions, which the editor only allows on step and foreachdir"
         if (
@@ -418,8 +468,15 @@ def check_paste_markers(rows: List[Row]) -> List[str]:
         year = re.match(r"^Year (\d+)$", row.year)
         if row.path is None or not exists_exactly(row.path) or not year:
             continue  # check_rows reports the broken link or Year cell
-        reason = paste_only_reason(int(year.group(1)), read_statements(row.path))
         where = f'README.md:{row.line_number} "{row.year} {row.name}"'
+        palette = palettes().get(int(year.group(1)))
+        if palette is None:
+            problems.append(
+                f"{where}: COMMANDS.md has no command palette for {row.year}"
+            )
+        reason = paste_only_reason(
+            int(year.group(1)), read_statements(row.path), palette
+        )
         if reason and not row.pasted:
             problems.append(
                 f"{where}: {reason}, so the row needs the {PASTE_MARKER} marker"

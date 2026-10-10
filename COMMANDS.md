@@ -105,9 +105,10 @@ The editor's direction picker takes one direction, except:
 A list the editor refuses still works when pasted in, on any level:
 several published records rely on one, and the Year 15 community
 six, a random multi-direction step, is reported at 16/25 live.
-Those rows carry the README's paste marker (📋), and
-`check_readme.py` fails any row whose marker disagrees with these
-rules.
+Those rows carry the README's paste marker (📋), as does any row
+whose program uses a command its level's palette (the table above)
+lacks, and `check_readme.py` fails any row whose marker disagrees
+with these rules.
 
 A condition with several terms (the button on the right of an `if`,
 which joins them with `and`/`or`) is offered wherever `if` is;

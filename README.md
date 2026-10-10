@@ -58,7 +58,7 @@ the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansSta
 ➖ = sometimes hits speed.
 
 📋 marks a solution that cannot be typed in the game's editor and has to be pasted in;
-[COMMANDS.md](COMMANDS.md#several-directions-on-one-command) lists what the editor refuses where.
+[COMMANDS.md](COMMANDS.md) lists what each level's editor offers and refuses.
 
 | Year    | Name                                                                                                                                                                                  | Contributor                                                                                                      | Size     | Speed       |
 |:--------|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------------|----------|-------------|

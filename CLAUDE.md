@@ -77,6 +77,9 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   Year 21; a pasted `myitem` on Year 15 did not work, so never queue a
   `myitem` program for Years 2-20.  Compound conditions (`and`/`or`)
   work wherever `if` does.
+- A command missing from the level's palette (the table in COMMANDS.md)
+  is a limit too: such a program can only be pasted in, and whether a
+  paste keeps the command is the open Year 23 question.
 - A README row carries 📋 exactly when its program breaks one of these
   limits; `check_readme.py` enforces it, and queue entries follow the
   same rule in their headings.  COMMANDS.md has the details.
