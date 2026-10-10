@@ -22,7 +22,9 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   the reason, so no effort repeats.
 - Sizes quoted anywhere must be canonical editor sizes
   (`check_readme.solution_size`; the emulator counts the same way).
-- Run `python check_readme.py` before pushing README or solution changes.
+- Run `python check_readme.py` before pushing README, queue or solution
+  changes; it also checks the queue's links, labels, sizes in file names
+  and heading markers.
 
 ## Speed-evidence rules (learned live, 2026-08-15)
 
@@ -81,5 +83,5 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   is a limit too: such a program can only be pasted in, and whether a
   paste keeps the command is the open Year 23 question.
 - A README row carries 📋 exactly when its program breaks one of these
-  limits; `check_readme.py` enforces it, and queue entries follow the
-  same rule in their headings.  COMMANDS.md has the details.
+  limits; `check_readme.py` enforces it, and for the queue's headings
+  too.  COMMANDS.md has the details.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that the tables in README.md agree with the solution files."""
+"""Check that the README tables agree with the solution files, and the live queue with its programs."""
 
 import functools
 import io
@@ -12,6 +12,8 @@ from typing import Dict, List, NamedTuple, Optional, Set
 REPO_ROOT = Path(__file__).parent
 README = REPO_ROOT / "README.md"
 COMMANDS = REPO_ROOT / "COMMANDS.md"
+QUEUE = REPO_ROOT / "SOLUTIONS_TO_TRY.md"
+QUEUE_DIRECTORY = REPO_ROOT / "SolutionsToTry"
 BLOB_PREFIX = "https://github.com/senegrom/7-billion-humans-solutions/blob/master/"
 
 # Maps a README section heading to the folder its rows must link to.
@@ -47,6 +49,11 @@ ASSIGNMENT_PATTERN = re.compile(r"^mem\d\s*=\s*(\w+)")
 PALETTE_ROW_PATTERN = re.compile(r"^\|\s*\d+\s*\|\s*(\d+)\s*\|[^|]*\|([^|]*)\|")
 FIRST_YEAR_WITH_STEP_DIRECTION_LISTS = 30
 FIRST_YEAR_WITH_MYITEM = 21
+
+# The live queue: an entry heading, its links, and the size a program's file name promises.
+QUEUE_HEADING_PATTERN = re.compile(r"^### ")
+QUEUE_LINK_PATTERN = re.compile(r"\]\(<([^>]+)>\)")
+QUEUE_FILE_SIZE_PATTERN = re.compile(r"size (\d+)\.txt$")
 
 
 class Row(NamedTuple):
@@ -531,9 +538,83 @@ def check_lower_percent_rows_are_better(rows: List[Row]) -> List[str]:
     return problems
 
 
+def check_queue() -> List[str]:
+    """
+    Checks the live queue in SOLUTIONS_TO_TRY.md against its programs in SolutionsToTry/.
+
+    Every link must resolve and every queue program must be linked; a program's labels must pair up with its jumps;
+    a "size N" in a program's file name must be its size; and an entry's heading carries the paste marker exactly
+    when one of its programs has to be pasted in.  A checkout without the queue has nothing to check.
+
+    Returns:
+        A list of problem descriptions, empty if the queue is consistent.
+    """
+    if not QUEUE.is_file():
+        return []
+    problems: List[str] = []
+    linked: Set[Path] = set()
+    heading: Optional[str] = None
+    heading_line = 0
+    entries: Dict[int, List[Path]] = {}
+    marks: Dict[int, str] = {}
+    for line_number, line in enumerate(
+        QUEUE.read_text(encoding="utf-8-sig").splitlines(), 1
+    ):
+        if QUEUE_HEADING_PATTERN.match(line):
+            heading, heading_line = line, line_number
+            continue
+        for target in QUEUE_LINK_PATTERN.findall(line):
+            path = REPO_ROOT / target
+            if not exists_exactly(path):
+                problems.append(
+                    f"SOLUTIONS_TO_TRY.md:{line_number}: link points at a file that does not exist: {target}"
+                )
+                continue
+            if path.parent == QUEUE_DIRECTORY:
+                linked.add(path)
+                if heading is not None:
+                    entries.setdefault(heading_line, []).append(path)
+                    marks[heading_line] = heading
+    for path in sorted(QUEUE_DIRECTORY.glob("*.txt")):
+        shown = f"SolutionsToTry/{path.name}"
+        if path not in linked:
+            problems.append(f'"{shown}" is not linked from SOLUTIONS_TO_TRY.md')
+        statements = read_statements(path)
+        problems.extend(
+            f'"{shown}": {problem}' for problem in label_problems(statements)
+        )
+        promised = QUEUE_FILE_SIZE_PATTERN.search(path.name)
+        if promised and int(promised.group(1)) != solution_size(path):
+            problems.append(
+                f'"{shown}": the file name promises size {promised.group(1)} but the program has '
+                f"{solution_size(path)} commands"
+            )
+    for line_number, paths in entries.items():
+        year = FILE_YEAR_PATTERN.match(paths[0].name)
+        if not year:
+            continue
+        number = int(year.group(1).split()[1])
+        reasons = [
+            paste_only_reason(number, read_statements(path), palettes().get(number))
+            for path in paths
+        ]
+        reason = next((r for r in reasons if r), None)
+        pasted = PASTE_MARKER in marks[line_number]
+        if reason and not pasted:
+            problems.append(
+                f"SOLUTIONS_TO_TRY.md:{line_number}: {reason}, so the heading needs the {PASTE_MARKER} marker"
+            )
+        elif pasted and not reason:
+            problems.append(
+                f"SOLUTIONS_TO_TRY.md:{line_number}: the heading carries the {PASTE_MARKER} marker but the editor "
+                "can build every program it links"
+            )
+    return problems
+
+
 def main() -> None:
     """
-    Checks the README against the solution files and exits non-zero if anything is wrong.
+    Checks the README and the live queue against their files and exits non-zero if anything is wrong.
     """
     # The markers are emoji: escape them on a console that cannot print them rather than crash.
     if isinstance(sys.stdout, io.TextIOWrapper):
@@ -544,6 +625,7 @@ def main() -> None:
         + check_files_are_listed(rows)
         + check_lower_percent_rows_are_better(rows)
         + check_paste_markers(rows)
+        + check_queue()
     )
     if not problems:
         print(f"Finished! Checked {len(rows)} solutions and there are no issues :)")
