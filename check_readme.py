@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check that the tables in README.md agree with the solution files."""
 
+import io
 import re
 import sys
 import urllib.parse
@@ -62,7 +63,7 @@ def read_statements(path: Path) -> List[str]:
     Splits a solution file into the statements the game counts as its size.
 
     Blank lines, `-- comment --` headers and the trailing `DEFINE COMMENT` payloads are dropped, and a condition
-    spread over several lines is joined back into a single statement.
+    spread over several lines is joined back into a single statement.  A byte-order mark at the start is ignored.
 
     Args:
         path: The solution file to read.
@@ -72,7 +73,7 @@ def read_statements(path: Path) -> List[str]:
     """
     statements: List[str] = []
     pending = ""
-    for raw_line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for raw_line in path.read_text(encoding="utf-8-sig", errors="replace").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("--"):
             continue
@@ -202,7 +203,7 @@ def parse_readme() -> List[Row]:
     rows: List[Row] = []
     section = None
     for line_number, line in enumerate(
-        README.read_text(encoding="utf-8").splitlines(), 1
+        README.read_text(encoding="utf-8-sig").splitlines(), 1
     ):
         heading = SECTION_PATTERN.match(line)
         if heading:
@@ -425,6 +426,9 @@ def main() -> None:
     """
     Checks the README against the solution files and exits non-zero if anything is wrong.
     """
+    # The markers are emoji: escape them on a console that cannot print them rather than crash.
+    if isinstance(sys.stdout, io.TextIOWrapper):
+        sys.stdout.reconfigure(errors="backslashreplace")
     rows = parse_readme()
     problems = (
         check_rows(rows)
