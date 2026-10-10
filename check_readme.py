@@ -32,7 +32,7 @@ LABEL_PATTERN = re.compile(r"^[A-Za-z_]\w*:$")
 COMMENT_COMMAND_PATTERN = re.compile(r"^comment \d+$")
 CONDITION_PATTERN = re.compile(r"^if\b")
 ELSE_PATTERN = re.compile(r"^else:?$")
-JUMP_PATTERN = re.compile(r"^jump\s+(\w+)$")
+JUMP_PATTERN = re.compile(r"^jump(?:\s+(\w+))?$")
 
 # What the game's editor will not build at a level, so a solution using it has to be pasted in and carries the
 # paste marker (the rules are in COMMANDS.md).
@@ -126,27 +126,44 @@ def solution_size(path: Path) -> int:
     return sum(1 for statement in read_statements(path) if not is_free(statement))
 
 
-def unreached_labels(statements: List[str]) -> List[str]:
+def label_problems(statements: List[str]) -> List[str]:
     """
-    Finds the labels in a solution that no jump leads to.
+    Finds labels and jumps that do not pair up.
 
     In the game a label is only ever the far end of a jump arrow, so it refuses to paste a program with a label that
-    nothing jumps to.
+    nothing jumps to.  A jump with no label, or a label defined twice, leaves a jump without one place to go.  Labels
+    are free in the size count, which is why this check and not the Size check has to catch a lost or copied one.
 
     Args:
         statements: The solution's statements.
 
     Returns:
-        The names of the labels no jump leads to, in the order they appear.
+        A description of each problem, in a fixed order.
     """
-    targets = {match.group(1) for match in map(JUMP_PATTERN.match, statements) if match}
-    return [
-        statement[:-1]
-        for statement in statements
-        if LABEL_PATTERN.match(statement)
-        and not ELSE_PATTERN.match(statement)
-        and statement[:-1] not in targets
+    labels = [
+        s[:-1]
+        for s in statements
+        if LABEL_PATTERN.match(s) and not ELSE_PATTERN.match(s)
     ]
+    jumps = [match.group(1) for match in map(JUMP_PATTERN.match, statements) if match]
+    problems = [
+        f"no jump leads to the label {label}:, and the game refuses such a paste"
+        for label in dict.fromkeys(labels)
+        if label not in jumps
+    ]
+    problems += [
+        f"the label {label}: is defined more than once"
+        for label in dict.fromkeys(labels)
+        if labels.count(label) > 1
+    ]
+    problems += [
+        f"`jump {target}` has no label {target}: to lead to"
+        for target in dict.fromkeys(jumps)
+        if target is not None and target not in labels
+    ]
+    if None in jumps:
+        problems.append("a `jump` names no label")
+    return problems
 
 
 def cell_value(cell: str) -> Optional[int]:
@@ -300,11 +317,10 @@ def check_rows(rows: List[Row]) -> List[str]:
             problems.append(
                 f"{where}: Year column says {row.year} but the solution is for {file_year.group(1)}"
             )
-        stranded = unreached_labels(read_statements(row.path))
-        if stranded:
-            problems.append(
-                f"{where}: no jump leads to the label {stranded[0]}:, and the game refuses such a paste"
-            )
+        problems.extend(
+            f"{where}: {problem}"
+            for problem in label_problems(read_statements(row.path))
+        )
         size = cell_value(row.size)
         actual_size = solution_size(row.path)
         if size is None:
