@@ -57,12 +57,23 @@ def check_files(
         f"Year must be between {min_year} and {max_year}:": [],
         "Years 08, 27 and 45 have no challenge, so no solutions:": [],
         f"Solution type must be one of {sorted(allowed_solution_types)}:": [],
+        "Must sit directly in its solutions folder, not in a subfolder:": [],
+        "Starts with a UTF-8 byte-order mark (save it as UTF-8 without one):": [],
     }
 
     for file_path in files:
         if file_path.suffix.lower() != ".txt":
             issues["Wrong extension (must be .txt):"].append(file_path)
             continue  # No need to perform further checks on non-.txt files
+        # main() names each folder relative to the repository, so a file directly in one has two parts
+        if len(file_path.parts) != 2:
+            issues[
+                "Must sit directly in its solutions folder, not in a subfolder:"
+            ].append(file_path)
+        if file_path.read_bytes().startswith(b"\xef\xbb\xbf"):
+            issues[
+                "Starts with a UTF-8 byte-order mark (save it as UTF-8 without one):"
+            ].append(file_path)
         match = FILE_PATTERN.match(file_path.name)
         if not match:
             issues[
