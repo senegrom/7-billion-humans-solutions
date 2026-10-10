@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check that the tables in README.md agree with the solution files."""
 
+import functools
 import io
 import re
 import sys
@@ -20,7 +21,7 @@ SECTION_DIRECTORIES: Dict[str, str] = {
 }
 
 SECTION_PATTERN = re.compile(r"^###### (.*)$")
-LINK_PATTERN = re.compile(r"\[([^\]]*)\]\((.*\.txt)\)")
+LINK_PATTERN = re.compile(r"\[([^\]]*)\]\((\S*\.txt)\)")
 FILE_TYPE_PATTERN = re.compile(r"\((speed|size|both)\)\.txt$", re.IGNORECASE)
 MARKERS = "❌✔➕➖📋"
 
@@ -193,6 +194,33 @@ def url_to_path(url: str) -> Optional[Path]:
     return REPO_ROOT / urllib.parse.unquote(url[len(BLOB_PREFIX) :])
 
 
+@functools.lru_cache(maxsize=None)
+def names_in(directory: Path) -> Set[str]:
+    """
+    Lists the exact names in a folder, so a link's letter case can be checked even where the file system ignores it.
+
+    Args:
+        directory: The folder to list.
+
+    Returns:
+        The names of the entries in the folder.
+    """
+    return {entry.name for entry in directory.iterdir()}
+
+
+def exists_exactly(path: Path) -> bool:
+    """
+    Reports whether a file exists with exactly this spelling, as GitHub requires.
+
+    Args:
+        path: The file to look for.
+
+    Returns:
+        True if the file exists and its name matches letter for letter.
+    """
+    return path.is_file() and path.name in names_in(path.parent)
+
+
 def parse_readme() -> List[Row]:
     """
     Reads every solution row out of the README's tables.
@@ -254,9 +282,9 @@ def check_rows(rows: List[Row]) -> List[str]:
                 f"{where}: link does not point into this repository: {row.url}"
             )
             continue
-        if not row.path.is_file():
+        if not exists_exactly(row.path):
             problems.append(
-                f"{where}: link points at a file that does not exist: {row.url}"
+                f"{where}: link points at a file that does not exist (letter case counts): {row.url}"
             )
             continue
         expected_directory = SECTION_DIRECTORIES[row.section]
@@ -364,7 +392,7 @@ def check_paste_markers(rows: List[Row]) -> List[str]:
     problems: List[str] = []
     for row in rows:
         year = re.match(r"^Year (\d+)$", row.year)
-        if row.path is None or not row.path.is_file() or not year:
+        if row.path is None or not exists_exactly(row.path) or not year:
             continue  # check_rows reports the broken link
         reason = paste_only_reason(int(year.group(1)), read_statements(row.path))
         where = f'README.md:{row.line_number} "{row.year} {row.name}"'
