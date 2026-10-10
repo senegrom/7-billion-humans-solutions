@@ -23,6 +23,7 @@ SECTION_DIRECTORIES: Dict[str, str] = {
 SECTION_PATTERN = re.compile(r"^###### (.*)$")
 LINK_PATTERN = re.compile(r"\[([^\]]*)\]\((\S*\.txt)\)")
 FILE_TYPE_PATTERN = re.compile(r"\((speed|size|both)\)\.txt$", re.IGNORECASE)
+FILE_YEAR_PATTERN = re.compile(r"^(Year \d{2}) - ")
 MARKERS = "❌✔➕➖📋"
 
 # Statements that the game does not count towards a solution's size.
@@ -294,6 +295,11 @@ def check_rows(rows: List[Row]) -> List[str]:
                 f"expected {expected_directory}"
             )
             continue
+        file_year = FILE_YEAR_PATTERN.match(row.path.name)
+        if file_year and row.year != file_year.group(1):
+            problems.append(
+                f"{where}: Year column says {row.year} but the solution is for {file_year.group(1)}"
+            )
         stranded = unreached_labels(read_statements(row.path))
         if stranded:
             problems.append(
@@ -307,6 +313,8 @@ def check_rows(rows: List[Row]) -> List[str]:
             problems.append(
                 f"{where}: Size column says {size} but the solution has {actual_size} commands"
             )
+        if is_bold(row.speed) and cell_value(row.speed) is None:
+            problems.append(f"{where}: Speed column is not a number: {row.speed}")
         file_type_match = FILE_TYPE_PATTERN.search(row.path.name)
         if not file_type_match:
             continue  # check_names.py reports the bad file name
@@ -393,7 +401,7 @@ def check_paste_markers(rows: List[Row]) -> List[str]:
     for row in rows:
         year = re.match(r"^Year (\d+)$", row.year)
         if row.path is None or not exists_exactly(row.path) or not year:
-            continue  # check_rows reports the broken link
+            continue  # check_rows reports the broken link or Year cell
         reason = paste_only_reason(int(year.group(1)), read_statements(row.path))
         where = f'README.md:{row.line_number} "{row.year} {row.name}"'
         if reason and not row.pasted:
