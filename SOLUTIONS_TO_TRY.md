@@ -649,9 +649,10 @@ kept intact so nothing is rediscovered.
 - **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - low-percent size 4.txt>)
 - Goal: live-confirm the new size-4 SolutionsLowPercent entry below the
   size-5 main record.
-- Public evidence: abfipes12 reports positive real-game wins, but its header is
-  internally inconsistent: "40 failures out of 50" implies 20%, while the
-  same line labels the result 10%.
+- Public evidence: abfipes12 reports positive real-game wins in the
+  [original posting](https://github.com/abfipes12/7-Billion-Humans-Solutions/blob/main/Test%20Solutions/low%25/Year%2044%20-%20Unique%20Fashion%20Party),
+  whose header reads "failed 40 out of 50 => 10% successful": 40 failures in
+  50 runs would be 20%, so the line is internally inconsistent.
 - Current emulator evidence: 0/20.  Year 44's model is already known to have an
   unfaithful randomized layout, so that result cannot overrule the live source.
 - Expected editor size: **4**.
