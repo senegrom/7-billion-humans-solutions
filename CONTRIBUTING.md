@@ -28,8 +28,8 @@ and a condition split over several lines still only costs one. `check_readme.py`
 README disagrees with the file.
 
 **Speed** is the time in seconds the game reports when the solution finishes. Solutions that rely on randomness do not
-have a fixed speed, so their value is written with a `~` prefix (`~155`) for a typical run, or as a range (`10-11`)
-when it varies between a couple of values.
+have a fixed speed: write the range of speeds seen over several runs (`10-11`, `516-701`), or a typical value with a
+`~` prefix (`~155`) when only one run was timed.
 
 ## How solutions are ranked
 

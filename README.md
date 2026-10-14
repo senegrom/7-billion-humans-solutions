@@ -48,7 +48,8 @@ for how sizes and speeds are measured, how solutions are ranked and how credit i
 ###### +99% Solutions
 
 **Size** is the number of commands in the solution and **Speed** is the time in seconds the game reports for the
-run; a `~` prefix means the solution is random and the value varies. The value a solution is optimised for is shown in **bold**
+run; a `~` prefix or a range such as `10-11` means the solution is random: `~` gives a typical run, a range the spread
+of observed runs. The value a solution is optimised for is shown in **bold**
 and carries a marker comparing it with the shortest/fastest known solution on
 the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansStats/):
 
