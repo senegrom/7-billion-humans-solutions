@@ -58,7 +58,7 @@ level's editor had in fact been shown to survive a paste.
    gain in its tier: the 99+ size row is 7.
 4. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
-   then the Year 68, 62, 65 and 67 ladders.
+   then the Year 68, 62 and 67 ladders.
 5. **Year 13 size 6**: two or three attempts of about ten minutes each;
    806/1000 plain, 770/1000 shuffled.  The attempt count is the tier
    evidence.
@@ -299,22 +299,6 @@ ask for that tier again.
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
   stop at the first regression and capture each completion panel and editor
   size.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 65 - Defrag Ordered - live-only speed tie-break at size 120
-
-- **Paste-ready program:** [SolutionsToTry/Year 65 - Defrag Ordered - live-only speed tie-break at size 120.txt](<SolutionsToTry/Year 65 - Defrag Ordered - live-only speed tie-break at size 120.txt>)
-- Goal: retain the current displayed speed record of 12 while reducing the
-  secondary size from 121 commands to 120.
-- Exact edit: in the inner `else` branch, delete the empty
-  `mem3 = foreachdir nw,w,sw,n,ne,e,se:` loop and its matching `endfor`, leaving
-  `comment 1` followed directly by `step e`.
-- Why it may be safe: `mem3` is never read, and the loop body is empty; its only
-  effect is seven iterations of cadence delay.
-- Fidelity caveat: the current model does not reproduce the published
-  incumbent, so this timing edit is live-only and has no emulator verdict.
-- Suggested live test: run the incumbent as a loading/control check, then the
-  candidate; capture both completion panels and editor size.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 208/209)

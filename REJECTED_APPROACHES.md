@@ -175,6 +175,12 @@ for records.  Candidates that still need live-game verification remain in
   0/1 at the real cutoff while the untouched size-100 incumbent won in 561
   frames.  Even one apparently dead store is phase-critical on this level.
 - Y65 size 13 rewrite: 0/52.
+- Y65 speed size-120 deletion of the empty seven-direction `foreachdir`
+  cadence loop: 0/50 plain and 0/50 shuffled, while the size-121 incumbent
+  wins 50/50 on both screens in 807 frames, so its seven empty iterations
+  carry the cadence the rest of the program needs.  It was queued as
+  live-only while the model failed to reproduce the incumbent; the model
+  has reproduced it since, so the screen decides (withdrawn 2026-10-14).
 - Y66 further padding cuts: deleting one store from the later 14-store block
   fails; deleting the earlier singleton after its first shuffle wins but slows
   from 1,552 to 1,574 frames/modelled speed 26.  Size 240 is the exact-timing
