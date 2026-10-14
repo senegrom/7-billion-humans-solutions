@@ -68,9 +68,10 @@ level's editor had in fact been shown to survive a paste.
 7. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); 82.5% here.  Skip it if the
    Year 15 five in item 2 completes.
-8. Optional confirmations of published rows, for a patient session: the
-   Year 38 community speed 6-7, the Year 58 four, the Year 30
-   probabilistic four and the Year 30 alternate five.
+8. Optional, for a patient session: confirmations of the published Year 38
+   community speed 6-7, Year 58 four and Year 30 probabilistic four; and
+   the Year 30 alternate five, an unpublished edit of the size-5 row whose
+   only claim is a small model speed edge that a live A/B has to confirm.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -478,10 +479,12 @@ ask for that tier again.
 - Exact edit: in the size-5 record, change the step set
   `nw,w,sw,s,ne,e,se` to `nw,sw,n,e,se`.
 - Emulator A/B evidence (frame-derived, so it cannot settle displayed
-  speed; the live A/B below decides) over the same 100 seeds: candidate 100/100, average
-  602.7 seconds, range 372-1,277; incumbent 100/100, average 635.1 seconds.
-  The incumbent's actual game score is about 588, so the emulator improvement
-  may not carry over.
+  speed; the live A/B below decides), 300 worlds at the live clock: plain,
+  candidate 299/300 averaging 615 seconds against the incumbent's 299/300
+  at 649; shuffled, candidate 299/300 at 619 against 300/300 at 627.  The
+  win rates match on both screens, but the edge shrinks from about 33
+  seconds to about 8 under the shuffled screen, and the incumbent's actual
+  game score is about 588, so the improvement may not carry over.
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
