@@ -516,8 +516,11 @@ kept intact so nothing is rediscovered.
   the queue floor.
 - Caution (2026-09-06 machine rules): the supervisor's give runs straight
   after its empty pickup, so if the relay's timing slips it gives
-  empty-handed beside the shredder and is lost.  Both rates predate those
-  rules; re-screen before any live attempt.
+  empty-handed beside the shredder and is lost.  Re-screened 2026-10-14
+  under those rules: 53/3,000 plain and 53/3,000 shuffled, the same rate
+  as before.  It can still reach that give, outside the working rules'
+  only exception to the ban on it (the model wins every run), so whether
+  it stays parked is the maintainer's call before this tier reopens.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
@@ -738,8 +741,11 @@ kept intact so nothing is rediscovered.
 - Suggested live test: 50-100 fresh runs; each attempt ends within a few
   seconds, so reset immediately after an explicit failure.
 - Caution (2026-09-06 machine rules): a worker that loses the race for a
-  cube still gives, empty-handed, at the shredder and is lost.  The rate
-  predates those rules; re-screen before any live attempt.
+  cube still gives, empty-handed, at the shredder and is lost.  Re-screened
+  2026-10-14 under those rules: 23/1,000 plain and 23/1,000 shuffled, the
+  same rate as before.  It can still reach that give, outside the working
+  rules' only exception to the ban on it (the model wins every run), so
+  whether it stays parked is the maintainer's call.
 - Result: _not yet tested locally in the game_.
 
 ## Parked long shots (win rate below 1 in 100)
@@ -949,6 +955,9 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Suggested live test: this may require thousands of quick resets.  Confirm
   that each successful run reports all four per-column minima before promotion.
 - Caution (2026-09-06 machine rules): a worker that loses the race for a
-  cube still gives, empty-handed, at the shredder and is lost.  The rate
-  predates those rules; re-screen before any live attempt.
+  cube still gives, empty-handed, at the shredder and is lost.  Re-screened
+  2026-10-14 under those rules: 5/10,000, the same rate as before.  It can
+  still reach that give, outside the working rules' only exception to the
+  ban on it (the model wins every run), so whether it stays parked is the
+  maintainer's call.
 - Result: _not yet tested locally in the game_.
