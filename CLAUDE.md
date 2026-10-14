@@ -33,10 +33,13 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   establish displayed speed; only a live incumbent-vs-candidate A/B does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
-- Machine reach differs from the simulator: worker-to-worker gives reach
-  diagonally, but machine gives serve cardinally, at the machine's front.
-  A diagonal shredder give killed its givers live (Year 21), so never
-  queue a merge that turns a machine give diagonal.
+- Machine reach is not worker reach: a take from a printer is served at
+  the printer's front (a diagonal take walks the worker there first),
+  while a shredder is fed from any touching square, diagonals included
+  (the Year 16-size, 19 and 21-size records feed diagonally).  Yet a merge
+  that turned a shredder give diagonal killed its givers live (Year 21),
+  for reasons not yet understood, so never queue a merge that turns a
+  machine give diagonal.
 - Simulator frame evidence remains valid for WIN/FAIL and for size.
 
 ## Candidate screening rules (learned live, 2026-08-19)

@@ -240,13 +240,16 @@ for records.  Candidates that still need live-game verification remain in
   (2026-09-06: a step at a shredder turned out to be refused, so this
   walk-in reading of the death is unconfirmed; the observation itself,
   givers lost at a diagonal shredder give, stands.)
-  RULE CORRECTION this refutation establishes: diagonal reach is fine for
-  worker-to-worker gives (the published Year 19 relay does exactly that),
-  but a SHREDDER give serves cardinally/at the machine front -- a diagonal
-  shredder give is a walk-in death.  Do not propose diagonal machine-give
-  merges again; audit any future merge for machine-adjacent geometry.
-  The step the merge removed exists precisely to make the give cardinal,
-  so no smaller variant of this loop survives the rule.
+  What this refutation does NOT establish: a diagonal shredder give is not
+  fatal in itself.  The published Year 16 (size), Year 19 and Year 21
+  (size) records aim gives diagonally at a shredder and complete -- Year
+  16 with every worker required to survive, and Year 19's workers take
+  from a printer and give straight into the shredder diagonally beside
+  them (it is not a relay).  Why this merge's givers died stays
+  unexplained, so the caution stands: do not propose merges that turn a
+  machine give diagonal, and audit any future merge for machine-adjacent
+  geometry.  The step the merge removed made the give cardinal, so no
+  smaller variant of this loop is worth queuing.
 - Y24 size-4 one-sided relay (`if myitem == something or w == hole:
   takefrom s; giveto e,s`): REFUTED LIVE by the maintainer -- "immediately
   throws the cube back in the printer and then dies (not allowed)".  The
@@ -310,11 +313,12 @@ for records.  Candidates that still need live-game verification remain in
   and (b) `a:/step n,s/jump a` for one run each -- whether the crew dies
   or fences against the shredder row under a SINGLE-direction step vs a
   RANDOM step decides the true rule, because several verified solutions
-  elsewhere appear to lean on machine rows as fences.  The Y21 diagonal
-  give death and the Y24 printer-return death likewise await one-run
-  discriminators (their unconditional versions each break verified
-  community rows: Years 19/21-size feed diagonally; Years 16/18/42
-  deliver past machine squares in list order).
+  elsewhere appear to lean on machine rows as fences.  The Y24
+  printer-return death is settled since (a give that lands on a printer
+  destroys it; see the last section); the Y21 diagonal give death is
+  not, and no unconditional version of it fits the verified community
+  rows (Years 16-size, 19 and 21-size feed shredders diagonally; Years
+  16/18/42 deliver past machine squares in list order).
 - Y60 ordered-pickup size 8: REFUTED LIVE by the maintainer -- the
   leftmost field stays empty.  The merge dropped the leftmost worker's
   per-lap 1.5 s bubble (its west is always the wall) or fell to the
@@ -983,8 +987,8 @@ should arm only the right half of the crew and a four should fill the
 board.  Every variant scored 0/400, and the position log shows why: a
 `takefrom` from a diagonal walks the worker to the printer's front, a
 cardinal move that flips parity, after which the crew dies in the
-odd-parity holes.  This is the same walk-in that refuted the Year 21
-candidate live.  The record's guarded `step w,e` is the parity restore
+odd-parity holes.  (A walk-in was also the first reading of the Year 21
+candidate's live deaths; that reading is unconfirmed.)  The record's guarded `step w,e` is the parity restore
 after that walk-in, and it must be guarded because unguarded it flips
 parity every loop — so six is the floor for this mechanism.
 
