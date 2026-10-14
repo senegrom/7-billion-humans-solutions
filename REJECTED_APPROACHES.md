@@ -1047,7 +1047,9 @@ exactly where these rules should land.
 **Rule for future candidates:** never queue a program that can reach a
 `giveto` empty-handed beside a shredder in a room where walking is
 allowed, and never queue a give whose direction list can resolve onto a
-printer.
+printer.  (Since 2026-09-28 the working rules allow one narrow exception
+to the first: losing that worker cannot fail the level, and the model,
+which includes the loss, still wins every run; the entry must say so.)
 
 ## Year 9 at size 4 — the rising diagonal does not count (refuted live 2026-08-14)
 
