@@ -59,8 +59,8 @@ elsewhere first.
 If you know of an earlier public posting of a solution, open an issue with a dated link to it (a Steam thread, a
 Twitch VOD, a forum post) and the credit will be updated.
 
-Each row names the people who produced the current record.  When an existing solution is improved (for example
-fewer commands at the same reported speed), the improver is credited, alongside the original authors when the
-improvement builds directly on their program.
+Each row names whoever produced the current record; rows carried over from the original repository keep the names
+they were published with.  When an existing solution is improved (for example fewer commands at the same reported
+speed), the improver becomes the contributor in place of the earlier authors.
 
 If you would rather be credited under a different name or link, say so in your pull request or open an issue.
