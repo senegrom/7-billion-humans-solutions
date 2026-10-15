@@ -238,15 +238,23 @@ def names_in(directory: Path) -> Set[str]:
 
 def exists_exactly(path: Path) -> bool:
     """
-    Reports whether a file exists with exactly this spelling, as GitHub requires.
+    Reports whether a file exists with exactly this spelling, folders included, as GitHub requires.
 
     Args:
         path: The file to look for.
 
     Returns:
-        True if the file exists and its name matches letter for letter.
+        True if the file exists inside the repository and every folder and file name on its path matches letter
+        for letter.
     """
-    return path.is_file() and path.name in names_in(path.parent)
+    if not path.is_file() or not path.is_relative_to(REPO_ROOT):
+        return False
+    folder = REPO_ROOT
+    for part in path.relative_to(REPO_ROOT).parts:
+        if part not in names_in(folder):
+            return False
+        folder /= part
+    return True
 
 
 def parse_readme() -> List[Row]:
