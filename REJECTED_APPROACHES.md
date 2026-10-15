@@ -511,31 +511,37 @@ the tie analysis that reopened it are in the queue entry in
 
 ## Exhaustive synthesis closures (2026-08-18) — do not re-derive
 
-Every program one command below the record was enumerated and run
-(straight-line grammar with the jump-always-last rule; stage 2 adds one
-if-block over all conditions; palettes' own commands only, plus
-nearest/mem1 forms where available).  Zero winners in every case, so
-these size records are optimal within those grammars:
+Every program one command below the record was enumerated
+(single-direction commands with the jump always last; stage 2 adds one
+if-block testing one square, or the hands, against one type with == or
+!=, with no numbers, no `else` and no and/or; the palette's own commands,
+plus nearest/mem1 forms where the palette offers them) and screened on
+the first test world under a 2,000-frame cap (Years 02 and 04: three
+worlds, all required).  Only a program that passed the screen was re-run
+at the full clock, and none passed.  So these rows are closed only for
+programs in those grammars that win the first world within 2,000 frames:
 
 - Year 02 at 3 (324 programs) and Year 04 at 3 (341) — no `if` in either
-  palette, fully closed.
-- Year 03 at 5 (105k) — no if in palette, fully closed.
-- Year 07 at 4 (6.5k + 168k stage 2) — fully closed.
-- Year 14 at 4 (21k + 377k stage 2) — fully closed.
-- Year 28 at 4 (17k with the nearest/mem grammar) — no if, fully closed.
-- Year 09 at 5 (122k + 5.35M stage 2) — fully closed.
-- Year 11 at 5 (122k + 5.35M stage 2) — fully closed.
+  palette; nothing passed the screen.
+- Year 03 at 5 (105k) — no if in palette; nothing passed the screen.
+- Year 07 at 4 (6.5k + 168k stage 2) — nothing passed the screen.
+- Year 14 at 4 (21k + 377k stage 2) — nothing passed the screen.
+- Year 28 at 4 (17k with the nearest/mem grammar) — no if; the screen
+  could not have seen a winner: the record itself needs about 5,600
+  frames on that world.
+- Year 09 at 5 (122k + 5.35M stage 2) — nothing passed the screen.
+- Year 11 at 5 (122k + 5.35M stage 2) — nothing passed the screen.
 - Year 18 at 5 (680k stage 1; stage 2 completed 2026-08-24 with
-  19.97M programs, zero winners) — the full size-4 space in both
-  grammars is closed; the 5 is optimal within them.
+  19.97M programs, zero winners) — nothing in either grammar passed the
+  screen.
 - Year 23 at 6 (3.0M stage 1 at size 5) — stage 2 still open.
 
-Grammar limits for honesty: direction lists, multi-mem programs, and
-foreachdir forms are not enumerated; a hypothetical winner would have to
-come from those.  Hand-checked separately and dead: Year 35 at 4 is
-structurally minimal (acquire/compute/write/replace), Year 17 at 1 is
-unbeatable, and the Year 05 low-percent question is already queued as
-the absorbing size-2 walker.
+Grammar limits for honesty: direction lists, multi-mem programs,
+foreachdir forms, number tests, `else` and compound conditions are not
+enumerated; a hypothetical winner would have to come from those, or need
+more than 2,000 frames, or lose the first test world.  Hand-checked
+separately and dead: Year 17 at 1 is unbeatable, and the Year 05
+low-percent question is already queued as the absorbing size-2 walker.
 
 ## Year 20 guard deletion (38→37) — refuted live 2026-08-19
 
@@ -562,20 +568,24 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
 
 ## Further synthesis closures (2026-08-19/20) — do not re-derive
 
-- Year 10 at 5: fully closed (5.6k stage 1 + 483k stage 2; its
-  step/jump/if palette is completely covered by the two grammars).
+- Year 10 at 5: open.  Stage 1 (5.6k single-direction programs) and
+  stage 2 (483k, one if-block over single type tests) were screened on
+  one world under the 2,000-frame cap, which the record itself fails (it
+  needs 9,700-32,400 frames), and neither grammar has the record's own
+  direction-list step, `else`, compound condition or number tests.
 - Year 21 at 5: closed at stage 1 (2.03M programs at size 4 over the
-  full takefrom/nearest alphabet); stage 2 completed 2026-08-25 with
-  45.91M programs, zero winners — the full size-4 space in both
-  grammars is closed; the 5 is optimal within them.
+  full takefrom alphabet); stage 2 completed 2026-08-25 with 45.91M
+  programs, zero winners — nothing in either grammar passed the screen.
 - Year 16 at 6: the entire loop-program space at size 5 is exhausted
   (2.46M, jump-last rule), and the halting half followed on 2026-08-22
-  (17.21M straight-line programs, zero winners) — the complete size-5
-  space in the grammar is closed; the 6 is optimal within it.
+  (17.21M straight-line programs, zero winners) — nothing in the grammar
+  passed the screen.
 - Vocabulary probes (each enumerates every shorter program over the
   record's own commands plus direction/operand variants — evidence,
-  not proof): Year 25 at 5 (46.6k), Year 29 at 5 (46.6k), Year 31
-  at 6 (4.2k) all survive with zero winners.
+  not proof): Year 25 at 5 (46.6k) and Year 29 at 5 (46.6k) survive with
+  zero winners.  The Year 31 at 6 probe (4.2k) is void as evidence: it
+  screened each program on one world at 8,000 frames, and the six itself
+  needs 16,000 or more.
 - Year 51 at 6: the tight-vocabulary probe at size 5 completed
   2026-08-24 — 7.56M programs over the record's own 23-command
   vocabulary, zero winners.  Same evidence tier as the probes above.
@@ -585,9 +595,13 @@ incumbent's 45/100.  Year 60's 158 showed 319.8 items against the incumbent's
   condition fragments and was discarded; the probe now joins split
   conditions before harvesting.)
 - Year 68 at 6: tight probe at size 5 completed 2026-08-25 — 290,000
-  programs, zero winners.  This finishes the small-row probe program:
-  every size row at 6 or below now carries either a full grammar proof
-  or a completed vocabulary probe.
+  programs, zero winners.  This finishes the small-row probe program,
+  which covered the rows no closure, probe or queue entry had touched.
+  It does not reach every row at 6 or below: Year 12's size 5 has never
+  been searched at size 4, Year 23's stage 2 is still open, every Year 44
+  result is void, Years 10 and 28 were screened too short to see a
+  record-speed winner, and Years 05, 13, 15, 22 and 56 were left to their
+  queue entries and live tests.
 - Structural arguments: Year 47 at 3 (the conditional wait is
   irreducible — the leftmost worker must speak unprompted, all others
   must wait; spam-tell forms 0/50), Year 49 at 4 (the trailing step e
@@ -640,14 +654,28 @@ closure, probe, or queue entry had ever touched (gate cap at 3x the
 incumbent's measured frames — an earlier 30,000-frame ceiling blinded
 the slow levels, so Years 30 and 58 were re-run before counting):
 
-- Year 59 at 3 (34 programs), Year 58 at 3 (1,610), Year 30 at 3 (45),
-  Year 32 at 4 (5,632), Year 50 at 4 (320,892): zero winners each.
-- Year 24 at 4: of 144 programs, exactly 14 win in the emulator, and
-  every one strips the incumbent's machine-safety guards (unguarded
-  `giveto s,e` loops, or one-guard halves).  All rest on a give-list
-  falling through the printer square — the live-refuted printer-return
-  family — so none are queueable, and no machine-safe size 4 exists in
-  that vocabulary.  The 5 stands.
+- Year 58 at 3 (1,610), Year 30 at 3 (45), Year 32 at 4 (5,632), Year 50
+  at 4 (320,892): zero winners each.
+- Year 59 at 3: the probe was empty in effect.  The record's only memory
+  assignment is its `foreachdir` line, which the probe could not use, so
+  none of its 34 programs ever sets a memory (and 4 of them were at the
+  record's own size 4).  The natural threes -- the record without its
+  guard, the record without its loop, and the unguarded loop over all
+  eight directions -- lose in the model.  The 4 stands.
+- Year 24 at 4: of 144 programs, 14 won in the model of 2026-08-21.
+  Twelve keep an unguarded `giveto s,e`, so each line's first worker
+  hands its cube back into its printer, and they lose under the
+  2026-09-06 printer rule.  The other two drop only the record's take
+  guard and keep its give guard and give word for word (`a: / if e ==
+  hole or se == shredder and myitem == something: / giveto s,e / endif /
+  takefrom w,s / jump a`, and the same with the take first).  None of
+  their gives can land on a printer, and the model wins them every run,
+  plain and shuffled, in about 10,250 frames against the record's 6,718.
+  They are still not queueable: their item-action counts (5,143 and
+  5,111 against the record's 4,553) break the items rule, and each line's
+  last worker now aims a bare `takefrom w,s` at its shredder, a take no
+  published program makes and the game has never been shown.  The 5
+  stands.
 - Year 48 at 3: of 10,143 programs the only four winners are the
   `takefrom s` + nearest-shredder family — the live-rejected
   direct-south choreography riding the instructor-shred false
