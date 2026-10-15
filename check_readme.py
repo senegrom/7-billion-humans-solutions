@@ -545,9 +545,10 @@ def check_queue() -> List[str]:
     """
     Checks the live queue in SOLUTIONS_TO_TRY.md against its programs in SolutionsToTry/.
 
-    Every link must resolve and every queue program must be linked; a program's labels must pair up with its jumps;
-    a "size N" in a program's file name must be its size; and an entry's heading carries the paste marker exactly
-    when one of its programs has to be pasted in.  A checkout without the queue has nothing to check.
+    Every link must resolve and every queue program must be linked; a queue program is a .txt file directly in
+    SolutionsToTry/ whose name starts with "Year NN - "; a program's labels must pair up with its jumps; a "size N"
+    in a program's file name must be its size; and an entry's heading, which names its Year, carries the paste
+    marker exactly when one of its programs has to be pasted in.  A checkout without the queue has nothing to check.
 
     Returns:
         A list of problem descriptions, empty if the queue is consistent.
@@ -578,8 +579,17 @@ def check_queue() -> List[str]:
                 if heading is not None:
                     entries.setdefault(heading_line, []).append(path)
                     marks[heading_line] = heading
+    for path in sorted(QUEUE_DIRECTORY.rglob("*")):
+        if path.is_file() and (path.parent != QUEUE_DIRECTORY or path.suffix != ".txt"):
+            problems.append(
+                f'"{path.relative_to(REPO_ROOT).as_posix()}" must be a .txt file directly in SolutionsToTry/'
+            )
     for path in sorted(QUEUE_DIRECTORY.glob("*.txt")):
         shown = f"SolutionsToTry/{path.name}"
+        if not FILE_YEAR_PATTERN.match(path.name):
+            problems.append(
+                f'"{shown}": a queue program\'s name must start with "Year NN - "'
+            )
         if path not in linked:
             problems.append(f'"{shown}" is not linked from SOLUTIONS_TO_TRY.md')
         statements = read_statements(path)
@@ -593,10 +603,13 @@ def check_queue() -> List[str]:
                 f"{solution_size(path)} commands"
             )
     for line_number, paths in entries.items():
-        year = FILE_YEAR_PATTERN.match(paths[0].name)
+        year = re.search(r"\bYear (\d{2}) - ", marks[line_number])
         if not year:
+            problems.append(
+                f"SOLUTIONS_TO_TRY.md:{line_number}: the heading names no Year"
+            )
             continue
-        number = int(year.group(1).split()[1])
+        number = int(year.group(1))
         reasons = [
             paste_only_reason(number, read_statements(path), palettes().get(number))
             for path in paths
