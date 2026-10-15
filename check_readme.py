@@ -446,12 +446,7 @@ def paste_only_reason(
     """
     for statement in statements:
         command = statement_command(statement)
-        if (
-            palette is not None
-            and command is not None
-            and command not in palette
-            and not (command in ("set", "calc") and palette & {"set", "calc"})
-        ):
+        if palette is not None and command is not None and command not in palette:
             return f"`{statement}` uses {command}, which the Year {year} editor does not offer"
         if ONE_DIRECTION_COMMAND_LIST_PATTERN.match(statement):
             return f"`{statement}` names several directions, which the editor only allows on step and foreachdir"
