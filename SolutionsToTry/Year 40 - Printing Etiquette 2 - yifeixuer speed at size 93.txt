@@ -1,0 +1,106 @@
+-- 7 Billion Humans (2145) --
+-- 40: Printing Etiquette 2 by yifeixuer --
+
+mem4 = nearest printer
+mem2 = nearest worker
+takefrom mem4
+step n
+if mem2 >= 0:
+	if ne == nothing or
+	 e == nothing:
+		step e
+		if n == nothing:
+			step n
+			mem3 = set 1
+		endif
+	else:
+		step w
+		if s == nothing:
+			step s
+		endif
+		jump a
+	endif
+else:
+	step nw
+	if c == [blank]:
+	endif
+	if c == [blank]:
+	endif
+	write 1
+	mem2 = set myitem
+	drop
+	step s
+	step s
+	jump b
+endif
+mem2 = set myitem
+write 1
+drop
+takefrom mem4
+step mem2
+step e
+step e
+step e
+step e
+write 2
+drop
+takefrom mem4
+step mem2
+step e
+step e
+step e
+write 3
+drop
+takefrom mem4
+step mem2
+step e
+step e
+write 4
+drop
+if mem3 == 1:
+	step w
+	step sw
+	step w
+	takefrom mem4
+	write 5
+	drop
+	end
+endif
+takefrom mem4
+step mem2
+step e
+write 5
+drop
+end
+a:
+mem2 = set myitem
+mem3 = set 5
+write 1
+drop
+b:
+takefrom mem4
+step mem2
+step w
+step w
+step w
+step w
+write 2
+drop
+takefrom mem4
+step mem2
+step w
+step w
+step w
+write 3
+drop
+takefrom mem4
+step mem2
+step w
+step w
+write 4
+drop
+takefrom mem4
+step mem2
+step w
+write 5
+drop

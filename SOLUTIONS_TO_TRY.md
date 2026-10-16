@@ -64,7 +64,8 @@ REJECTED_APPROACHES.md.
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
-   then the Year 62 and 67 ladders.  The Year 68 ladder waits until its
+   Year 40 at 93 (yifeixuer's 2018 program, live-only), then the Year 62
+   and 67 ladders.  The Year 68 ladder waits until its
    control completes: the published program failed all three attempts
    on 2026-08-22.
 4. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
@@ -210,6 +211,28 @@ ask for that tier again.
   needs the live A/B (control run first, discard on regression).
   Item-action count identical; 200/200 under the shuffled-dispatch
   screen re-taken 2026-09-03, at the same 455 frames.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
+
+- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt>)
+- Goal: match the speed record of 36 at size **93**, against the
+  incumbent's 176.
+- Source: yifeixuer's Steam post "Year 40 36s" of 2018-10-06
+  ([thread](https://steamcommunity.com/app/792100/discussions/0/1728711392737304334/)),
+  from game version 2145.  The same day commonnickname withdrew the
+  176-command edit (upstream pull request #92) in its favour: "Solution
+  by yifeixuer looks much better and he got it first."  It never reached
+  either repository.
+- Emulator evidence: none usable.  The model loses it 0/20 plain and
+  0/20 shuffled while winning the incumbent 20/20, but Printing Etiquette
+  is one of the levels whose crowd behaviour the model is known to miss,
+  so only the game can judge it.  Queued live-only at the maintainer's
+  request.
+- Suggested live test: run the incumbent once as the control, then this
+  program a few times; capture the completion panel, the displayed speed
+  and the editor size.  A completion at 36 s or faster takes the speed
+  row at size 93.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
