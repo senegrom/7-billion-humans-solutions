@@ -64,7 +64,9 @@ REJECTED_APPROACHES.md.
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
-   then the Year 68, 62 and 67 ladders.
+   then the Year 62 and 67 ladders.  The Year 68 ladder waits until its
+   control completes: the published program failed all three attempts
+   on 2026-08-22.
 4. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
    minutes, each to the clock; 925/1000 plain and 945/1000 shuffled
    against the published four's 618/1000 and 616/1000.

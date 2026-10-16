@@ -181,6 +181,10 @@ the [OCD+ challenge stat page](https://tomorrowcorporation.com/7billionhumansSta
 | Year 68 | [Goodbye, Humans!](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2068%20-%20Goodbye%20Humans%20(size).txt)                                   | [aqueous68](https://github.com/aqueous68), [main-gi](https://github.com/main-gi)                                 | **6** ➕  | 74-75       |
 | Year 68 | [Goodbye, Humans!](https://github.com/senegrom/7-billion-humans-solutions/blob/master/Solutions99%2B/Year%2068%20-%20Goodbye%20Humans%20(speed).txt)                                  | [commonnickname](https://github.com/commonnickname)                                                              | 172      | **16** ➕    |
 
+The Year 68 speed program did not complete in any of three attempts in the current game
+(2026-08-22); its 16 s is the 2019 report.  [SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md) keeps it as the
+control run for that level's speed ladder.
+
 ###### +50% Solutions
 
 | Year    | Name                                                                                                                                                                                  | Contributor                                                                  | Size    | Speed     |
