@@ -33,6 +33,13 @@ for records.  Candidates that still need live-game verification remain in
   neither candidate is retained.
 - Y12 speed size-16 random final-direction fusion: 0/100 while the incumbent
   was 100/100 in 197 frames; endpoint motion changes later branch entrants.
+- Y13 size 6 (drop into a gap, then re-pick the cube to its west), withdrawn
+  untested 2026-10-16: it never fills the gaps.  It moves each one to the
+  west end of its row and keeps the end cube in hand, and the level only
+  completes when every row is whole and every hand empty.  0/200 plain and
+  0/200 shuffled once the model grades whole rows and hands; it had read
+  806/1000 while the model graded only the span between a row's outermost
+  cubes.
 - Y14 pickup-first size 4: the existing live size-4 and this permutation both
   retain the cube-less worker's failed pickup/give path.  There is no
   action-animation saving to gain, and the corrected emulator makes them exactly tied
@@ -494,20 +501,19 @@ outright — a step list is a random choice live and in the model, so
 collapsing a measured comparison into one throws the information away.
 Class closed; do not re-derive.
 
-## Year 56 written-max size 4 — withdrawn before test 2026-08-18
+## Year 56 written-max size 4 — withdrawn twice (2026-08-18, and 2026-10-16 after a measured test was queued)
 
-Designed independently (write 99 on any group cube, shred it — the goal
-grades the cube by the number it shows going in), then found to be
-n05ucc4u's existing LowPercent (both) row, same size 4, same mechanism.
-Its LowPercent tier also settles the live behavior: seven workers
-converging on the one shredder fail often enough to sit under 50%.
-Curation rule: before queueing a "new" candidate, check every tier's
-rows INCLUDING (both) files — a (size)-only glob misses them.
-
-**Re-opened 2026-09-02 for a measured test.**  The withdrawal above
-inferred the live rate from the tier label alone; the measurement and
-the tie analysis that reopened it are in the queue entry in
-[SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md).
+Designed independently (write 99 on any group cube, shred it), then
+found to be n05ucc4u's existing LowPercent (both) row, same size 4, same
+mechanism.  It sits in the low-percent tier for a plain reason: an
+overwritten 99 counts only when 99 is the biggest number some group
+started with, which happens in about 43% of rooms, so no five-attempt
+live test can show it clearing 50%.  (The 2026-09-02 re-opening assumed
+the level grades the number a cube shows as it goes in; graded on
+starting maxima, the model measures it at 410/1000 plain and 410/1000
+shuffled.)  Curation rule: before queueing a "new" candidate, check
+every tier's rows INCLUDING (both) files — a (size)-only glob misses
+them.
 
 ## Exhaustive synthesis closures (2026-08-18) — do not re-derive
 
@@ -999,12 +1005,13 @@ from 61.2% to **92.5% over 1000 runs** (94.5% screened) at the same size
 walk costs 17 points.  Not a new row (same size, same tier), but a much
 stronger paste and the seed for a top-tier four if hardening reaches 99%.
 
-**Year 13, Injection Sites 2 — what "fill the gaps" means.**  A row
-passes when the span between its outermost cubes contains no empty
-floor; emptied rows impose nothing.  So the 84% six never fills a gap:
-it *pushes* each gap west, one tile per visit, until it falls off the
-row's end, and its guard cube is exactly the cube it re-picks, which is
-why its carriers are never empty-handed.  Two designs died on this:
+**Year 13, Injection Sites 2 — what "fill the gaps" means.**  The level
+completes only when every row of data is whole and nobody holds a cube.
+The model once passed a row whenever the span between its outermost
+cubes had no gap, so the 84% six "won" by pushing each gap west, one
+tile per visit, until it fell off the row's end, while its carriers kept
+the cubes they re-picked; it is withdrawn (see the list at the top).
+Two earlier designs died on the walk instead:
 - a **five** that drops only where cubes sit on both sides and never
   re-picks — right about the room, wrong about the walk: any walk that
   can revisit rows 9 and 11 also reaches the hole row and a worker's

@@ -44,6 +44,15 @@ entry below that has to be pasted now carries 📋, and the Year 23 paste
 test's reasoning is corrected: no operand or command missing from a
 level's editor had in fact been shown to survive a paste.
 
+**Goal checks corrected (2026-10-16):** several of the model's goal
+checks were corrected, and three entries change with them.  Injection
+Sites counts a row only when it is whole, Injection Sites and Good
+Neighbors stay open while anybody still holds a cube, and Local Maximums
+wants every shredded number to be the largest some group started with.
+So the Year 13 six and the Year 56 tier check are withdrawn (see
+REJECTED_APPROACHES.md), and the Year 58 four, now 0/1000, is parked
+below the 1-in-100 floor.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -53,25 +62,19 @@ level's editor had in fact been shown to survive a paste.
    pasted before (`myitem` on Year 15) did not work.
 2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
    the Year 15 five (records 8 and 6), each a couple of short runs.
-3. **Year 56 size 4**: five quick attempts (about 12 s each) on the
-   community's published four; 1000/1000 on both screens.  A three-size
-   gain in its tier: the 99+ size row is 7.
-4. **Speed tie-breaks**, each with the incumbent control run first, every
+3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
    then the Year 68, 62 and 67 ladders.
-5. **Year 13 size 6**: two or three attempts of about ten minutes each;
-   806/1000 plain, 770/1000 shuffled.  The attempt count is the tier
-   evidence.
-6. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
+4. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
    minutes, each to the clock; 925/1000 plain and 945/1000 shuffled
    against the published four's 618/1000 and 616/1000.
-7. Optional control: the Year 15 community six, already the Solutions50+
+5. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); 82.5% here.  Skip it if the
    Year 15 five in item 2 completes.
-8. Optional, for a patient session: confirmations of the published Year 38
-   community speed 6-7, Year 58 four and Year 30 probabilistic four; and
-   the Year 30 alternate five, an unpublished edit of the size-5 row whose
-   only claim is a small model speed edge that a live A/B has to confirm.
+6. Optional, for a patient session: confirmations of the published Year 38
+   community speed 6-7 and Year 30 probabilistic four; and the Year 30
+   alternate five, an unpublished edit of the size-5 row whose only claim
+   is a small model speed edge that a live A/B has to confirm.
 
 Low-percent leads are parked in their own section further down until you
 ask for that tier again.
@@ -145,45 +148,6 @@ ask for that tier again.
   every run.
 - Suggested live test: paste, confirm editor size 5, and run it two or
   three times.
-- Result: _not yet tested in the game_.
-
-### [ ] Year 56 - Local Maximums - tier check at size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 56 - Local Maximums - tier check at size 4.txt](<SolutionsToTry/Year 56 - Local Maximums - tier check at size 4.txt>)
-- Goal: promote the community's published **low-percent size 4** row to
-  Solutions50+.  Year 56 has no 50+ row at all today and its 99+ size
-  record is 7, so a confirmed 50%+ four is a three-size gain in that
-  tier.  The program is n05ucc4u's own, unchanged.
-- Mechanism: no maximum is ever searched for.  Each worker lifts the cube
-  on its north-west ring tile, overwrites it with `write 99`, and hands
-  it to the room's single shredder.  The goal grades the number a cube
-  shows as it goes in rather than the number it started with, so
-  overwriting makes the carried cube its group's maximum instead of
-  finding it.
-- Emulator evidence: **1000/1000** at the live cap and **1000/1000 under
-  the shuffled-dispatch screen** (re-taken 2026-09-14 on the current
-  engine), finishing in about 6 s of simulated time.
-- Why it sits in the low-percent tier, and what the attempts measure:
-  values are drawn 0..99, so a group can already hold a 99.  That happens
-  in **44% of worlds** (measured over 200) and the model passes those as
-  ties — it rejects a group only when a cube still shows something
-  strictly greater.  If the game demands a strict maximum the live rate
-  is about **56%**; if it accepts the tie, near 100%.  Both clear the 50%
-  bar, so the attempt is worth making, and a much lower live rate would
-  instead expose a real emulator gap on this level, which is worth
-  knowing either way.
-- **This was withdrawn once, on 2026-08-18**, on the reasoning that the
-  low-percent tier label already settled the live behaviour as workers
-  jamming at the single shredder.  What is new is measurement rather
-  than opinion: the shuffled-dispatch screen says the run is
-  order-robust, so jamming is not a failure mode in anything we model,
-  and the tie decomposition above gives a concrete mechanism for a
-  sub-100% live rate that is not crowding.  The tier label is a reason
-  to test it, not a reason to claim it.
-- Suggested live test: five attempts, about 12 s each.  Record every win
-  and loss; three or more wins supports the Solutions50+ row.  The one
-  unmodelled risk is seven workers converging on the single shredder,
-  where the model shows no crowding trouble.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
@@ -324,32 +288,6 @@ ask for that tier again.
   retain the last successful form.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 13 - Injection Sites 2 - Solutions50+ size 6 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt](<SolutionsToTry/Year 13 - Injection Sites 2 - Solutions50+ size 6.txt>)
-- Goal: a new Solutions50+ row at size **6** — one below the 99+ size
-  record of 7, and a tier above the existing low-percent 6.
-- Mechanism: the published low-percent six's random walk and gap-filling,
-  with three changes: the `step se` after the opening pickup goes, `s`
-  leaves the walk (`step w,sw,n,e,se`), and after dropping into a gap the
-  worker immediately re-picks the cube it just walked past (`pickup w`
-  under the guard that already vouches for `w == datacube`), so each
-  worker chains fills instead of retiring after one.  The opener `pickup s` is the published
-  row's own; there are no direction lists on item commands anywhere, so
-  the Year 60 list-stall class does not apply.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **806/1000 plain** at ~40,000 frames (about 640 s of game time) and
-  **770/1000 under the shuffled-dispatch screen** — several points under
-  its plain rate, so this one is mildly order-sensitive and a first
-  attempt can miss; the published low-percent row measures 83/200 =
-  41.5% on the same model, and the pickup-before-drop ordering of the
-  same idea 71%.  Found by the tier-upgrade hardening search 2026-09-02;
-  no later hardening run improved on this form.
-- Suggested live test: paste, confirm editor size 6, run at 12x; two or
-  three attempts should land a win.  Capture the completion panel — the
-  attempt count is the tier evidence.
-- Result: _not yet tested in the game_.
-
 ### [ ] Year 30 - Fill the Floor - eight-sided take at size 4 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
@@ -429,33 +367,13 @@ ask for that tier again.
   and editor size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 58 - Good Neighbors - size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
-- Goal: live-validate the existing
-  [Solutions50+ entry](<Solutions50+/Year 58 - Good Neighbors (size).txt>).
-- Emulator evidence (2026-09-28): 942/1000 at the live clock and 961/1000
-  with the clock lifted, so 39 losses are genuinely stuck worlds (the frozen
-  failure below) and the rest are slow runs; winning runs range from about
-  85 to 1,379 seconds.  That is Solutions50+, not Solutions99+.
-- Suggested live test: at least 10 runs.  A definitive frozen failure is all 20
-  workers holding cubes while the level has not completed; capture the board.
-- A hardening search from this program (2026-09-11 to 14) found no more
-  reliable four.
-- Result: **one live attempt (2026-08-17) looked like an infinite loop** and
-  was abandoned before the 1,400-second cutoff.  That matches either the
-  model's stuck worlds (about 4%) or a live/emulator divergence at
-  contended cubes; the winning tail is slow (emulator range 85-1,379
-  seconds), so a run only counts as failed at the cutoff or visibly frozen.
-  Low priority until a patient full-length session.
-
 ### [ ] Year 30 - Fill the Floor - probabilistic size 4 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
   ~1211) below the size-5 main entry.
 - **Superseded as a paste target (2026-09-14)** by the eight-sided four
-  in item 6: same size, 925/1000 against this program's 618/1000 on the
+  in item 4: same size, 925/1000 against this program's 618/1000 on the
   current engine.  Run this one only as the control if
   you want the A/B, or to confirm the published row as it stands.
 - Machine-reach note: this program takes from printers diagonally
@@ -901,6 +819,23 @@ higher-rate variant is found.  Nothing below this line needs game time.
   natural manual verification is impractical without a reproducible RNG-start
   method.  Capture the completion panel if the matching world occurs.
 - Result: _not yet tested locally in the game_.
+
+### [ ] Year 58 - Good Neighbors - size 4
+
+- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
+- Goal: live-validate the existing
+  [Solutions50+ entry](<Solutions50+/Year 58 - Good Neighbors (size).txt>).
+- **Parked 2026-10-16, below the floor.**  The level completes only when
+  nobody is holding a cube, and this program picks cubes up and never
+  puts them down: every win the model used to record ended with 19 or 20
+  of the 20 workers still holding one.  Now that the model checks hands
+  it wins **0/1000 plain and 0/1000 shuffled**; it had read 942/1000
+  while it graded only the floor.
+- The one live attempt (2026-08-17) looked like an infinite loop and was
+  abandoned before the 1,400-second cutoff, which is what this predicts:
+  workers holding cubes while the level stays open.
+- Whether the published Solutions50+ row stays is the maintainer's call.
+- Result: _one live attempt, abandoned (2026-08-17)_.
 
 ### [ ] Year 62 - The Sorting Floor - initially sorted size 0
 
