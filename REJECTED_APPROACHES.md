@@ -168,6 +168,12 @@ for records.  Candidates that still need live-game verification remain in
   pruning families produced no witness across their bounded screens.  Exact
   graph optimization shows a win must remove at least 12 interior cubes and
   at most 8 perimeter cubes; the tested policies have the wrong removal bias.
+- Y58 size 4 (the Solutions50+ row, withdrawn 2026-10-16): the level only
+  completes when nobody is holding a cube, and this program picks cubes up
+  and never puts them down.  Every win the model used to record ended with
+  19 or 20 of the 20 workers holding one, which is how its one live
+  attempt (2026-08-17) froze.  0/1000 plain and 0/1000 shuffled once the
+  model checks hands; it had read 942/1000.
 - Y60 alternate size 9: superseded by dmr's public 0/200-failure size-9 record.
 - Y62 speed empty-inner-loop size 215: 35/100 fixed-order wins versus the
   incumbent's 36/100; its win set loses seed 97, which changes from a

@@ -49,9 +49,9 @@ checks were corrected, and three entries change with them.  Injection
 Sites counts a row only when it is whole, Injection Sites and Good
 Neighbors stay open while anybody still holds a cube, and Local Maximums
 wants every shredded number to be the largest some group started with.
-So the Year 13 six and the Year 56 tier check are withdrawn (see
-REJECTED_APPROACHES.md), and the Year 58 four, now 0/1000, is parked
-below the 1-in-100 floor.
+So the Year 13 six, the Year 56 tier check and the Year 58 four (now
+0/1000, with its published Solutions50+ row) are withdrawn; see
+REJECTED_APPROACHES.md.
 
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
@@ -820,23 +820,6 @@ higher-rate variant is found.  Nothing below this line needs game time.
   natural manual verification is impractical without a reproducible RNG-start
   method.  Capture the completion panel if the matching world occurs.
 - Result: _not yet tested locally in the game_.
-
-### [ ] Year 58 - Good Neighbors - size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - size 4.txt](<SolutionsToTry/Year 58 - Good Neighbors - size 4.txt>)
-- Goal: live-validate the existing
-  [Solutions50+ entry](<Solutions50+/Year 58 - Good Neighbors (size).txt>).
-- **Parked 2026-10-16, below the floor.**  The level completes only when
-  nobody is holding a cube, and this program picks cubes up and never
-  puts them down: every win the model used to record ended with 19 or 20
-  of the 20 workers still holding one.  Now that the model checks hands
-  it wins **0/1000 plain and 0/1000 shuffled**; it had read 942/1000
-  while it graded only the floor.
-- The one live attempt (2026-08-17) looked like an infinite loop and was
-  abandoned before the 1,400-second cutoff, which is what this predicts:
-  workers holding cubes while the level stays open.
-- Whether the published Solutions50+ row stays is the maintainer's call.
-- Result: _one live attempt, abandoned (2026-08-17)_.
 
 ### [ ] Year 62 - The Sorting Floor - initially sorted size 0
 
