@@ -323,6 +323,9 @@ for records.  Candidates that still need live-game verification remain in
   a longer queue wait).  The live ladder protocol (test one edit at a
   time, keep the last non-regressing rung) is therefore mandatory for
   every speed-row size reduction; the simulator cannot pre-clear them.
+  A cancelling pair of opposite steps counts as one edit, since deleting
+  only one of them changes where the walk ends (the Year 38 size-140 and
+  Year 59 size-142 rungs each remove such a pair).
 - Y15 event-gated size 5 (random `step n,s` + guarded pickup/give):
   REFUTED LIVE by the maintainer -- "again all workers die".  The random
   walk steps workers onto the shredder row, and STEPPING ONTO A SHREDDER

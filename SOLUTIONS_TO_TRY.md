@@ -268,9 +268,11 @@ ask for that tier again.
   size.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 208/209)
+### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 206-209)
 
 - **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt](<SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt>)
+- **Fallback (size 206):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt>)
+- **Fallback (size 207):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt>)
 - **Fallback (size 208):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt>)
 - **Fallback (size 209):** [SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt](<SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt>)
 - Goal: retain the current displayed speed record of 41 while reducing the
@@ -280,14 +282,15 @@ ask for that tier again.
   consecutive `tell everyone hi` commands.
 - Why they may be safe: every `mem2` occurrence is an assignment, never a read,
   and the program contains no `listenfor`; all five deleted commands are
-  cadence only.  Size 208 deletes one store and one tell; the conservative
-  tell-only fallback is size 209.
+  cadence only.  The ladder removes one of them per rung: 209 deletes one
+  tell, 208 one store as well, 207 the second tell, 206 a second store,
+  and 205 the third.
 - Timing caveat: candidate and incumbent both fail in the current model, so
   it cannot referee either edit; this remains live-only.
 - Expected editor size: **205**; expected displayed speed: **41**.
-- Suggested live test: run the incumbent, size 209, size 208, and finally size
-  205.  Stop the ladder at the first failure or displayed-speed regression and
-  retain the last successful form.
+- Suggested live test: run the incumbent, then sizes 209, 208, 207, 206 and
+  finally 205.  Stop the ladder at the first failure or displayed-speed
+  regression and retain the last successful form.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 30 - Fill the Floor - eight-sided take at size 4 📋
