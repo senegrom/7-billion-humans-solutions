@@ -47,8 +47,8 @@ with 📋 in the README so you can tell before you try to reproduce them.
 `check_readme.py` checks every marker against it.
 
 If you submit a solution that has to be pasted in, please say so in your pull request and add the marker. If you spot
-a marker that looks wrong, open an issue or a pull request and say which command you could or could not build, and at
-which level.
+a marker that looks wrong, open a pull request or post on the [Steam thread](https://steamcommunity.com/app/792100/discussions/0/1739968490573286109/) and say which command you could
+or could not build, and at which level.
 
 ## Credit
 
@@ -56,11 +56,11 @@ The **Contributor** column records who provided the solution to this repository,
 first discovered it. Many of these solutions were found independently by several people, and some were posted
 elsewhere first.
 
-If you know of an earlier public posting of a solution, open an issue with a dated link to it (a Steam thread, a
-Twitch VOD, a forum post) and the credit will be updated.
+If you know of an earlier public posting of a solution, give a dated link to it (a Steam thread, a Twitch VOD, a
+forum post) in a pull request or on the Steam thread, and the credit will be updated.
 
 Each row names whoever produced the current record; rows carried over from the original repository keep the names
 they were published with.  When an existing solution is improved (for example fewer commands at the same reported
 speed), the improver becomes the contributor in place of the earlier authors.
 
-If you would rather be credited under a different name or link, say so in your pull request or open an issue.
+If you would rather be credited under a different name or link, say so in your pull request or on the Steam thread.
