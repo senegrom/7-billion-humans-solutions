@@ -804,12 +804,13 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Goal: improve the existing size-4 SolutionsLowPercent entry and size-7 main
   entry to size 3.
 - Mechanism: each worker takes the northwest cube from its own eight-cube
-  group and feeds its nearest shredder.  The level wins exactly when all seven
-  selected cubes are already weak maxima of their groups, so the omitted
-  `write 99` is unnecessary in that world.
-- Exact probability: each selected value is maximal with probability
-  `sum(k^7, k=1..100) / 100^8`; across seven independent groups the win rate
-  is `6.2945867338e-7`, or about one in 1,588,667.
+  group and feeds its nearest shredder.  The level wins exactly when every
+  shredded number is the largest number some group started with, its own
+  or another's, so the omitted `write 99` is unnecessary in that world.
+- Exact probability (corrected 2026-10-16): `2.1092691716e-6`, or about
+  one in 474,098.  The figure first given here, `6.2945867338e-7` (one in
+  1,588,667), counted only the worlds where every shredded cube is its own
+  group's maximum.
 - Witness: an independent search of the model's random worlds found seed
   3,281,406.  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
   group.  An isolated seed-offset emulator run then won in 310 frames with
