@@ -1,3 +1,0 @@
-step nw
-pickup ne
-giveto w,s

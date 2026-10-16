@@ -90,6 +90,12 @@ for records.  Candidates that still need live-game verification remain in
   the worker onto the source tile, so terminal `drop` restores the copy on the
   center square; the extra restore step in the queued size-5 form is essential.
 - Y34 alternate size 7 safe-init rewrite: 29/100 at the real cutoff.
+- Y34 one-shot low-percent size 4 (each of four workers shreds one nearest
+  cube; it wins when those are the four column minima), rejected
+  2026-10-16 from the parked long shots: a worker that loses the race for
+  a cube still gives, empty-handed, at the shredder and is lost, and the
+  model does not win every run, so the working rules' one exception does
+  not cover it.  5/10,000 under the machine rules, as before.
 - Y36 size 7: eventual emulator wins take up to roughly 6,400 seconds, beyond
   the game's 1,400-second limit.
 - Y36 deletion of `comment 1` from the size-211 speed candidate: runtime-neutral
@@ -117,6 +123,13 @@ for records.  Candidates that still need live-game verification remain in
   cut preserves the whole ascent and pickup square, but reproduced the same
   decisive shared-seed regressions: seed 5 changed 18→19 item actions and seed
   12 changed 17→18 while slowing 382→460 frames.  It was stopped there.
+- Y38 cardinal-relay low-percent size 3 and one-shot low-percent size 4,
+  rejected 2026-10-16 from the parked low-percent leads: each can reach an
+  empty-handed give at the shredder, which costs the worker (the relay's
+  supervisor gives straight after its empty pickup; the one-shot's race
+  losers still give), and the model does not win every run, so the
+  working rules' one exception does not cover them.  53/3,000 and
+  23/1,000 under the machine rules, as before.
 - Y39 unguarded-printer size 5: 0/100 at a 20,000-frame diagnostic cap; random
   requeueing did not produce the required exactly-five-sheets-per-worker state.
 - Y39 end-only speed size 172: initially superseded in the emulator by the

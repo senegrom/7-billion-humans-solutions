@@ -412,35 +412,6 @@ ask for that tier again.
 Valid candidates below the Solutions50+ bar.  Not for the next session;
 kept intact so nothing is rediscovered.
 
-### [ ] Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - cardinal-relay low-percent size 3.txt>)
-- Goal: establish a size-**3** SolutionsLowPercent row below the size-8
-  Solutions50+ and size-10 Solutions99+ entries.
-- Mechanism: the bottom workers move northwest and pick distinct northeast
-  cubes.  Only the leftmost carrier can give west to the empty supervisor;
-  every other carrier targets a still-full neighbour and immediately errors.
-  The rendezvous pins the supervisor through its empty-pickup error, after
-  which its `giveto w,s` selects the cardinal south shredder.
-- The level wins exactly when the one relayed cube is a weak global minimum.
-  The intended random-state model gives about **2.23%** wins; an exact
-  2,000,000-state spot check produced 2.23085%.
-- Expected editor size: **3**; the multi-direction `giveto` syntax is already
-  established in exported solutions.
-- Suggested live test: 100-200 fast fresh attempts at 12x, capturing the first
-  completion and editor size.  Do not substitute diagonal `giveto sw`.
-- Local-emulator cross-check (2026-08-22): 53/3,000 = **1.77%** against the
-  2.23% claim — the same order of magnitude in a second model, still above
-  the queue floor.
-- Caution (2026-09-06 machine rules): the supervisor's give runs straight
-  after its empty pickup, so if the relay's timing slips it gives
-  empty-handed beside the shredder and is lost.  Re-screened 2026-10-14
-  under those rules: 53/3,000 plain and 53/3,000 shuffled, the same rate
-  as before.  It can still reach that give, outside the working rules'
-  only exception to the ban on it (the model wins every run), so whether
-  it stays parked is the maintainer's call before this tier reopens.
-- Result: _not yet tested locally in the game_.
-
 ### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
 
 - **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - static-cull low-percent size 3.txt>)
@@ -645,27 +616,6 @@ kept intact so nothing is rediscovered.
   the first completion panel with editor size 5.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 38 - Seek and Destroy 3 - one-shot low-percent size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - one-shot low-percent size 4.txt>)
-- Goal: establish a size-4 SolutionsLowPercent record below the size-10 main
-  and size-8 Solutions50+ entries.
-- Mechanism: each worker selects and shreds one nearest cube.  The level wins
-  only when the first shredded cube happens to be the room's global minimum;
-  routing and selection do not inspect values.
-- Capped-emulator evidence: 23/1,000 wins (2.3%); every win completed in 133
-  frames with displayed speed 3.
-- Expected editor size: **4**; all commands are available in Year 38.
-- Suggested live test: 50-100 fresh runs; each attempt ends within a few
-  seconds, so reset immediately after an explicit failure.
-- Caution (2026-09-06 machine rules): a worker that loses the race for a
-  cube still gives, empty-handed, at the shredder and is lost.  Re-screened
-  2026-10-14 under those rules: 23/1,000 plain and 23/1,000 shuffled, the
-  same rate as before.  It can still reach that give, outside the working
-  rules' only exception to the ban on it (the model wins every run), so
-  whether it stays parked is the maintainer's call.
-- Result: _not yet tested locally in the game_.
-
 ## Parked long shots (win rate below 1 in 100)
 
 Per the maintainer's rule, candidates that win less often than **1 in
@@ -857,26 +807,4 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Expected editor size: **5**; all commands are available in Year 33.
 - Suggested live test: repeated quick runs; roughly a few hundred attempts per
   observed win is plausible, but record the actual tie behavior.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 34 - Seek and Destroy 1 - one-shot low-percent size 4
-
-- **Paste-ready program:** [SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt](<SolutionsToTry/Year 34 - Seek and Destroy 1 - one-shot low-percent size 4.txt>)
-- Goal: establish a size-4 SolutionsLowPercent record below the size-7 main
-  entry.
-- Mechanism: each of four workers independently selects and shreds one nearest
-  cube; the level wins only when those choices are the minimum cube in every
-  column.  Cross-column nearest ties make the exact probability layout-dependent.
-- Capped-emulator evidence: 5/10,000 wins (0.05%); every win completed in 187
-  frames with displayed speed 3.  Seed 3,769 was independently isolated as a
-  reproducible winning world with 8 item actions.
-- Expected editor size: **4**; all commands are available in Year 34.
-- Suggested live test: this may require thousands of quick resets.  Confirm
-  that each successful run reports all four per-column minima before promotion.
-- Caution (2026-09-06 machine rules): a worker that loses the race for a
-  cube still gives, empty-handed, at the shredder and is lost.  Re-screened
-  2026-10-14 under those rules: 5/10,000, the same rate as before.  It can
-  still reach that give, outside the working rules' only exception to the
-  ban on it (the model wins every run), so whether it stays parked is the
-  maintainer's call.
 - Result: _not yet tested locally in the game_.
