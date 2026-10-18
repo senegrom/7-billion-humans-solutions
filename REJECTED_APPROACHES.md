@@ -89,6 +89,12 @@ for records.  Candidates that still need live-game verification remain in
 - Y06 monotone low-percent size 3 (parked, 3/10,000), withdrawn
   2026-10-18 for the same reason: its eight-square pickup list can gather
   six or more things in the maze.
+- Y62 list-merge speed tie-break size 213 (queued 2026-10-18), withdrawn
+  the same day under the jitter rule: over 1000 worlds on the corrected
+  model it wins 125 plain and 100 shuffled against the incumbent's 150
+  and 145.  The 9/20-and-5/20 agreement that queued it was a small
+  sample; `pickup s,se` is not equivalent to the guarded block it
+  replaced.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y31 diagonal size-4 families: `takefrom` failed 0/10 because workers steal

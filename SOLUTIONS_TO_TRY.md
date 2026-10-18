@@ -59,6 +59,16 @@ So the Year 13 six, the Year 56 tier check and the Year 58 four (now
 0/1000, with its published Solutions50+ row) are withdrawn; see
 REJECTED_APPROACHES.md.
 
+**Model re-measured (2026-10-18, after a review of the emulator against
+the game's own code):** every queued program was measured again on the
+corrected model, and the entries below quote the new figures.  Two
+working rules change with it (see CLAUDE.md and the 2026-10-18 section of
+REJECTED_APPROACHES.md): no give or take list falls through, so a give
+list that names a printer goes to the printer, and an empty-handed give
+or take at a shredder kills in every room.  The Year 62 list merge at 213
+is withdrawn: it now does materially worse than its incumbent.  The Year
+44 transient-survivor three leaves the parked long shots.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -71,12 +81,11 @@ REJECTED_APPROACHES.md.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
    Year 58 at 102, Year 40 at 93 (yifeixuer's 2018 program, live-only),
-   then the Year 62 ladder and its separate list merge at 213, and the
-   Year 67 ladder.  The Year 68 ladder waits until its
-   control completes: the published program failed all three attempts
-   on 2026-08-22.
+   then the Year 62 ladder and the Year 67 ladder.  The Year 68 ladder
+   waits until its control completes: the published program failed all
+   three attempts on 2026-08-22.
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); about 82% here.  Skip it if the
+   row on public evidence (16/25 live); about 81% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
@@ -145,7 +154,9 @@ ask for that tier again.
   shredder once, then keeps taking the nearest cube and feeding that
   shredder.
 - Emulator evidence, level palette lifted: **1000/1000 plain and
-  1000/1000 shuffled**, about 22 s of game time.
+  1000/1000 shuffled**, about 16 s of game time (re-measured 2026-10-18;
+  it was about 22 s while the model let `nearest datacube` find cubes in
+  other workers' hands, which the game does not).
 - Caution: a worker that loses a race for a cube still walks to its
   shredder and, arriving empty-handed, is lost; that is the mechanism
   behind the earlier Shred Lines failures.  In the model the other
@@ -171,7 +182,10 @@ ask for that tier again.
   620 (the fallback: 200/200 at 614).  Item-action count identical.
   Re-screened 2026-09-03 with the build that implements the screen:
   199/200 for the candidate and 200/200 for the fallback, frames and
-  item counts unchanged.
+  item counts unchanged.  Re-measured 2026-10-18 over 1000 worlds: the
+  candidate 994 plain and 993 shuffled at 608 frames, the fallback 998
+  on both at 617, the incumbent 998 on both at 618, item counts within
+  0.1 of each other.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
@@ -195,7 +209,11 @@ ask for that tier again.
   jump takes its label with it.)
 - Emulator evidence (corpus deletion sweep, re-run on the fixed file):
   100/100 wins at exactly the incumbent's 230.0 frames, and 200/200
-  under the shuffled-dispatch screen re-taken 2026-09-03.  The only live
+  under the shuffled-dispatch screen re-taken 2026-09-03.  Re-measured
+  2026-10-18: 1000/1000 plain and shuffled for both, at 230 frames.  The
+  candidate counts 25 item actions to the incumbent's 24; the one extra
+  is the `if e == nothing` re-test the deleted jump used to skip, with
+  every step, pickup and drop the same.  The only live
   risk is that the three extra tests cost wall time on the longest route
   (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
@@ -214,7 +232,9 @@ ask for that tier again.
   incumbent's 447 — 8 frames slower in the model, so the displayed speed
   needs the live A/B (control run first, discard on regression).
   Item-action count identical; 200/200 under the shuffled-dispatch
-  screen re-taken 2026-09-03, at the same 455 frames.
+  screen re-taken 2026-09-03, at the same 455 frames.  Re-measured
+  2026-10-18: 1000/1000 plain and shuffled at 452 frames against the
+  incumbent's 443, still 9 frames slower.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 58 - Good Neighbors - list-merge speed tie-break at size 102 📋
@@ -227,8 +247,8 @@ ask for that tier again.
   over a bare square and takes the first thing it meets in slot order, so
   the list lifts the north-west cube when it is there and the north-east
   one otherwise, as the block did.
-- Emulator evidence (2026-10-18, under the corrected list rule): 20/20
-  plain and 20/20 shuffled, frame-identical to the incumbent at 230
+- Emulator evidence (2026-10-18, on the corrected model): 1000/1000
+  plain and 1000/1000 shuffled, frame-identical to the incumbent at 230
   frames with the same item-action count (38).
 - History: this merge was closed on 2026-08-17 on the old reading of the
   Year 60 failure (that a list never passes over an empty square); the
@@ -249,10 +269,10 @@ ask for that tier again.
   176-command edit (upstream pull request #92) in its favour: "Solution
   by yifeixuer looks much better and he got it first."  It never reached
   either repository.
-- Emulator evidence: none usable.  The model loses it 0/20 plain and
-  0/20 shuffled while winning the incumbent 20/20, but Printing Etiquette
-  is one of the levels whose crowd behaviour the model is known to miss,
-  so only the game can judge it.  Queued live-only at the maintainer's
+- Emulator evidence: none usable.  The model loses it 0/200 plain and
+  0/200 shuffled while winning the incumbent 1000/1000 (2026-10-18), but
+  Printing Etiquette is one of the levels whose crowd behaviour the model
+  is known to miss, so only the game can judge it.  Queued live-only at the maintainer's
   request.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
@@ -309,31 +329,17 @@ ask for that tier again.
 - Live-only: the model under-reproduces the published incumbent (15/40
   worlds), so those paired aggregates support equivalence but cannot
   establish live reliability or timing.
+- Re-measured 2026-10-18 over 1000 worlds on the corrected model: the
+  incumbent wins 150 plain and 145 shuffled, size 215 wins 150 and 128,
+  and size 214 150 and 118.  Plain they are frame-identical; under the
+  shuffled screen the rungs trail the incumbent, the 214 by about two
+  standard errors, so stop the ladder at the first live regression.
 - Expected editor size: **214** if the extra cadence cut survives; otherwise
   use the tested **215** fallback.
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
   stop at the first regression and capture each completion panel and editor
   size.
 - Result: _not yet tested locally in the game_.
-
-### [ ] Year 62 - The Sorting Floor - list-merge speed tie-break at size 213 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - list-merge speed tie-break at size 213.txt](<SolutionsToTry/Year 62 - The Sorting Floor - list-merge speed tie-break at size 213.txt>)
-- Goal: retain the displayed speed range of 9-12 while reducing the size
-  from 216 to **213**.
-- Exact edit: the `if mem2 == mem4 and mem2 == mem3: pickup se / else:
-  pickup s / endif` block becomes `pickup s,se`, which lifts the south
-  cube when it is there and the south-east one otherwise.
-- Emulator evidence (2026-10-18, under the corrected list rule): identical
-  to the incumbent, 9/20 plain and 5/20 shuffled with the same frames and
-  item counts.  The model under-reproduces the published incumbent on this
-  level, so this shows equivalence only: live-only.
-- A different edit from the duplicate-store ladder above; test them
-  separately, one edit per rung.  Paste-only: the editor gives `pickup` no
-  lists.
-- Suggested live test: incumbent once as control, then the candidate;
-  stop at any regression.
-- Result: _not yet tested in the game_.
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 206-209)
 
@@ -375,8 +381,10 @@ ask for that tier again.
   REJECTED_APPROACHES.md; this six is now the level's smallest published
   program.
 - Measured here under the machine rules: **82.5%** at the live cap
-  (95.5% before them), about 54,600 frames; re-measured 2026-10-18 on
-  the current model at 163/200 plain and 175/200 shuffled.
+  (95.5% before them), about 54,600 frames; re-measured 2026-10-18 at
+  163/200 plain and 175/200 shuffled, and again after the same day's
+  review corrections at 162/200 plain and 165/200 shuffled, about 58,600
+  frames.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -393,8 +401,9 @@ ask for that tier again.
   program, imported to Solutions50+ below our 9-10 main speed row
   (found in the 2026-08-17 source audit; it was never in our tables).
 - Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
-- Local emulator: 36/50 wins, average 423.6 frames (win/fail evidence
-  only; displayed speed is async wall-time and theirs is live-measured).
+- Local emulator: 669/1000 plain and shuffled (2026-10-18; 36/50
+  before), average 429 frames (win/fail evidence only; displayed speed is
+  async wall-time and theirs is live-measured).
 - Expected editor size: **122**; glitchless, so it should also be
   typable/editable normally.
 - Suggested live test: repeated runs until a win; capture displayed speed
@@ -414,9 +423,10 @@ ask for that tier again.
   printer take is safe, unlike the diagonal shredder give that killed
   Year 21's givers.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 618/1000 plain and 616/1000 shuffled
-  (2026-09-14).  Winning runs average about 1,211 s, so they often finish
-  only just before the game deadline.
+- Current emulator evidence: 147/200 plain and 149/200 shuffled
+  (2026-10-18; 618/1000 and 616/1000 on 2026-09-14).  Winning runs average
+  about 1,126 s, so they often finish only just before the game
+  deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
@@ -436,6 +446,9 @@ ask for that tier again.
   win rates match on both screens, but the edge shrinks from about 33
   seconds to about 8 under the shuffled screen, and the incumbent's actual
   game score is about 588, so the improvement may not carry over.
+  Re-measured 2026-10-18 over 200 worlds: plain, candidate 197/200 at 616
+  seconds against the incumbent's 200/200 at 647; shuffled, 199/200 at
+  641 against 199/200 at 647, an edge of about 6 seconds.
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
@@ -455,7 +468,9 @@ kept intact so nothing is rediscovered.
   members of the level's shuffled 0-6 set; the remaining three hold ordinary
   random cubes.  A win occurs when those three supply the missing values.
 - Nominal probability: `3! / 7^3 = 6 / 343`, or **1.749271%**.  A faithful
-  1,000,000-state model produced 17,405 wins (1.7405%).
+  1,000,000-state model produced 17,405 wins (1.7405%).  The emulator,
+  which now deals the level's 0-6 at run start as the game does, gives
+  12/1000 plain and 12/1000 shuffled (2026-10-18).
 - Expected editor size: **3**; the condition has three terms, below the parser
   limit, and `if`, `calc`, and `pickup` are all available in Year 44.
 - Suggested live test: 100-200 fresh attempts at 12x.  On a stable loss, verify
@@ -481,7 +496,8 @@ kept intact so nothing is rediscovered.
   first form, `pickup w`, would not paste.  The list passes over the
   worker's own bare square and lifts the cube to the west, so the run is
   the same; the model gives the new form 66/5,000 = 1.32% plain and the
-  same shuffled, in line with the exact 1.367%.
+  same shuffled, in line with the exact 1.367%; 15/1000 on both
+  screens after the 2026-10-18 corrections.
 - Suggested live test: repeated fresh attempts at 12x, resetting shortly
   after the longest successful path; do not wait for the 1,400-second cap when
   the worker is visibly parked in the losing corner.
@@ -504,7 +520,9 @@ kept intact so nothing is rediscovered.
 - Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
   16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
   16.2.  The win rate drops from about 52% to about 38-45% (still the
-  low-percent tier) with the speed distribution unchanged.
+  low-percent tier) with the speed distribution unchanged.  Re-measured
+  2026-10-18 over 1000 worlds: incumbent 508, size 21 426, size 19 355,
+  plain and shuffled alike, all at about 16 modelled seconds.
 - Suggested live test: repeated ~14-second runs until a win; capture the
   displayed speed and editor size.
 - Result: _not yet tested in the game_.
@@ -518,7 +536,9 @@ kept intact so nothing is rediscovered.
   `if n == nothing: step n; else: step s; endif` with random `step n,s`.
 - Capped-emulator evidence: 1/100 candidate runs won in 278 frames with
   modelled speed 5 and 18 item actions.  The incumbent was 100/100 at 311
-  frames and 24 actions; canonical sizes are 13 and 16.
+  frames and 24 actions; canonical sizes are 13 and 16.  Re-measured
+  2026-10-18: 17/1000 plain and shuffled at 328 frames, the incumbent
+  1000/1000 at 361.
 - Construction caveat: random multi-direction movement is paste-only here, so
   retain the clipboard marker and classify the program as LowPercent.
 - Suggested live test: repeated quick attempts; on a win, capture both the
@@ -534,8 +554,10 @@ kept intact so nothing is rediscovered.
   `if ne != datacube: step ne; else: step sw; endif` with random `step ne,sw`.
 - Capped-emulator A/B evidence: candidate won 23/100.  Every winning run was
   frame-identical to the incumbent at 326 frames and modelled speed 6, while
-  using 21 instead of 24 item actions.  Canonical sizes are 17 and 20; the
-  incumbent's authoritative live score is 5.
+  using 21 instead of 24 item actions.  Re-measured 2026-10-18: 235/1000
+  plain, every win at the incumbent's 370 frames (it wins 1000/1000), and
+  175/1000 shuffled, averaging 399; 24 item actions to its 27.  Canonical
+  sizes are 17 and 20; the incumbent's authoritative live score is 5.
 - Construction caveat: the random diagonal step is paste-only, so retain the
   clipboard marker and LowPercent classification.
 - Suggested live test: a handful of attempts should normally produce a win;
@@ -556,7 +578,8 @@ kept intact so nothing is rediscovered.
   shredder.  `nearest` itself is timing-free in the validated model.
 - Same-seed emulator A/B evidence: candidate and incumbent won the identical
   5/20 seeds, each in exactly 411 frames with modelled speed 7 and 11 item
-  actions.  Canonical sizes are 83 and 84.
+  actions.  Re-measured 2026-10-18: both 322/1000 plain and shuffled, at
+  the same 411 frames and 11 item actions.  Canonical sizes are 83 and 84.
 - Expected editor size: **83**; expected displayed speed: **about 6**.
 - Suggested live test: run repeated candidate attempts until it wins, then
   capture the completion panel and editor size.
@@ -571,11 +594,36 @@ kept intact so nothing is rediscovered.
   [original posting](https://github.com/abfipes12/7-Billion-Humans-Solutions/blob/main/Test%20Solutions/low%25/Year%2044%20-%20Unique%20Fashion%20Party),
   whose header reads "failed 40 out of 50 => 10% successful": 40 failures in
   50 runs would be 20%, so the line is internally inconsistent.
-- Current emulator evidence: 0/20.  Year 44's model is already known to have an
-  unfaithful randomized layout, so that result cannot overrule the live source.
+- Current emulator evidence (2026-10-18, now that the model deals the
+  level's 0-6 at the start of every run, as the game does): **73/1000
+  plain and 92/1000 shuffled**, in line with the live source's "10%".
+  It read 0/20 while the model drew those seven cubes independently.
 - Expected editor size: **4**.
 - Suggested live test: 10-20 runs; capture the final cube/worker arrangement on
   every failure.
+- Result: _not yet tested locally in the game_.
+
+### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
+
+- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt>)
+- Goal: establish a size-3 SolutionsLowPercent record below the public size-4
+  low-percent entry and size-5 main entry.
+- Mechanism: all 45 workers take their cubes and walk toward the room's holes.
+  The goal is checked every frame, so the run wins during any transient frame
+  with exactly seven survivors whose held values are a permutation of 0-6;
+  the workers do not need to remain stable afterward.
+- Constructive evidence: 38 workers can follow finite routes into upper/bottom
+  holes within 13 strides while seven designated workers take longer cardinal
+  routes, leaving a nonempty exactly-seven window.
+- Model evidence (2026-10-18, now that the model deals the level's 0-6 at
+  the start of every run, as the game does): **10/1000 plain and 17/1000
+  shuffled**, on the 1-in-100 line, so it moved up from the parked long
+  shots.  The model now wins the public size-4 program too (73/1000 plain,
+  92/1000 shuffled).  The figure first given here, `7! / 7^7` (about
+  0.612%) for value uniqueness, assumed independent draws.
+- Expected editor size: **3**.
+- Suggested live test: repeated fresh runs, capturing every exactly-seven
+  survivor pattern and the first completion panel.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 05 - An Important Decision - absorbing low-percent size 2 📋
@@ -589,7 +637,8 @@ kept intact so nothing is rediscovered.
   the exact success probability is `24 / 2,401`, or about 1.00%.
 - Capped-emulator evidence: 12/1,000 wins (1.2%), average winning speed 8.0,
   range 5-14, and winning frames 253-862.  The observed rate agrees with the
-  static probability and no winning run approached the deadline.
+  static probability and no winning run approached the deadline.  After the
+  2026-10-18 corrections: 2/200 plain and 4/200 shuffled.
 - Expected editor size: **2**.
 - Entry method: paste the text; random multi-direction `step w,e` is not
   constructible from Year 05's normal editor palette.
@@ -609,7 +658,8 @@ kept intact so nothing is rediscovered.
   program.  Removing the initializer creates additional hole-loss paths but
   leaves collision-free successful routes reachable.
 - Capped-emulator evidence: 14/100 wins; winning speed averaged 365.9, ranged
-  from 59 to 1,223, and used 3,635-76,436 frames.
+  from 59 to 1,223, and used 3,635-76,436 frames.  Re-measured 2026-10-18:
+  33/200 plain and 30/200 shuffled, winning runs averaging about 437 s.
 - Expected editor size: **5**.
 - Entry method: paste the text because the six-direction random step is not
   constructible from the normal editor controls.
@@ -625,10 +675,12 @@ kept intact so nothing is rediscovered.
 - Mechanism: every worker takes its own cube, then performs an independent
   north/south random walk until falling through the disposal hole.  The level
   wins when all non-maximum holders have died while at least one maximum holder
-  remains alive; otherwise the run absorbs as a loss.
-- Capped-emulator evidence: 84/1,000 wins; winning speed averaged 14.4, ranged
-  from 5 to 34, and used 307-2,071 frames (876 average).  Every win completed
-  far before the deadline.
+  remains alive, and the survivors, who walk on for ever, keep holding the
+  maximum for more than a second; losing the last maximum cube ends the run.
+- Emulator evidence (2026-10-18, with the game's own goal and its deal of
+  ten different numbers): 93/1,000 plain and 95/1,000 shuffled, winning runs
+  averaging 1,018 frames (about 16 s); 84/1,000 before.  Every win
+  completes far before the deadline.
 - Expected editor size: **3**.
 - Entry method: paste the text because `step n,s` is a random multi-direction
   command unavailable from the normal editor controls.
@@ -649,7 +701,8 @@ kept intact so nothing is rediscovered.
   range modes gives an intended-world probability about 0.259.  The 0-6 mode
   alone has probability about 0.514 of averaging to 3.
 - Capped-emulator evidence: 20/100 wins; winning speed averaged 30.6, ranged
-  from 29 to 31, and used 1,786-1,936 frames.
+  from 29 to 31, and used 1,786-1,936 frames.  Re-measured 2026-10-18:
+  49/200 plain and shuffled, winning runs at about 1,910 frames.
 - Expected editor size: **5**; all commands are available in Year 54.
 - Suggested live test: repeated quick runs; record the random range and capture
   the first completion panel with editor size 5.
@@ -675,32 +728,13 @@ higher-rate variant is found.  Nothing below this line needs game time.
   the corresponding seven held labels are the complete set 0-6.
 - Probability evidence: 131/200,000 faithful modeled states won (0.0655%);
   the iid calculation is 0.072778626%, and a concrete winning start state
-  exists in the model.
+  exists in the model.  Both figures assume the seven cubes are drawn
+  independently; the game deals them 0-6 once each, and the corrected
+  emulator gives 0/1000 plain and shuffled (2026-10-18).
 - Expected editor size: **2**.  Size 1 cannot both acquire cubes and remove
   redundant workers.
 - Suggested live test: none under the current cutoff; retain for a future
   reproducible RNG harness or a lucky natural completion.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 44 - Unique Fashion Party - transient-survivor size 3
-
-- **Paste-ready program:** [SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt](<SolutionsToTry/Year 44 - Unique Fashion Party - transient-survivor size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the public size-4
-  low-percent entry and size-5 main entry.
-- Mechanism: all 45 workers take their cubes and walk toward the room's holes.
-  The goal is checked every frame, so the run wins during any transient frame
-  with exactly seven survivors whose held values are a permutation of 0-6;
-  the workers do not need to remain stable afterward.
-- Constructive evidence: 38 workers can follow finite routes into upper/bottom
-  holes within 13 strides while seven designated workers take longer cardinal
-  routes, leaving a nonempty exactly-seven window.  Conditional on a fixed
-  last-seven set, value uniqueness has probability `7! / 7^7`, about 0.612%.
-- Fidelity caveat: the current Year 44 emulator loses even the public size-4
-  program and is not a trustworthy judge of large crowds.  This is a live-only
-  candidate with a positive finite schedule, not a measured success rate.
-- Expected editor size: **3**.
-- Suggested live test: repeated fresh runs, capturing every exactly-seven
-  survivor pattern and the first completion panel.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 12 - Unzip - one-shot low-percent size 3 📋
