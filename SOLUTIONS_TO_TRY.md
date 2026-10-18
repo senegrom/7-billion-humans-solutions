@@ -475,6 +475,12 @@ kept intact so nothing is rediscovered.
 - Expected editor size: **5**; the label is free and the program has one
   pickup, three steps, and one jump.  Paste is required for the direction
   lists at this early level.
+- The pickup is written `pickup c,w` (2026-10-18): the game refuses a
+  pickup naming a single direction other than `c` on Years 2-6, so the
+  first form, `pickup w`, would not paste.  The list passes over the
+  worker's own bare square and lifts the cube to the west, so the run is
+  the same; the model gives the new form 66/5,000 = 1.32% plain and the
+  same shuffled, in line with the exact 1.367%.
 - Suggested live test: repeated fresh attempts at 12x, resetting shortly
   after the longest successful path; do not wait for the 1,400-second cap when
   the worker is visibly parked in the losing corner.

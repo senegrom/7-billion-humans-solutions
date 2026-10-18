@@ -1,5 +1,5 @@
 a:
-pickup w
+pickup c,w
 step s,se
 step sw,e
 step sw,se
