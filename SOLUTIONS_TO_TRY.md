@@ -76,7 +76,7 @@ REJECTED_APPROACHES.md.
    control completes: the published program failed all three attempts
    on 2026-08-22.
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); 82.5% here.  Skip it if the
+   row on public evidence (16/25 live); about 82% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
@@ -375,7 +375,8 @@ ask for that tier again.
   REJECTED_APPROACHES.md; this six is now the level's smallest published
   program.
 - Measured here under the machine rules: **82.5%** at the live cap
-  (95.5% before them), about 54,600 frames.
+  (95.5% before them), about 54,600 frames; re-measured 2026-10-18 on
+  the current model at 163/200 plain and 175/200 shuffled.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
