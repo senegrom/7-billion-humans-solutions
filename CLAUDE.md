@@ -66,8 +66,11 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
 - A give whose direction list resolves onto a printer destroys it and
   ends the run.  Give-list fall-through is real, so never queue a give
   list that can land on a printer.
-- A pickup list does not skip an empty listed square (Year 60), so never
-  rely on one doing so.
+- A pickup list passes over bare squares, but the first thing it meets in
+  slot order decides: a wall, hole or worker before the cube means no
+  cube.  Year 04's 99+ `pickup c,e` starts on a bare square and completes;
+  the fused Year 60 `pickup w,se` failed live because its leftmost
+  worker's first listed thing is the wall to its west.
 - A direction list is a set, stored in the slot order
   nw,w,sw,n,c,s,ne,e,se: a direction cannot be named twice, and the
   order in which a list is written carries no meaning.

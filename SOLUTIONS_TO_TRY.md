@@ -722,8 +722,9 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Expected editor size: **3**.
 - Entry method: paste the text; the four-direction random step and eight-target
   pickup are not constructible from Year 06's normal editor controls.
-- Caution: the eight-target pickup has to skip empty squares, which the
-  game does not do (Year 60), so the model's rate is not trustworthy.
+- The eight-target pickup passes over bare squares and stops at the first
+  thing it meets, as the game's lists do; re-measured 2026-10-18 under
+  that rule at 3/10,000.
 - Suggested live test: repeated quick resets only if pursuing a very rare
   record.  The observed rate implies thousands of attempts per win, so this is
   lower priority than the deterministic and main-tier candidates.
@@ -768,9 +769,8 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Expected editor size: **5**.
 - Entry method: paste the text because the ordered multi-target `pickup c,s`
   is not constructible from Year 55's normal editor controls.
-- Caution: `pickup c,s` has to skip the empty centre to reach the petal,
-  and the game does not skip an empty listed square (Year 60), so this
-  program most likely stalls in the game.
+- `pickup c,s` passes over the bare centre to the petal, as the game's
+  lists do (Year 04's `pickup c,e` record relies on the same).
 - Suggested live test: natural manual verification is impractical without a
   reproducible RNG-start method.  Capture the completion panel if the matching
   world can be reproduced.

@@ -246,9 +246,9 @@ for records.  Candidates that still need live-game verification remain in
   despite the lower 8.4% rate, its wins land in 5-34 s and its losses
   self-terminate, so expected wall-clock per witnessed completion is far
   lower.  KEPT AS FALLBACK if the hole-dive's live rate disappoints,
-  with one caution added later: `pickup c,s` relies on the list skipping
-  an empty square, which the game does not do (Year 60), so its live
-  rate is likely below the model's.
+  with one caution added later and since withdrawn: `pickup c,s` relies
+  on the list passing over an empty square, which the game's lists do
+  (only a wall, hole or worker met first stops them).
 - Y58 size-4 top-tier promotion: the 50+ entry measures 384/400 = 96.0%
   at the real 1,400-second clock, losses all clock-outs (slowest win
   1,379 s).  Both improvement axes are exhausted: eleven step-list
@@ -493,15 +493,19 @@ for records.  Candidates that still need live-game verification remain in
 ## Year 60 pickup fusion (size 9→8) — refuted live 2026-08-17
 
 The fused `pickup w,se` (two sequential pickups collapsed into one
-direction list) failed in the game: the worker stalled at the **empty**
-west square and the run overran the 1,400-second cap.  The emulator's
-pickup list scans for the first listed square that has a cube; the live
-game evidently does not skip an empty listed square that way.  Year 16's
-published record types the same `pickup w,se` and works — there both
-squares hold cubes when the command runs, so it never discriminates.
-Standing rule: **no candidate may depend on a pickup list skipping an
-empty square.**  (Give lists do fall through, as settled on 2026-09-06;
-the hazard there is what they land on.)  The Year 60 size row stays 9.
+direction list) failed in the game: the leftmost spot stayed empty and
+the run overran the 1,400-second cap.  A pickup list passes over bare
+squares, but the first thing it meets in slot order decides, and for the
+leftmost worker that is the wall to its west, so it never lifts its
+cube.  (This was first read as "a list never passes over an empty
+square"; Year 04's 99+ `pickup c,e`, which starts on a bare square and
+completes live, shows otherwise.)  Year 16's published record types the
+same `pickup w,se` and works: there the first thing in each list is a
+cube.  Standing rule: **a pickup list stops at the first thing it meets;
+a wall, hole or worker before the cube means no cube.**  (Give lists do
+fall through, as settled on 2026-09-06; the hazard there is what they
+land on.)  The model, which follows the corrected rule since 2026-10-18,
+loses the fusion every run.  The Year 60 size row stays 9.
 
 ## Conditional-to-direction-list collapse (whole class) — closed 2026-08-17
 
