@@ -80,6 +80,15 @@ for records.  Candidates that still need live-game verification remain in
 - Y30 speed first branch-terminal `end` deletion: 0/1 at the real cutoff;
   without it that worker falls into the common-tail work before the exact fill
   goal is complete.
+- Y30 eight-sided take size 4 (queued 2026-09-14 at 925/1000), withdrawn
+  2026-10-18 -- NEVER PASTE IT.  The game cannot handle a take, give,
+  pickup or set whose direction list gathers six or more things (walls,
+  holes and cubes all count): it faults.  Beside the printer this
+  eight-square `takefrom` gathers that many in every run within about
+  2 s.  The model has no such limit, which is how it scored the program.
+- Y06 monotone low-percent size 3 (parked, 3/10,000), withdrawn
+  2026-10-18 for the same reason: its eight-square pickup list can gather
+  six or more things in the maze.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y31 diagonal size-4 families: `takefrom` failed 0/10 because workers steal
@@ -1036,8 +1045,9 @@ rule worth knowing before the next attempt.
 neighbours of the printer.  Naming all eight sides on the take lifts it
 from 61.2% to **92.5% over 1000 runs** (94.5% screened) at the same size
 4; cardinals alone collapse to 10.8%, and adding a northward step to the
-walk costs 17 points.  Not a new row (same size, same tier), but a much
-stronger paste and the seed for a top-tier four if hardening reaches 99%.
+walk costs 17 points.  Withdrawn 2026-10-18 and never to be pasted: an
+eight-square take gathers more things than the game can handle (see the
+list at the top).
 
 **Year 13, Injection Sites 2 — what "fill the gaps" means.**  The level
 completes only when every row of data is whole and nobody holds a cube.

@@ -35,6 +35,12 @@ file was derived and verified.
 list below runs from the cheapest attempt to the most expensive, with the
 optional items last.
 
+**Withdrawn for safety (2026-10-18):** the game cannot handle a take,
+give, pickup or set whose direction list gathers six or more things
+(walls, holes and cubes all count): it faults.  The Year 30 eight-sided
+take does that beside the printer in every run, so it is withdrawn and
+must not be pasted; the parked Year 06 eight-square pickup goes with it.
+
 **Paste markers settled (2026-09-28):** the editor's limits are now
 known from the game itself (see COMMANDS.md): several directions on
 `step` only from Year 30, never on `pickup`, `giveto`, `takefrom` or
@@ -69,13 +75,10 @@ REJECTED_APPROACHES.md.
    Year 67 ladder.  The Year 68 ladder waits until its
    control completes: the published program failed all three attempts
    on 2026-08-22.
-4. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
-   minutes, each to the clock; 925/1000 plain and 945/1000 shuffled
-   against the published four's 618/1000 and 616/1000.
-5. Optional control: the Year 15 community six, already the Solutions50+
+4. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); 82.5% here.  Skip it if the
    Year 15 five in item 2 completes.
-6. Optional, for a patient session: confirmations of the published Year 38
+5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
    alternate five, an unpublished edit of the size-5 row whose only claim
    is a small model speed edge that a live A/B has to confirm.
@@ -357,45 +360,6 @@ ask for that tier again.
   regression and retain the last successful form.
 - Result: _not yet tested locally in the game_.
 
-### [ ] Year 30 - Fill the Floor - eight-sided take at size 4 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - eight-sided take at size 4.txt>)
-- Goal: not a new row — the published 50%+ row is already a four — but a
-  far more reliable one, and the seed for a top-tier four if hardening
-  reaches 99% against the 99%+ record of **5**.
-- Mechanism: identical to the published four except for one list.  That
-  one refills only when the worker happens to stand on three of the
-  printer's eight sides; this one names all eight, so every worker beside
-  the machine reloads instead of one in three.  Nothing else changes.
-- Emulator evidence (re-taken 2026-09-14 on the current engine):
-  **925/1000 plain and 945/1000 under the shuffled-dispatch screen**,
-  against the published four's 618/1000 and 616/1000 on the same
-  measures — 62% to 92.5% for one edit.  Cardinals alone collapse to
-  10.8%, so the diagonal sides carry the refill; adding a northward step
-  to the walk costs 17 points.  A hardening search over 720 generations
-  (2026-09-11 to 14) found nothing more reliable: its best, a reordered
-  form with a five-direction step, measures 920/1000 and 935/1000.
-- Diagonal printer takes are live-proven: the published four takes only
-  diagonally (`takefrom nw,sw,ne`) and has 15/25 public wins, so the
-  machine-reach caution on the shredder side does not carry over here.
-- Unaffected by the 2026-09-06 machine rules: the program only ever
-  *takes* from the printer and never gives to one, and its rate is
-  identical before and after that change.  There is no shredder in the
-  room, so the empty-handed give cannot bite either.
-- Suggested live test: paste, confirm editor size 4, and run it a few
-  times — wins take about 930 s of game time, so let each run go to the
-  clock rather than restarting early.
-- What to watch (corrected 2026-09-28): every lost run in the model is
-  simply slow.  With the clock lifted, all 1000 test worlds finish,
-  averaging about 62,000 frames against the 87,500-frame clock, so a
-  loss in the game should look like a floor still a few squares short
-  when time runs out, not a frozen crew.  The note this replaces said
-  the losses were permanent freezes; that rested on a measurement the
-  model had silently capped at the clock.  Since the losses are only
-  slowness, a faster walk at the same size is the lever toward the 99%+
-  record of **5**.
-- Result: _not yet tested in the game_.
-
 ### [ ] Year 15 - Shred Lines - community size 6 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 15 - Shred Lines - community size 6.txt](<SolutionsToTry/Year 15 - Shred Lines - community size 6.txt>)
@@ -441,10 +405,9 @@ ask for that tier again.
 - **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt](<SolutionsToTry/Year 30 - Fill the Floor - probabilistic size 4.txt>)
 - Goal: live-confirm the size-4 Solutions50+ row (already published at
   ~1211) below the size-5 main entry.
-- **Superseded as a paste target (2026-09-14)** by the eight-sided four
-  in item 4: same size, 925/1000 against this program's 618/1000 on the
-  current engine.  Run this one only as the control if
-  you want the A/B, or to confirm the published row as it stands.
+- The eight-sided four that superseded it on 2026-09-14 was withdrawn on
+  2026-10-18 (see REJECTED_APPROACHES.md: never paste it), so this is the
+  Year 30 four to run.
 - Machine-reach note: this program takes from printers diagonally
   (`takefrom nw,sw,ne`), and its 15/25 public wins show that a diagonal
   printer take is safe, unlike the diagonal shredder give that killed
@@ -747,28 +710,6 @@ higher-rate variant is found.  Nothing below this line needs game time.
 - Suggested live test: use repeated fresh runs rather than waiting within one
   run—the program finishes immediately.  A live win may take several thousand
   attempts, so this is lower priority than the main-tier candidates.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 06 - Little Exterminator 1 - monotone low-percent size 3 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt](<SolutionsToTry/Year 06 - Little Exterminator 1 - monotone low-percent size 3.txt>)
-- Goal: establish a size-3 SolutionsLowPercent record below the existing
-  size-7 low-percent entry and the size-8 main entry.
-- Mechanism: the restricted random walk moves only southward/eastward through
-  the maze.  A small set of direction sequences reaches pickup range of the
-  target cube; other paths absorb into holes rather than wandering until the
-  game deadline.
-- Capped-emulator evidence: 2/10,000 wins (0.02%); the two wins completed in
-  755 and 862 frames with displayed speeds 13 and 14.
-- Expected editor size: **3**.
-- Entry method: paste the text; the four-direction random step and eight-target
-  pickup are not constructible from Year 06's normal editor controls.
-- The eight-target pickup passes over bare squares and stops at the first
-  thing it meets, as the game's lists do; re-measured 2026-10-18 under
-  that rule at 3/10,000.
-- Suggested live test: repeated quick resets only if pursuing a very rare
-  record.  The observed rate implies thousands of attempts per win, so this is
-  lower priority than the deterministic and main-tier candidates.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 52 - The Mode Code - one-shot low-percent size 6
