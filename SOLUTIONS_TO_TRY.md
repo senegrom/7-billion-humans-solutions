@@ -64,8 +64,9 @@ REJECTED_APPROACHES.md.
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
-   Year 40 at 93 (yifeixuer's 2018 program, live-only), then the Year 62
-   and 67 ladders.  The Year 68 ladder waits until its
+   Year 58 at 102, Year 40 at 93 (yifeixuer's 2018 program, live-only),
+   then the Year 62 ladder and its separate list merge at 213, and the
+   Year 67 ladder.  The Year 68 ladder waits until its
    control completes: the published program failed all three attempts
    on 2026-08-22.
 4. **Year 30 size 4 (eight-sided take)**: a few runs of about fifteen
@@ -213,6 +214,27 @@ ask for that tier again.
   screen re-taken 2026-09-03, at the same 455 frames.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 58 - Good Neighbors - list-merge speed tie-break at size 102 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - list-merge speed tie-break at size 102.txt](<SolutionsToTry/Year 58 - Good Neighbors - list-merge speed tie-break at size 102.txt>)
+- Goal: retain the displayed speed record of 2 while reducing the size
+  from 105 to **102**.
+- Exact edit: the `if mem2 == nothing: pickup ne / else: pickup nw /
+  endif` block becomes the one list `pickup nw,ne`.  A pickup list passes
+  over a bare square and takes the first thing it meets in slot order, so
+  the list lifts the north-west cube when it is there and the north-east
+  one otherwise, as the block did.
+- Emulator evidence (2026-10-18, under the corrected list rule): 20/20
+  plain and 20/20 shuffled, frame-identical to the incumbent at 230
+  frames with the same item-action count (38).
+- History: this merge was closed on 2026-08-17 on the old reading of the
+  Year 60 failure (that a list never passes over an empty square); the
+  corrected reading reopens it.  Paste-only: the editor gives `pickup` no
+  lists.
+- Suggested live test: incumbent once as control, then the candidate;
+  2-second runs; discard it on any displayed-speed regression.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
 
 - **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt>)
@@ -290,6 +312,25 @@ ask for that tier again.
   stop at the first regression and capture each completion panel and editor
   size.
 - Result: _not yet tested locally in the game_.
+
+### [ ] Year 62 - The Sorting Floor - list-merge speed tie-break at size 213 📋
+
+- **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - list-merge speed tie-break at size 213.txt](<SolutionsToTry/Year 62 - The Sorting Floor - list-merge speed tie-break at size 213.txt>)
+- Goal: retain the displayed speed range of 9-12 while reducing the size
+  from 216 to **213**.
+- Exact edit: the `if mem2 == mem4 and mem2 == mem3: pickup se / else:
+  pickup s / endif` block becomes `pickup s,se`, which lifts the south
+  cube when it is there and the south-east one otherwise.
+- Emulator evidence (2026-10-18, under the corrected list rule): identical
+  to the incumbent, 9/20 plain and 5/20 shuffled with the same frames and
+  item counts.  The model under-reproduces the published incumbent on this
+  level, so this shows equivalence only: live-only.
+- A different edit from the duplicate-store ladder above; test them
+  separately, one edit per rung.  Paste-only: the editor gives `pickup` no
+  lists.
+- Suggested live test: incumbent once as control, then the candidate;
+  stop at any regression.
+- Result: _not yet tested in the game_.
 
 ### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 206-209)
 

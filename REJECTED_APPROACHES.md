@@ -514,9 +514,8 @@ direction commands and a single direction-list command would be shorter
 (e.g. `if n == datacube: pickup n / else: pickup ne` → `pickup n,ne`).
 Emulator survivors: four.  All fall to known live mechanisms —
 
-- Y58 speed 105→102 (`pickup ne`/`pickup nw` merge): depends on the list
-  skipping an empty square — the exact mechanism Year 60's live failure
-  refuted above.
+- Y58 speed 105→102 (`pickup ne`/`pickup nw` merge): closed on the old
+  reading of the Year 60 failure; reopened and queued 2026-10-18 (below).
 - Y60 speed 159→157 (three variants of `pickup e` + guarded retry
   `if myitem == nothing: pickup e` merged): deletes a pickup **retry**,
   the class already refuted live on Year 38.
@@ -525,7 +524,16 @@ Every other site (step collapses on Y11/12/13/20/30/36/41/42/52/56/62/68,
 the Y23 size `step e,w`, Y26's give collapse) loses in the emulator
 outright — a step list is a random choice live and in the model, so
 collapsing a measured comparison into one throws the information away.
-Class closed; do not re-derive.
+
+Re-screened 2026-10-18 under the corrected list rule (a pickup list
+passes over bare squares and stops at the first thing it meets), 20
+worlds plain and shuffled, every if/else between two same-verb pickups
+or gives: two of the 16 survive with the incumbent's win counts, frames
+and item actions, and are queued -- Year 58 speed 105→102 (`pickup
+nw,ne`) and Year 62 speed 216→213 (`pickup s,se`).  Three more Year 62
+sites match the rate but change the item count; the other ten pickup
+merges, and Year 26's give merge, do worse.  Step merges stay closed: a step list is
+a random choice.  Do not re-derive.
 
 ## Year 56 written-max size 4 — withdrawn twice (2026-08-18, and 2026-10-16 after a measured test was queued)
 
