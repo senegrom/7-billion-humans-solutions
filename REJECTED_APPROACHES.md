@@ -304,8 +304,10 @@ for records.  Candidates that still need live-game verification remain in
   subsystem is settled by a live witness, no candidate whose safety
   argument depends on a give-list falling through a machine square, or on
   any non-cardinal machine give, should be queued.  (Settled on
-  2026-09-06: fall-through is real, and a list that lands on a printer
-  destroys it; see the last section.)
+  2026-09-06: a list that reaches a printer destroys it; see the
+  2026-09-06 section.  Decoded on 2026-10-18 that this is no
+  fall-through: a printer in a give list comes before every worker; see
+  the 2026-10-18 section.)
 - THE FRAME-IDENTICAL CLAIM CLASS AND THE DIAGONAL TRANSFORM, refuted
   live on Years 39 and 40 (maintainer A/Bs, same machine, same session):
   Y39 diagonal-stack+end-drop (size 167) ran 41 s against the incumbent's
@@ -512,9 +514,10 @@ completes live, shows otherwise.)  Year 16's published record types the
 same `pickup w,se` and works: there the first thing in each list is a
 cube.  Standing rule: **a pickup list stops at the first thing it meets;
 a wall, hole or worker before the cube means no cube.**  (Give lists do
-fall through, as settled on 2026-09-06; the hazard there is what they
-land on.)  The model, which follows the corrected rule since 2026-10-18,
-loses the fusion every run.  The Year 60 size row stays 9.
+not fall through either: a give settles its target once, a printer
+before any worker; see the 2026-10-18 section.)  The model, which
+follows the corrected rule since 2026-10-18, loses the fusion every run.
+The Year 60 size row stays 9.
 
 ## Conditional-to-direction-list collapse (whole class) — closed 2026-08-17
 
@@ -1126,6 +1129,11 @@ relay forms are withdrawn: the primary and the diagonal arm both name a
 direction that can resolve to the printer, and the fallback measures
 1/20 under the corrected rules.
 
+(Decoded on 2026-10-18: the relay six's `giveto n,s` named the printer,
+and a give list takes a printer before any worker, so it went there
+whatever the receiver did; nothing fell through.  The refutation and the
+rule below stand; see the 2026-10-18 section.)
+
 What this costs: the Year 15 size row stays 8 and Year 26 stays 7.  What
 it buys is a model that predicts the one program on Shred Lines with a
 real live rate — the community six wins 16 of 25 attempts and now models
@@ -1135,10 +1143,12 @@ exactly where these rules should land.
 
 **Rule for future candidates:** never queue a program that can reach a
 `giveto` empty-handed beside a shredder in a room where walking is
-allowed, and never queue a give whose direction list can resolve onto a
-printer.  (Since 2026-09-28 the working rules allow one narrow exception
-to the first: losing that worker cannot fail the level, and the model,
-which includes the loss, still wins every run; the entry must say so.)
+allowed (since 2026-10-18: in any room, and an empty-handed `takefrom`
+at a shredder too), and never queue a give whose direction list can
+resolve onto a printer (since 2026-10-18: one that names a printer).
+(Since 2026-09-28 the working rules allow one narrow exception to the
+first: losing that worker cannot fail the level, and the model, which
+includes the loss, still wins every run; the entry must say so.)
 
 ## Year 9 at size 4 — the rising diagonal does not count (refuted live 2026-08-14)
 
@@ -1161,4 +1171,33 @@ about one world in 524,288.  Its give list names the printer's own
 square, so whenever the preferred receivers are busy the list falls
 through onto the printer and destroys it, which is exactly how the relay
 six died in the game.  Its evidence also predates that rule.  Withdrawn
-from the parked list on 2026-09-28, and its paste file deleted.
+from the parked list on 2026-09-28, and its paste file deleted.  (Decoded
+on 2026-10-18: no list falls through, and a give list that names the
+printer and no shredder goes to the printer at once, so the withdrawal
+stands.)
+
+## The 2026-10-18 rule review — what the decoded game changed
+
+A review of the emulator against the game's own code landed 23 changes on
+2026-10-18.  Four of them revise conclusions recorded above.
+
+- **Give and take lists do not fall through.**  A list settles its target
+  once, when the command comes up: a give asks for a shredder, then a
+  printer, then the first worker listed, else the first thing; a take asks
+  for a printer, then a shredder, then the first worker.  A worker listed
+  first decides even when one listed later would do.  The Year 26 relay
+  six's `giveto n,s` named the printer, so it went there whatever the
+  receiver did.  Every refutation above stands, and so does the rule never
+  to queue a give that can reach a printer; the mechanism was misread.
+- **No room makes an empty-handed give at a shredder safe.**  The game
+  feeds the worker to it in every room, a no-walk room included, and an
+  empty-handed `takefrom` at a shredder does the same.  The no-walk
+  exception the model used to make came from Budget Brigade 2's published
+  seven, which still wins every run in the corrected model.
+- **Year 48's two shortcuts the live game rejected now lose in the model
+  too.**  Community Training Day waits for the instructor's shredder to
+  eat a cube while somebody stands on the leftmost student's starting
+  square, and is then graded on the cubes shredded, not on who printed.
+- **The two Year 44 records now win in the model.**  Unique Fashion
+  Party's run start deals 0..randmax once each to the first cubes it meets,
+  so the rare-luck reading the model needed for them is gone.

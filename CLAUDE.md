@@ -59,18 +59,25 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
 ## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
 
 - A step aimed at a shredder is refused: the worker stays put.
-- An empty-handed give at a shredder feeds the worker to it, in any room
-  where walking is allowed.  Never queue a program that can reach such a
-  give, unless losing that worker cannot fail the level and the model,
-  which includes the loss, still wins every run; the entry must say so.
-- A give whose direction list resolves onto a printer destroys it and
-  ends the run.  Give-list fall-through is real, so never queue a give
-  list that can land on a printer.
+- An empty-handed give at a shredder feeds the worker to it, in every
+  room, a no-walk room included, and so does an empty-handed takefrom
+  aimed at a shredder (both decoded 2026-10-18).  Never queue a program
+  that can reach such a give or take, unless losing that worker cannot
+  fail the level and the model, which includes the loss, still wins every
+  run; the entry must say so.
+- A give list settles its target once, when the command comes up: a
+  shredder, then a printer, then the first worker listed, else the first
+  thing; a take list a printer, then a shredder, then the first worker.
+  Nothing falls through to a later square (decoded 2026-10-18; the live
+  Budget Brigade 2 loss read as a fall-through on 2026-09-06 is this
+  rule).  A give that reaches a printer destroys it and ends the run, so
+  never queue a give list that names a printer.
 - A pickup list passes over bare squares, but the first thing it meets in
-  slot order decides: a wall, hole or worker before the cube means no
-  cube.  Year 04's 99+ `pickup c,e` starts on a bare square and completes;
-  the fused Year 60 `pickup w,se` failed live because its leftmost
-  worker's first listed thing is the wall to its west.
+  slot order decides: a wall, hole, worker, or a counting machine's pad or
+  button before the cube means no cube.  Year 04's 99+ `pickup c,e` starts
+  on a bare square and completes; the fused Year 60 `pickup w,se` failed
+  live because its leftmost worker's first listed thing is the wall to its
+  west.
 - A direction list is a set, stored in the slot order
   nw,w,sw,n,c,s,ne,e,se: a direction cannot be named twice, and the
   order in which a list is written carries no meaning.
