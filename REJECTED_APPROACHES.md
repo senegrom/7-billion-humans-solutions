@@ -511,9 +511,9 @@ for records.  Candidates that still need live-game verification remain in
     timing is exactly what the live game disputes; not queued.
   Other outcomes from the same sweep: Y22 Solutions50+ speed 7→6 (demoted
   2026-10-19, see above) and Y23 speed 9→8 were published; Y09 speed
-  15→14 and Y23 low-percent speed 23→19 (fallback 21) remain queued.  Y54 Solutions50+ speed 37→36 was
-  initially queued but later withdrawn under the item-action rule, as recorded
-  above.
+  15→14 and Y23 low-percent speed 23→19 (fallback 21) remain queued.  Y54
+  Solutions50+ speed 37→36 was initially queued but later withdrawn under
+  the item-action rule, as recorded above.
 
 ## Year 60 pickup fusion (size 9→8) — refuted live 2026-08-17
 
