@@ -47,6 +47,14 @@ for records.  Candidates that still need live-game verification remain in
   therefore expected to retain the live score of 4, not challenge speed 2.
 - Y18 random-fan size 4: 0/100 capped emulator wins; the workers do not fan out
   to ten unique shredders reliably enough to retain as a live candidate.
+- Y22 speed size 6 (the Solutions50+ row, demoted 2026-10-19): the
+  corrected model, which deals Number Royale's ten contest numbers all
+  different and grades the room the way the game does, wins it 419/1000
+  plain and 419/1000 shuffled, below the 50% bar.  Among the <50% rows
+  nezhi's size-4 program wins the same 419/1000 at the same model speed
+  and is listed at the better speed (1 against 2), so the six is
+  dominated: its row and file go.  (Its 7-to-6 cut, below, stands as
+  the cut it was.)
 - Y22 public size 4: its header says 86 failures out of 150, which is 42.7%
   success rather than the claimed 57.3%; current emulator is 48/100.  It ties
   the existing LowPercent size-4 program while being far slower, so it is
@@ -501,9 +509,9 @@ for records.  Candidates that still need live-game verification remain in
   - Y50 speed 31→30 (steps, a give, listens — several frame-identical or
     faster): a tell/listen choreography level where the model's inbox
     timing is exactly what the live game disputes; not queued.
-  Other outcomes from the same sweep: Y22 Solutions50+ speed 7→6 and Y23
-  speed 9→8 were published; Y09 speed 15→14 and Y23 low-percent speed
-  23→19 (fallback 21) remain queued.  Y54 Solutions50+ speed 37→36 was
+  Other outcomes from the same sweep: Y22 Solutions50+ speed 7→6 (demoted
+  2026-10-19, see above) and Y23 speed 9→8 were published; Y09 speed
+  15→14 and Y23 low-percent speed 23→19 (fallback 21) remain queued.  Y54 Solutions50+ speed 37→36 was
   initially queued but later withdrawn under the item-action rule, as recorded
   above.
 
