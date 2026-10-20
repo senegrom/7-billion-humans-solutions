@@ -69,6 +69,12 @@ or take at a shredder kills in every room.  The Year 62 list merge at 213
 is withdrawn: it now does materially worse than its incumbent.  The Year
 44 transient-survivor three leaves the parked long shots.
 
+**Two speed ladders parked (2026-10-20):** a second review of the
+emulator against the game's own code shows that the Year 67 ladder's
+deleted tells are the presser's clock rather than padding, and that the
+Year 68 ladder can never get the passing control run it needs.  Both now
+sit with the parked long shots at the end, and neither needs game time.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -81,9 +87,7 @@ is withdrawn: it now does materially worse than its incumbent.  The Year
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
    Year 58 at 102, Year 40 at 93 (yifeixuer's 2018 program, live-only),
-   then the Year 62 ladder and the Year 67 ladder.  The Year 68 ladder
-   waits until its control completes: the published program failed all
-   three attempts on 2026-08-22.
+   then the Year 62 ladder.
 4. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); about 81% here.  Skip it if the
    Year 15 five in item 2 completes.
@@ -280,30 +284,6 @@ ask for that tier again.
   row at size 93.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
-
-- **Paste-ready program:** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt>)
-- **Fallback (size 171):** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt>)
-- Goal: retain the displayed speed record of 16 while reducing the secondary
-  size from 172 to **170** (or 171 at the conservative rung).
-- Exact edit: delete both consecutive top-level `tell everyone hi` commands at
-  incumbent lines 195-196; restore either one for the size-171 fallback.  No
-  `listenfor` exists, so the deleted greetings carry no data and only change
-  asynchronous cadence.
-- Why this is reopened: the size-171 form was queued originally, then 171/170
-  moved to rejected only because the nominally stronger bypassed-wrapper
-  size-164 program dominated them.  Size 164 later failed live, leaving the
-  tell-only rungs needing an independent test.
-- Live ladder: run the incumbent size-172/speed-16 program as control, then 171,
-  then 170.  Stop at the first failure or displayed speed above 16.
-- Live-only: the model does not reproduce the incumbent (0/40 worlds), so
-  no emulator screen applies to these rungs.
-- Result: _live attempt inconclusive_.  The published size-172 control failed
-  all three attempts on 2026-08-22, so it did not establish a passing
-  baseline.  The correctly pasted size-171 rung then failed its one attempt;
-  size 170 was not run under the stop-on-failure rule.  Keep this queued for a
-  future session that first obtains a successful control run.
-
 ### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214 (fallback 215)
 
 - **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt](<SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt>)
@@ -339,31 +319,6 @@ ask for that tier again.
 - Suggested live test: run the incumbent, size 215, and size 214 in that order;
   stop at the first regression and capture each completion panel and editor
   size.
-- Result: _not yet tested locally in the game_.
-
-### [ ] Year 67 - Decimal Doubler - live-only speed tie-break at size 205 (fallbacks 206-209)
-
-- **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt](<SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt>)
-- **Fallback (size 206):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt>)
-- **Fallback (size 207):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt>)
-- **Fallback (size 208):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt>)
-- **Fallback (size 209):** [SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt](<SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt>)
-- Goal: retain the current displayed speed record of 41 while reducing the
-  secondary size from 210 commands to 205.
-- Exact edits: after opening `pickup ne; step n`, delete all three consecutive
-  `mem2 = set c` commands; in loop `j`, after `step mem3; step e`, delete both
-  consecutive `tell everyone hi` commands.
-- Why they may be safe: every `mem2` occurrence is an assignment, never a read,
-  and the program contains no `listenfor`; all five deleted commands are
-  cadence only.  The ladder removes one of them per rung: 209 deletes one
-  tell, 208 one store as well, 207 the second tell, 206 a second store,
-  and 205 the third.
-- Timing caveat: candidate and incumbent both fail in the current model, so
-  it cannot referee either edit; this remains live-only.
-- Expected editor size: **205**; expected displayed speed: **41**.
-- Suggested live test: run the incumbent, then sizes 209, 208, 207, 206 and
-  finally 205.  Stop the ladder at the first failure or displayed-speed
-  regression and retain the last successful form.
 - Result: _not yet tested locally in the game_.
 
 ### [ ] Year 15 - Shred Lines - community size 6 📋
@@ -715,6 +670,50 @@ Per the maintainer's rule, candidates that win less often than **1 in
 would cost more restart-grinding than the row is worth.  They remain
 here (with their paste-ready files) in case the rule changes or a
 higher-rate variant is found.  Nothing below this line needs game time.
+
+### [ ] Year 67 - Decimal Doubler - speed tie-break at size 205 (fallbacks 206-209)
+
+- **Paste-ready program:** [SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt](<SolutionsToTry/Year 67 - Decimal Doubler - live-only speed tie-break at size 205.txt>)
+- **Fallback (size 206):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 206.txt>)
+- **Fallback (size 207):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 207.txt>)
+- **Fallback (size 208):** [SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt](<SolutionsToTry/Year 67 - Decimal Doubler - fallback size 208.txt>)
+- **Fallback (size 209):** [SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt](<SolutionsToTry/Year 67 - Decimal Doubler - conservative fallback size 209.txt>)
+- Goal: retain the displayed speed record of 41 while reducing the
+  secondary size from 210 commands to 205.
+- Exact edits: after opening `pickup ne; step n`, delete all three consecutive
+  `mem2 = set c` commands; in loop `j`, after `step mem3; step e`, delete both
+  consecutive `tell everyone hi` commands.  The ladder removes one of them
+  per rung: 209 deletes one tell, 208 one store as well, 207 the second
+  tell, 206 a second store, and 205 the third.
+- Why it is parked (2026-10-20): the two tells are the presser's clock, not
+  padding.  The program has no `listenfor`, but the tells make loop `j`
+  last exactly 127 frames, the length of the writers' digit cycle, and the
+  pads show the full number for only 11 frames of each cycle.  With one
+  tell gone the presser's lap is 85 frames (43 with both gone), so most
+  presses read part-written or empty pads; Decimal Doubler counts a press
+  only when it reads the next doubling, and any other reading starts the
+  count again.  Every rung deletes the first tell.  On the game's own code
+  the 209 rung fails this way, and the review's corrected model wins the
+  incumbent 20 times in 20 and every rung in none of 20.
+- Suggested live test: none.  Screen any future Year 67 speed edit on the
+  corrected model first.
+- Result: _not tested in the game_.
+
+### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
+
+- **Paste-ready program:** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt>)
+- **Fallback (size 171):** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt>)
+- Goal: retain the displayed speed record of 16 while reducing the secondary
+  size from 172 to **170** (or 171 at the conservative rung).
+- Exact edit: delete both consecutive top-level `tell everyone hi` commands at
+  incumbent lines 195-196; restore either one for the size-171 fallback.
+- Why it is parked (2026-10-20): the ladder needs a passing control run of
+  the published size-172 program, and none can be had.  That program
+  failed all three live attempts on 2026-08-22, the correctly pasted
+  size-171 rung failed its one attempt, and the review's corrected model
+  loses the incumbent and both rungs (none of 20 each).
+- Result: _live attempt inconclusive_ (2026-08-22, above); size 170 was
+  never run.
 
 ### [ ] Year 44 - Unique Fashion Party - divide-by-zero long-shot size 2
 
