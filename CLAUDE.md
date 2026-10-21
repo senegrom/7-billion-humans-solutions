@@ -2,22 +2,37 @@
 
 ## Candidate win-rate floor
 
-**Ignore solutions that win less often than 1 in 100 runs.** Do not queue
-them in `SOLUTIONS_TO_TRY.md`, do not spend search time polishing them, and
-do not ask for live-game attempts on them. A witnessed completion below
-that rate costs more restart-grinding than the record row is worth.
-Anything already found below the floor goes to the queue's
-"Parked long shots" section (kept, not deleted, in case a higher-rate
-variant turns up). Measured rates near the line (about 1%) stay queued.
+**Ignore candidates that win fewer than 35% of their plain runs in the
+model.**  The game keeps a completion only after its visible win: it then
+plays 25 fresh random rounds, and if 12 or more fail it says the solution
+failed more than 50 percent of the random tests and saves nothing.  That
+check runs on every level from Year 09 on, and on Years 02-07 once Year
+09 is beaten (decoded 2026-10-19), so a record needs a kept completion,
+not just a visible win.  A program that wins a share p of its runs is
+kept with a chance of about p × P(at least 14 of 25 rounds win) per
+attempt: 1 in 1,000 at 28%, 1 in 100 at 35%, 1 in 6 at 50% and 4 in 5 at
+80%.  Below 35%, one kept completion costs more than 100 attempts, more
+restart-grinding than a record row is worth: do not queue such a
+candidate in `SOLUTIONS_TO_TRY.md`, do not spend search time polishing
+it, and do not ask for live-game attempts on it.  Anything already found
+below the floor goes to the queue's "Parked long shots" section (kept,
+not deleted, in case a higher-rate variant turns up).  Rates near the
+line (30-40%) stay queued with their per-attempt figure, measured over
+200 or more trials, since that figure moves steeply.
 
 ## Live-game queue conventions
 
 - `SOLUTIONS_TO_TRY.md` is the shared verification queue; every entry links
   a verified paste-ready program in `SolutionsToTry/`.
 - An emulator win is evidence, not proof: a candidate leaves the queue only
-  on a game completion screen (or an explicit live failure).
-- The game stops every run at 1,400 seconds; completions past that are
-  failures.
+  when the game keeps a completion (its panel finishes the 25 random
+  rounds and records the size and speed) or on an explicit live failure.
+  A visible win followed by the "more than 50 percent" message is a live
+  failure.  After any failed round, kept or not, the game replays that
+  room on the next run until you leave the level, so go back to the
+  elevator before counting another attempt.
+- The game stops every run at 1,400 seconds, the visible run and each of
+  the 25 rounds alike; completions past that are failures.
 - Rejected and superseded experiments go to `REJECTED_APPROACHES.md` with
   the reason, so no effort repeats.
 - Sizes quoted anywhere must be canonical editor sizes
@@ -26,10 +41,15 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   changes; it also checks the queue's links, labels, sizes in file names
   and heading markers.
 
-## Speed-evidence rules (learned live, 2026-08-15)
+## Speed-evidence rules (learned live 2026-08-15, explained 2026-10-19)
 
-- The game's displayed speed is **asynchronous wall-time**, not a function
-  of the simulator's frame timeline. Frame-identical A/B evidence does NOT
+- The displayed speed is not wall time: the game counts a fixed 16 ms per
+  tick, shows the whole seconds of the mean over the winning rounds of its
+  25 random tests, and keeps the best it has shown (decoded 2026-10-19).
+  The model's estimate is the whole seconds of 0.016 s × frames, averaged
+  over winning trials.  Its timing is not exact everywhere, though: in the
+  2026-08-15 Year 39 and 40 A/Bs, programs it ran in identical frames
+  showed 41 s against 36 s live.  So frame-identical A/B evidence does NOT
   establish displayed speed; only a live incumbent-vs-candidate A/B does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
@@ -54,7 +74,11 @@ variant turns up). Measured rates near the line (about 1%) stay queued.
   incumbent under the same screen; absolute 100% is only demanded where
   the incumbent holds it.  Levels whose published programs the model
   cannot reproduce cannot be screened; their entries are live-only and
-  say so.
+  say so.  The game runs its workers in one fixed order every tick, the
+  emulator's plain order, so the plain rate is the model's own rate; the
+  shuffled screen measures how much a choreography leans on exact timing
+  (Year 44's speed record wins every plain run and about one shuffled run
+  in twenty).
 
 ## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
 

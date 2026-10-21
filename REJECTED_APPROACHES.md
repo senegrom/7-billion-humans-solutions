@@ -338,6 +338,10 @@ for records.  Candidates that still need live-game verification remain in
   live-control experiments.  Y40 falls back to the PR-92 ladder (176
   live-verified 36, then 175).  Frame-based speed evidence anywhere in the
   queue is downgraded to "requires live incumbent control first".
+  (Explained on 2026-10-19 from the game itself: the displayed speed is
+  not wall time but a fixed 16 ms per tick, averaged over the 25 random
+  rounds the game plays after a visible win.  Both results are timing the
+  model gets wrong, not a wall clock; the live-control rule stands.)
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results

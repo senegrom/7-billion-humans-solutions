@@ -13,9 +13,11 @@ Rejected and superseded experiments are archived in
 [REJECTED_APPROACHES.md](REJECTED_APPROACHES.md).
 
 **Speed-evidence downgrade (2026-08-15):** two live A/Bs (Years 39 and
-40) proved the game's displayed speed is asynchronous wall-time —
-frame-identical simulator evidence does NOT establish it, and diagonal
-step substitutions regressed 36 to 41 in both tests.  Every speed
+40) showed that frame-identical simulator evidence does NOT establish the
+displayed speed: diagonal step substitutions regressed 36 to 41 in both
+tests.  (The cause is not wall time, as first thought: the game counts a
+fixed 16 ms per tick, averaged over the 25 random rounds it plays after a
+visible win, so these were timings the model got wrong.)  Every speed
 tie-break below therefore requires a live incumbent control run first;
 discard the candidate on any displayed-speed regression.  Win/loss and
 size evidence is unaffected.
@@ -75,6 +77,17 @@ deleted tells are the presser's clock rather than padding, and that the
 Year 68 ladder can never get the passing control run it needs.  Both now
 sit with the parked long shots at the end, and neither needs game time.
 
+**Completions count only once kept (2026-10-21):** after a visible win
+the game plays 25 fresh random rounds and keeps the completion only if at
+least 14 of them win; otherwise it says the solution failed more than 50
+percent of the random tests and saves nothing.  This holds on every level
+from Year 09 on, and on the earlier ones once Year 09 is beaten.
+CLAUDE.md's floor is therefore now a 35% win rate per run (about one kept
+completion per 100 attempts), and the low-percent leads, all well below
+it, now sit with the parked long shots.  After any failed round the game
+replays that room until you leave the level, so go back to the elevator
+before counting another attempt.
+
 **Next session (50%+ rule in force — no low-percent testing for now):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -96,8 +109,8 @@ sit with the parked long shots at the end, and neither needs game time.
    alternate five, an unpublished edit of the size-5 row whose only claim
    is a small model speed edge that a live A/B has to confirm.
 
-Low-percent leads are parked in their own section further down until you
-ask for that tier again.
+The low-percent leads sit with the parked long shots at the end: under
+the game's 25-round check none of them can realistically be kept.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -357,8 +370,8 @@ ask for that tier again.
   (found in the 2026-08-17 source audit; it was never in our tables).
 - Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
 - Local emulator: 669/1000 plain and shuffled (2026-10-18; 36/50
-  before), average 429 frames (win/fail evidence only; displayed speed is
-  async wall-time and theirs is live-measured).
+  before), average 429 frames (win/fail evidence only; the model's speed
+  is an estimate, and theirs is live-measured).
 - Expected editor size: **122**; glitchless, so it should also be
   typable/editable normally.
 - Suggested live test: repeated runs until a win; capture displayed speed
@@ -408,10 +421,18 @@ ask for that tier again.
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
 
-## Low-percent leads (parked — 50%+ only for now)
+## Parked long shots (kept less than once in 100 attempts)
 
-Valid candidates below the Solutions50+ bar.  Not for the next session;
-kept intact so nothing is rediscovered.
+The game keeps a completion only when at least 14 of the 25 random
+rounds it plays after a visible win also win, so under CLAUDE.md's floor
+a candidate needs about a 35% win rate per run; below that, one kept
+completion costs more than 100 attempts (about 4,400 at 25% and 650
+million at 10%).  Nothing here clears it.  First come the low-percent
+leads (valid programs for the SolutionsLowPercent tier, at about 1% to
+25% per run), then two speed ladders that cannot be settled, then the
+long shots below 1 in 100 runs.  All stay here with their paste-ready
+files in case the rule changes or a higher-rate variant turns up.
+Nothing below this line needs game time.
 
 ### [ ] Year 44 - Unique Fashion Party - static-cull low-percent size 3
 
@@ -662,14 +683,6 @@ kept intact so nothing is rediscovered.
 - Suggested live test: repeated quick runs; record the random range and capture
   the first completion panel with editor size 5.
 - Result: _not yet tested locally in the game_.
-
-## Parked long shots (win rate below 1 in 100)
-
-Per the maintainer's rule, candidates that win less often than **1 in
-100 runs** are not part of the live-game queue: a witnessed completion
-would cost more restart-grinding than the row is worth.  They remain
-here (with their paste-ready files) in case the rule changes or a
-higher-rate variant is found.  Nothing below this line needs game time.
 
 ### [ ] Year 67 - Decimal Doubler - speed tie-break at size 205 (fallbacks 206-209)
 
