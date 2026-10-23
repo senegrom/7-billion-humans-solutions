@@ -93,10 +93,18 @@ for records.  Candidates that still need live-game verification remain in
   pickup or set whose direction list gathers six or more things (walls,
   holes and cubes all count): it faults.  Beside the printer this
   eight-square `takefrom` gathers that many in every run within about
-  2 s.  The model has no such limit, which is how it scored the program.
+  2 s.  The model had no such limit, which is how it scored the program.
+  (Decoded exactly on 2026-10-19 and modelled since 2026-10-23: a
+  direction list holds five things, and a wall, hole or floor cube met
+  after the fifth overruns it; a take survives one overrun only with a
+  printer among the five, and a second always crashes.  The model now
+  crashes this take in every world, so the withdrawal stands.)
 - Y06 monotone low-percent size 3 (parked, 3/10,000), withdrawn
   2026-10-18 for the same reason: its eight-square pickup list can gather
-  six or more things in the maze.
+  six or more things in the maze.  (Under the rule decoded on 2026-10-19
+  a pickup survives one overrun unless its first thing is a machine, but
+  a second crashes; at 3/10,000 the program is far below the win-rate
+  floor anyway, so it stays withdrawn.)
 - Y62 list-merge speed tie-break size 213 (queued 2026-10-18), withdrawn
   the same day under the jitter rule: over 1000 worlds on the corrected
   model it wins 125 plain and 100 shuffled against the incumbent's 150
@@ -300,11 +308,20 @@ for records.  Candidates that still need live-game verification remain in
   (size) records aim gives diagonally at a shredder and complete -- Year
   16 with every worker required to survive, and Year 19's workers take
   from a printer and give straight into the shredder diagonally beside
-  them (it is not a relay).  Why this merge's givers died stays
-  unexplained, so the caution stands: do not propose merges that turn a
-  machine give diagonal, and audit any future merge for machine-adjacent
-  geometry.  The step the merge removed made the give cardinal, so no
-  smaller variant of this loop is worth queuing.
+  them (it is not a relay).  Why this merge's givers died stayed
+  unexplained until 2026-10-19, so the caution read: do not propose
+  merges that turn a machine give diagonal, and audit any future merge
+  for machine-adjacent geometry.  The step the merge removed made the
+  give cardinal, so no smaller variant of this loop is worth queuing.
+  (Explained on 2026-10-19 from the game's own code, and reproduced by
+  the model since 2026-10-21: a shredder is fed only from its front
+  square, so the diagonal give walks the giver onto the front, where it
+  stays.  Its next command, `takefrom s`, then names the shredder, and an
+  empty-handed take at a shredder feeds the worker to it.  The model now
+  loses the merge 195 runs in 200 (197 shuffled).  The records'
+  paste-only take lists, `takefrom sw,s` on Year 19 and `takefrom s,se`
+  on Year 21's size row, settle on the printer first and keep their
+  workers alive; their `takefrom s` forms lose every run.)
 - Y24 size-4 one-sided relay (`if myitem == something or w == hole:
   takefrom s; giveto e,s`): REFUTED LIVE by the maintainer -- "immediately
   throws the cube back in the printer and then dies (not allowed)".  The
@@ -321,7 +338,8 @@ for records.  Candidates that still need live-game verification remain in
   2026-09-06: a list that reaches a printer destroys it; see the
   2026-09-06 section.  Decoded on 2026-10-18 that this is no
   fall-through: a printer in a give list comes before every worker; see
-  the 2026-10-18 section.)
+  the 2026-10-18 section.  The Year 21 death it was grouped with is
+  another mechanism, the walk onto the shredder's front; see that entry.)
 - THE FRAME-IDENTICAL CLAIM CLASS AND THE DIAGONAL TRANSFORM, refuted
   live on Years 39 and 40 (maintainer A/Bs, same machine, same session):
   Y39 diagonal-stack+end-drop (size 167) ran 41 s against the incumbent's

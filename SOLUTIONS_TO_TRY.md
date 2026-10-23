@@ -42,6 +42,9 @@ give, pickup or set whose direction list gathers six or more things
 (walls, holes and cubes all count): it faults.  The Year 30 eight-sided
 take does that beside the printer in every run, so it is withdrawn and
 must not be pasted; the parked Year 06 eight-square pickup goes with it.
+(Decoded exactly on 2026-10-19; see CLAUDE.md: a list holds five
+things, and only some lists survive one wall, hole or cube past the
+fifth.  The corrected model crashes the Year 30 take in every world.)
 
 **Paste markers settled (2026-09-28):** the editor's limits are now
 known from the game itself (see COMMANDS.md): several directions on
@@ -388,8 +391,9 @@ the game's 25-round check none of them can realistically be kept.
   Year 30 four to run.
 - Machine-reach note: this program takes from printers diagonally
   (`takefrom nw,sw,ne`), and its 15/25 public wins show that a diagonal
-  printer take is safe, unlike the diagonal shredder give that killed
-  Year 21's givers.
+  printer take is safe.  Year 21's givers died for another reason: their
+  diagonal shredder give walked them onto the shredder's front, where
+  their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
 - Current emulator evidence: 147/200 plain and 149/200 shuffled
   (2026-10-18; 618/1000 and 616/1000 on 2026-09-14).  Winning runs average

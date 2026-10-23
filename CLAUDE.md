@@ -53,13 +53,19 @@ line (30-40%) stay queued with their per-attempt figure, measured over
   establish displayed speed; only a live incumbent-vs-candidate A/B does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
-- Machine reach is not worker reach: a take from a printer is served at
-  the printer's front (a diagonal take walks the worker there first),
-  while a shredder is fed from any touching square, diagonals included
-  (the Year 16-size, 19 and 21-size records feed diagonally).  Yet a merge
-  that turned a shredder give diagonal killed its givers live (Year 21),
-  for reasons not yet understood, so never queue a merge that turns a
-  machine give diagonal.
+- Machines serve from their front square only: a take from a printer is
+  served there (a diagonal take walks the worker there first), and so is
+  a give to a shredder: a giver beside it or at its corner walks onto the
+  front first and stays there (decoded 2026-10-19; the Year 16-size, 19
+  and 21-size records reach their diagonal shredders so).  Whatever the
+  giver does next it does from the front, so audit every command a
+  shredder giver runs after its give.  That is what killed the Year 21
+  merge's givers live: its `takefrom s` then named the shredder, and an
+  empty-handed take there feeds the worker to it (the model now loses
+  that merge 195 runs in 200).  The records' paste-only `takefrom sw,s`
+  (Year 19) and `takefrom s,se` (Year 21 size) settle on the printer
+  first and keep their workers alive; their `takefrom s` forms lose
+  every run.
 - Simulator frame evidence remains valid for WIN/FAIL and for size.
 
 ## Candidate screening rules (learned live, 2026-08-19)
@@ -85,10 +91,12 @@ line (30-40%) stay queued with their per-attempt figure, measured over
 - A step aimed at a shredder is refused: the worker stays put.
 - An empty-handed give at a shredder feeds the worker to it, in every
   room, a no-walk room included, and so does an empty-handed takefrom
-  aimed at a shredder (both decoded 2026-10-18).  Never queue a program
-  that can reach such a give or take, unless losing that worker cannot
-  fail the level and the model, which includes the loss, still wins every
-  run; the entry must say so.
+  aimed at a shredder (both decoded 2026-10-18); the worker walks onto
+  the shredder's front first, from beside it or, when the shredder is
+  remembered, from across the room (decoded 2026-10-19).  Never queue a
+  program that can reach such a give or take, unless losing that worker
+  cannot fail the level and the model, which includes the loss, still
+  wins every run; the entry must say so.
 - A give list settles its target once, when the command comes up: a
   shredder, then a printer, then the first worker listed, else the first
   thing; a take list a printer, then a shredder, then the first worker.
@@ -105,6 +113,15 @@ line (30-40%) stay queued with their per-attempt figure, measured over
 - A direction list is a set, stored in the slot order
   nw,w,sw,n,c,s,ne,e,se: a direction cannot be named twice, and the
   order in which a list is written carries no meaning.
+- A take, give, pickup or set aimed by direction lists at most five
+  things, square by square in that slot order (decoded 2026-10-19).  A
+  worker, machine, the boss or a pad met once five are listed goes
+  unseen; a wall, hole or floor cube met then overruns the list.  A take
+  survives an overrun only with a printer among the five, a give only
+  with a shredder among them and a cube in hand, a pickup only if its
+  first thing is not a machine, and a set never; a second overrun always
+  crashes the game, and the run is lost.  Never queue a direction list
+  that can crash so: the Year 30 eight-sided take does in every run.
 - A label must be some jump's destination: deleting a jump deletes its
   label too, or the game refuses the paste.
 
