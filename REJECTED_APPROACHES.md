@@ -118,6 +118,12 @@ count; the live results themselves stand.
   and 145.  The 9/20-and-5/20 agreement that queued it was a small
   sample; `pickup s,se` is not equivalent to the guarded block it
   replaced.
+- Y62 duplicate-store speed tie-breaks at sizes 214 and 215 (a two-rung
+  ladder deleting the stores before the exit), withdrawn 2026-10-23
+  under the jitter rule: with the second review's fixes both rungs win
+  779 plain runs per 1000 (644 and 713 shuffled) against the
+  incumbent's 980 and 773.  The deleted `mem1 = set myitem` stores are
+  load-bearing timing, as the 2026-10-18 shuffled screen had hinted.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y31 diagonal size-4 families: `takefrom` failed 0/10 because workers steal

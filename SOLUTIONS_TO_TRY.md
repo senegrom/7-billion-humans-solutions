@@ -95,7 +95,19 @@ it, now sit with the parked long shots.  After any failed round the game
 replays that room until you leave the level, so go back to the elevator
 before counting another attempt.
 
-**Next session (50%+ rule in force — no low-percent testing for now):**
+**Model re-measured again (2026-10-23, after the second review's fixes
+landed):** every queued program was measured again; the entries quote
+the new figures where they moved.  The Year 62 ladder is withdrawn: both
+rungs now win 779 runs in 1000 against the incumbent's 980.  The Year 23
+low-percent speed tie-break comes back from the parked long shots: its
+size-21 rung wins 43% of runs, a kept completion about once in 17
+attempts.  Yifeixuer's Year 40 program now runs in the model, which
+reads it about 2 s slower than the incumbent, and the Year 15 community
+six reads 67%, near its public 64%.  A candidate of our own that the
+model reads slower than its incumbent is now dropped without a live run
+(CLAUDE.md); none of the remaining tie-breaks does.
+
+**Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
    about a minute.  It decides whether the game keeps a command the
@@ -106,18 +118,22 @@ before counting another attempt.
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
-   Year 58 at 102, Year 40 at 93 (yifeixuer's 2018 program, live-only),
-   then the Year 62 ladder.
+   Year 58 at 102, then Year 40 at 93 (yifeixuer's 2018 program, which
+   the model now reads about 2 s slower than the incumbent).
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); about 81% here.  Skip it if the
+   row on public evidence (16/25 live); about 67% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
    alternate five, an unpublished edit of the size-5 row whose only claim
    is a small model speed edge that a live A/B has to confirm.
+6. Optional, the one low-percent item above the floor: the Year 23
+   low-percent speed row at size 21, then 19 (in the model a completion
+   is kept about once in 17 attempts and once in 95); stop at the first
+   displayed-speed regression.
 
-The low-percent leads sit with the parked long shots at the end: under
-the game's 25-round check none of them can realistically be kept.
+The other low-percent leads sit with the parked long shots at the end:
+under the game's 25-round check none of them can realistically be kept.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -162,8 +178,8 @@ the game's 25-round check none of them can realistically be kept.
   shredder.  The room holds exactly three cubes, so one trip each
   finishes the level.
 - Emulator evidence, level palette lifted: **1000/1000 plain and
-  1000/1000 shuffled**, about 5 s of game time.  The three workers always
-  pick three different cubes.
+  1000/1000 shuffled**, about 7 s of game time (re-measured 2026-10-23).
+  The three workers always pick three different cubes.
 - Suggested live test: paste, confirm editor size 4 with both `nearest`
   lines present, and run it twice.
 - Result: _not yet tested in the game_.
@@ -178,7 +194,7 @@ the game's 25-round check none of them can realistically be kept.
   shredder once, then keeps taking the nearest cube and feeding that
   shredder.
 - Emulator evidence, level palette lifted: **1000/1000 plain and
-  1000/1000 shuffled**, about 16 s of game time (re-measured 2026-10-18;
+  1000/1000 shuffled**, about 15 s of game time (re-measured 2026-10-23;
   it was about 22 s while the model let `nearest datacube` find cubes in
   other workers' hands, which the game does not).
 - Caution: a worker that loses a race for a cube still walks to its
@@ -209,7 +225,11 @@ the game's 25-round check none of them can realistically be kept.
   item counts unchanged.  Re-measured 2026-10-18 over 1000 worlds: the
   candidate 994 plain and 993 shuffled at 608 frames, the fallback 998
   on both at 617, the incumbent 998 on both at 618, item counts within
-  0.1 of each other.
+  0.1 of each other.  Re-measured 2026-10-23 with the second review's
+  fixes: the candidate 992 on both screens at 617 frames, the fallback
+  and the incumbent 998 on both at 627; by the game's rule the model
+  reads the candidate at 9 s and the other two at 10 (live 9-10), so the
+  live control decides.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
@@ -234,7 +254,8 @@ the game's 25-round check none of them can realistically be kept.
 - Emulator evidence (corpus deletion sweep, re-run on the fixed file):
   100/100 wins at exactly the incumbent's 230.0 frames, and 200/200
   under the shuffled-dispatch screen re-taken 2026-09-03.  Re-measured
-  2026-10-18: 1000/1000 plain and shuffled for both, at 230 frames.  The
+  2026-10-18 and 2026-10-23: 1000/1000 plain and shuffled for both, at
+  230 frames.  The
   candidate counts 25 item actions to the incumbent's 24; the one extra
   is the `if e == nothing` re-test the deleted jump used to skip, with
   every step, pickup and drop the same.  The only live
@@ -259,7 +280,9 @@ the game's 25-round check none of them can realistically be kept.
   Item-action count identical; 200/200 under the shuffled-dispatch
   screen re-taken 2026-09-03, at the same 455 frames.  Re-measured
   2026-10-18: 1000/1000 plain and shuffled at 452 frames against the
-  incumbent's 443, still 9 frames slower.
+  incumbent's 443, still 9 frames slower; and 2026-10-23 at 467 against
+  458, which by the game's rule both read 7 s (live 6), so the model
+  calls it a tie and the live A/B decides.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 58 - Good Neighbors - list-merge speed tie-break at size 102 📋
@@ -274,7 +297,7 @@ the game's 25-round check none of them can realistically be kept.
   one otherwise, as the block did.
 - Emulator evidence (2026-10-18, on the corrected model): 1000/1000
   plain and 1000/1000 shuffled, frame-identical to the incumbent at 230
-  frames with the same item-action count (38).
+  frames with the same item-action count (38); unchanged on 2026-10-23.
 - History: this merge was closed on 2026-08-17 on the old reading of the
   Year 60 failure (that a list never passes over an empty square); the
   corrected reading reopens it.  Paste-only: the editor gives `pickup` no
@@ -294,53 +317,19 @@ the game's 25-round check none of them can realistically be kept.
   176-command edit (upstream pull request #92) in its favour: "Solution
   by yifeixuer looks much better and he got it first."  It never reached
   either repository.
-- Emulator evidence: none usable.  The model loses it 0/200 plain and
-  0/200 shuffled while winning the incumbent 1000/1000 (2026-10-18), but
-  Printing Etiquette is one of the levels whose crowd behaviour the model
-  is known to miss, so only the game can judge it.  Queued live-only at the maintainer's
-  request.
+- Emulator evidence: until 2026-10-18 the model lost it every run.  With
+  the second review's fixes (2026-10-23) it wins 1000/1000 plain at 2,478
+  frames, 39 s by the game's rule, but only 262/1000 shuffled, while the
+  incumbent wins 1000/1000 on both screens at 2,322 frames (37 s; live
+  36).  So the model reads it about 2 s slower and far more fragile, and
+  under the speed rule a candidate of our own would be dropped.  It stays
+  queued at the maintainer's request as the live test of the 36 s its
+  author reported.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
   and the editor size.  A completion at 36 s or faster takes the speed
   row at size 93.
 - Result: _not yet tested in the game_.
-
-### [ ] Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214 (fallback 215)
-
-- **Paste-ready program:** [SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt](<SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store speed tie-break at size 214.txt>)
-- **Fallback (size 215):** [SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store fallback size 215.txt](<SolutionsToTry/Year 62 - The Sorting Floor - duplicate-store fallback size 215.txt>)
-- Goal: retain the current displayed speed range of 9-12 while reducing the
-  secondary size from 216 commands to 214, with the tested one-store deletion
-  at size 215 as the fallback.
-- Exact edit: start from
-  [the current speed program](<Solutions99+/Year 62 - The Sorting Floor (speed).txt>)
-  and delete both consecutive `mem1 = set myitem` commands immediately before
-  `tell everyone hi` and the divide-by-zero exit.  To test the size-215
-  fallback, restore either one of them.
-- Why it may be safe: neither saved value is read before that worker's exit;
-  only the two synchronization delays can matter.
-- Fallback emulator A/B evidence: the size-215 candidate and incumbent both
-  win seed 1 in exactly 836 frames.  Across the same 100 model worlds each
-  wins 36, with modelled speed 12.3 and nearly identical average frames
-  (734.9 versus 735.0).
-- Size-214 bounded gate: 9/20 model worlds won, with modelled speed averaging
-  10.9 (range 6-14), winning frames averaging 648.0 (range 371-836), and 40.4
-  average item actions.  The observed 45% is encouraging but not statistically
-  decisive against the established 36/100 baseline.
-- Live-only: the model under-reproduces the published incumbent (15/40
-  worlds), so those paired aggregates support equivalence but cannot
-  establish live reliability or timing.
-- Re-measured 2026-10-18 over 1000 worlds on the corrected model: the
-  incumbent wins 150 plain and 145 shuffled, size 215 wins 150 and 128,
-  and size 214 150 and 118.  Plain they are frame-identical; under the
-  shuffled screen the rungs trail the incumbent, the 214 by about two
-  standard errors, so stop the ladder at the first live regression.
-- Expected editor size: **214** if the extra cadence cut survives; otherwise
-  use the tested **215** fallback.
-- Suggested live test: run the incumbent, size 215, and size 214 in that order;
-  stop at the first regression and capture each completion panel and editor
-  size.
-- Result: _not yet tested locally in the game_.
 
 ### [ ] Year 15 - Shred Lines - community size 6 📋
 
@@ -360,7 +349,12 @@ the game's 25-round check none of them can realistically be kept.
   (95.5% before them), about 54,600 frames; re-measured 2026-10-18 at
   163/200 plain and 175/200 shuffled, and again after the same day's
   review corrections at 162/200 plain and 165/200 shuffled, about 58,600
-  frames.
+  frames.  With the second review's fixes (2026-10-23) it wins **134/200
+  plain and 146/200 shuffled**, about 61,500 frames, near the public 64%;
+  a completion is kept on about 61% of attempts.  Three of the review's
+  corrections each cost it some runs: the directional `if` reading its
+  squares later, the look a give aimed by direction pays first, and
+  lists finding workers where their bodies are.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -377,9 +371,10 @@ the game's 25-round check none of them can realistically be kept.
   program, imported to Solutions50+ below our 9-10 main speed row
   (found in the 2026-08-17 source audit; it was never in our tables).
 - Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
-- Local emulator: 669/1000 plain and shuffled (2026-10-18; 36/50
-  before), average 429 frames (win/fail evidence only; the model's speed
-  is an estimate, and theirs is live-measured).
+- Local emulator: 669/1000 plain and shuffled (2026-10-18, and again
+  2026-10-23; 36/50 before), average 437 frames, a completion kept on
+  about 61% of attempts (win/fail evidence only; the model's speed is an
+  estimate, and theirs is live-measured).
 - Expected editor size: **122**; glitchless, so it should also be
   typable/editable normally.
 - Suggested live test: repeated runs until a win; capture displayed speed
@@ -400,10 +395,11 @@ the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 147/200 plain and 149/200 shuffled
-  (2026-10-18; 618/1000 and 616/1000 on 2026-09-14).  Winning runs average
-  about 1,126 s, so they often finish only just before the game
-  deadline.
+- Current emulator evidence: 146/200 plain and 133/200 shuffled
+  (2026-10-23; 147/200 and 149/200 on 2026-10-18, 618/1000 and 616/1000
+  on 2026-09-14), a completion kept on about 60% of attempts.  Winning
+  runs average about 1,165 s, so they often finish only just before the
+  game deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
@@ -425,9 +421,41 @@ the game's 25-round check none of them can realistically be kept.
   game score is about 588, so the improvement may not carry over.
   Re-measured 2026-10-18 over 200 worlds: plain, candidate 197/200 at 616
   seconds against the incumbent's 200/200 at 647; shuffled, 199/200 at
-  641 against 199/200 at 647, an edge of about 6 seconds.
+  641 against 199/200 at 647, an edge of about 6 seconds.  Re-measured
+  2026-10-23 over 200 worlds: plain, candidate 199/200 at 607 seconds
+  against the incumbent's 200/200 at 617; shuffled, 199/200 at 609
+  against 198/200 at 629.
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
+
+- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
+- **Fallback (size 21):** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt>)
+- Goal: retain the low-percent speed row's displayed ~14 while reducing its
+  size from 23 to **19** (n05ucc4u's program; keep the credit).
+- Exact edits: delete the two three-line re-check tails — in the `> 49`
+  branch `if w > myitem: jump d / endif` and in the `else` branch
+  `if e < myitem: jump h / endif` — and the labels `d:` and `h:` they
+  leave unused (the game refuses a paste with a label no jump leads to;
+  labels are free, so the sizes stand).  The size-21 fallback deletes only
+  the first tail and `d:`.
+- Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
+  16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
+  16.2.  The win rate drops from about 52% to about 38-45% (still the
+  low-percent tier) with the speed distribution unchanged.  Re-measured
+  2026-10-18 over 1000 worlds: incumbent 508, size 21 426, size 19 355,
+  plain and shuffled alike, all at about 16 modelled seconds.
+  Re-measured 2026-10-23: incumbent 509, size 21 431, size 19 356 plain
+  (359 shuffled), all reading 15 s by the game's rule, so the live
+  control decides.  In the model a completion is kept about once in 5
+  attempts for the incumbent, once in 17 at size 21 and once in 95 at
+  size 19.
+- Suggested live test: the size-21 fallback first, repeated ~14-second
+  runs until the game keeps a completion (back to the elevator after
+  every failed round), then the size 19; capture the displayed speed and
+  editor size.
 - Result: _not yet tested in the game_.
 
 ## Parked long shots (kept less than once in 100 attempts)
@@ -489,28 +517,6 @@ Nothing below this line needs game time.
 - Local-emulator cross-check (2026-08-22): 36/3,000 = **1.20%**, within one
   sigma of the exact 1.367% claim — the rate is confirmed by a second model.
 - Result: _not yet tested locally in the game_.
-
-### [ ] Year 23 - Sorting Hall - low-percent speed tie-break at size 19 (fallback 21)
-
-- **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed tie-break at size 19.txt>)
-- **Fallback (size 21):** [SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt](<SolutionsToTry/Year 23 - Sorting Hall - low-percent speed fallback at size 21.txt>)
-- Goal: retain the low-percent speed row's displayed ~14 while reducing its
-  size from 23 to **19** (n05ucc4u's program; keep the credit).
-- Exact edits: delete the two three-line re-check tails — in the `> 49`
-  branch `if w > myitem: jump d / endif` and in the `else` branch
-  `if e < myitem: jump h / endif` — and the labels `d:` and `h:` they
-  leave unused (the game refuses a paste with a label no jump leads to;
-  labels are free, so the sizes stand).  The size-21 fallback deletes only
-  the first tail and `d:`.
-- Emulator evidence: 300-trial A/B on one model — incumbent 155 wins at
-  16.3 modelled seconds; size 21: 135 wins at 16.2; size 19: 114 wins at
-  16.2.  The win rate drops from about 52% to about 38-45% (still the
-  low-percent tier) with the speed distribution unchanged.  Re-measured
-  2026-10-18 over 1000 worlds: incumbent 508, size 21 426, size 19 355,
-  plain and shuffled alike, all at about 16 modelled seconds.
-- Suggested live test: repeated ~14-second runs until a win; capture the
-  displayed speed and editor size.
-- Result: _not yet tested in the game_.
 
 ### [ ] Year 11 - Injection Sites 1 - low-percent speed tie-break at size 13 📋
 
