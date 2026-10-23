@@ -4,6 +4,13 @@ These experiments are kept so failed ideas are not rediscovered and mistaken
 for records.  Candidates that still need live-game verification remain in
 [SOLUTIONS_TO_TRY.md](SOLUTIONS_TO_TRY.md).
 
+**Reading note (2026-10-23):** entries written before 2026-10-19 call the
+displayed speed asynchronous wall time.  It is not: the game counts a fixed
+16 ms per tick and shows the truncated mean over the winning rounds of the
+25-round check it plays after a visible win.  Where an entry says a change
+cost wall time, read that it cost game ticks the model's timeline did not
+count; the live results themselves stand.
+
 - Y24 size 3: emulator false positive; real handoff semantics do not sustain it.
 - Y15 size-5 give-first ordering: 300/300, but average and worst-case timing
   were slightly worse than the then-preferred pickup-first ordering on the
@@ -360,6 +367,13 @@ for records.  Candidates that still need live-game verification remain in
   not wall time but a fixed 16 ms per tick, averaged over the 25 random
   rounds the game plays after a visible win.  Both results are timing the
   model gets wrong, not a wall clock; the live-control rule stands.)
+  (Re-run on 2026-10-23 on the corrected model, these candidates are no
+  longer frame-identical: the Year 40 incumbent, the size-175 deletion
+  and the size-169 stack show 37, 39 and 41, against 36, 38 and 41 live,
+  but the Year 39 size-167 stack shows 36 against its incumbent's 35,
+  where the game showed 41 against 36.  A modelled speed loss now
+  suffices to drop a candidate; a modelled tie or gain still needs the
+  live control.)
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results

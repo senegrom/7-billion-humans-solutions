@@ -17,8 +17,9 @@ candidate in `SOLUTIONS_TO_TRY.md`, do not spend search time polishing
 it, and do not ask for live-game attempts on it.  Anything already found
 below the floor goes to the queue's "Parked long shots" section (kept,
 not deleted, in case a higher-rate variant turns up).  Rates near the
-line (30-40%) stay queued with their per-attempt figure, measured over
-200 or more trials, since that figure moves steeply.
+line (30-40%) stay queued with their per-attempt figure (the emulator's
+`kept` line), measured over 200 or more trials, since that figure moves
+steeply.
 
 ## Live-game queue conventions
 
@@ -46,11 +47,18 @@ line (30-40%) stay queued with their per-attempt figure, measured over
 - The displayed speed is not wall time: the game counts a fixed 16 ms per
   tick, shows the whole seconds of the mean over the winning rounds of its
   25 random tests, and keeps the best it has shown (decoded 2026-10-19).
-  The model's estimate is the whole seconds of 0.016 s × frames, averaged
-  over winning trials.  Its timing is not exact everywhere, though: in the
-  2026-08-15 Year 39 and 40 A/Bs, programs it ran in identical frames
-  showed 41 s against 36 s live.  So frame-identical A/B evidence does NOT
-  establish displayed speed; only a live incumbent-vs-candidate A/B does.
+  The emulator's `speed` line applies the same rule to its frames (its
+  `seconds` line prints the exact mean).  Its timing is close but not
+  exact: in the 2026-08-15 Year 39 and 40 A/Bs the old model ran the
+  candidates in their incumbents' frames or fewer, yet they showed 41 s
+  and 38 s against 36 s live.  Re-run on 2026-10-23, the corrected model
+  reads the Year 40 incumbent, its dead-calc deletion and its diagonal
+  stack as 37, 39 and 41 (live 36, 38 and 41), and the Year 39 diagonal
+  stack as 36 against 35, though only a tenth of a second behind (live
+  41 against 36).  So a candidate whose `speed` line reads slower than
+  its incumbent's is dropped, but a modelled tie or gain does NOT
+  establish displayed speed; only a live incumbent-vs-candidate A/B
+  does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
 - Machines serve from their front square only: a take from a printer is

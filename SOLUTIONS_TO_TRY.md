@@ -20,7 +20,11 @@ fixed 16 ms per tick, averaged over the 25 random rounds it plays after a
 visible win, so these were timings the model got wrong.)  Every speed
 tie-break below therefore requires a live incumbent control run first;
 discard the candidate on any displayed-speed regression.  Win/loss and
-size evidence is unaffected.
+size evidence is unaffected.  (Re-run on 2026-10-23, the corrected model
+reads all three refuted candidates slower than their incumbents, the
+Year 40 ones by about the live margins, so a candidate it reads slower
+is now dropped without a live run; one it reads tied or faster still
+needs the control.)
 
 Rates are quoted at the live 1,400 s clock, measured plain and under the
 shuffled-dispatch screen (the worker dispatch order shuffled every
@@ -234,8 +238,9 @@ the game's 25-round check none of them can realistically be kept.
   candidate counts 25 item actions to the incumbent's 24; the one extra
   is the `if e == nothing` re-test the deleted jump used to skip, with
   every step, pickup and drop the same.  The only live
-  risk is that the three extra tests cost wall time on the longest route
-  (Year 47 showed an `if` is not free live) — a 3-second A/B decides it.
+  risk is that the three extra tests cost time on the longest route that
+  the model does not count (Year 47 showed an `if` is not free live) — a
+  3-second A/B decides it.
 - Suggested live test: incumbent once as control, then the candidate.
 - Result: _first paste refused (orphaned label, 2026-08-17); the fixed
   file has not been run yet_.
