@@ -51,14 +51,15 @@ steeply.
   `seconds` line prints the exact mean).  Its timing is close but not
   exact: in the 2026-08-15 Year 39 and 40 A/Bs the old model ran the
   candidates in their incumbents' frames or fewer, yet they showed 41 s
-  and 38 s against 36 s live.  Re-run on 2026-10-23, the corrected model
-  reads the Year 40 incumbent, its dead-calc deletion and its diagonal
-  stack as 37, 39 and 41 (live 36, 38 and 41), and the Year 39 diagonal
-  stack as 36 against 35, though only a tenth of a second behind (live
-  41 against 36).  So a candidate whose `speed` line reads slower than
-  its incumbent's is dropped, but a modelled tie or gain does NOT
-  establish displayed speed; only a live incumbent-vs-candidate A/B
-  does.
+  and 38 s against 36 s live.  Re-run on 2026-10-26, with the printer's
+  serve timed as the game's, the model reads the Year 40 incumbent, its
+  dead-calc deletion and its diagonal stack as 36, 38 and 41, the live
+  figures, but the Year 39 diagonal stack as a tie with its incumbent at
+  35, a sixth of a second behind (live 41 against 36); only the jitter
+  rule drops it there (50 shuffled wins in 200 against 200).  So a
+  candidate whose `speed` line reads slower than its incumbent's is
+  dropped, but a modelled tie or gain does NOT establish displayed speed;
+  only a live incumbent-vs-candidate A/B does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
 - Machines serve from their front square only: a take from a printer is

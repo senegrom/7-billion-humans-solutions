@@ -11,6 +11,17 @@ displayed speed asynchronous wall time.  It is not: the game counts a fixed
 cost wall time, read that it cost game ticks the model's timeline did not
 count; the live results themselves stand.
 
+**Reading note (2026-10-26):** model figures quoted before this date for
+programs that hand a cube from one worker to another (the Budget Brigade
+relays, and the Shred Lines and Fill the Floor walks whose gives or
+takes can find a worker) come from a model that threw the cube without
+the meeting the game holds first.  In the game the giver or taker waits
+until its partner stands idle, stopping a busy one at its next command,
+walks up beside it if it must, and only then is the cube thrown; the
+model does the same since 2026-10-26.  Every verdict below that was
+re-measured with it stands, and the entries whose figures moved quote
+the new ones.
+
 - Y24 size 3: emulator false positive; real handoff semantics do not sustain it.
 - Y15 size-5 give-first ordering: 300/300, but average and worst-case timing
   were slightly worse than the then-preferred pickup-first ordering on the
@@ -25,7 +36,10 @@ count; the live results themselves stand.
   because every newly attempted pickup points at a known non-cube, but it
   failed 0/20 fixed-order worlds while abfipes12's size-6 control won the
   identical 20/20 (59,848.7 frames, 5,031.4 items).  Failed-pickup timing is
-  load-bearing on Shred Lines; no shuffled test was run.
+  load-bearing on Shred Lines; no shuffled test was run.  (Re-measured
+  2026-10-26, with the game's hand-off: 11/200 plain and 5/200
+  shuffled, against the six's 152/200 and 91/200, still far below the
+  win-rate floor.)
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
@@ -52,6 +66,10 @@ count; the live results themselves stand.
   action-animation saving to gain, and the corrected emulator makes them exactly tied
   at 97 frames even though it misreports the incumbent's live timing.  It is
   therefore expected to retain the live score of 4, not challenge speed 2.
+  (Since 2026-10-26 the model times both at that live 4 s, 265 frames
+  each: the cube-less worker's empty-handed give feeds it to the
+  shredder, and the room, which waits for every worker still in it to
+  finish, waits until the shredder has taken it.)
 - Y18 random-fan size 4: 0/100 capped emulator wins; the workers do not fan out
   to ten unique shredders reliably enough to retain as a live candidate.
 - Y22 speed size 6 (the Solutions50+ row, demoted 2026-10-19): the
@@ -379,7 +397,11 @@ count; the live results themselves stand.
   but the Year 39 size-167 stack shows 36 against its incumbent's 35,
   where the game showed 41 against 36.  A modelled speed loss now
   suffices to drop a candidate; a modelled tie or gain still needs the
-  live control.)
+  live control.)  (Re-run on 2026-10-26 with the printer's serve timed
+  as the game's: the Year 40 three show 36, 38 and 41, exactly the live
+  figures, and the Year 39 stack ties its incumbent at 35, so only the
+  jitter rule drops it now, with 50 shuffled wins in 200 against the
+  incumbent's 200.)
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results
@@ -480,6 +502,10 @@ count; the live results themselves stand.
   - Y25 size 6: "really almost works -- at the end people stand around in
     a queue."  Same signature as Y29: the final gives at a contended
     machine never land in the game while the simulator serves them.
+    (Re-measured 2026-10-26, the model now loses it every run too: at
+    the end two workers stand holding cubes at their give to the
+    shredder and the rest wait at their pickups; 0/200 plain and
+    shuffled.)
     The incumbent's terminal cleanup exists precisely to handle this.
     FINAL at size 6; the machine-serve rules (front, arrival, failure)
     are the emulator work that would reopen this class.  This did
@@ -528,7 +554,13 @@ count; the live results themselves stand.
     published size-4 row, which the game times at 4 versus the guarded
     program's 2 — the emulator prices failed pickups/gives far too cheaply
     (97 versus 130 frames the wrong way round).  Calibration fact, not a
-    candidate: failed item actions cost real wall time live.
+    candidate: failed item actions cost real wall time live.  (Explained
+    on 2026-10-26: what the model missed was not the failed pickup but
+    what follows it.  The cube-less worker's empty-handed give feeds it
+    to the shredder, the worker stays on its square until the shredder
+    has it, 127 ticks after the give came up, and the room waits for it.
+    The model now times the size-4 row at 265 frames and the guarded
+    program at 178, the live 4 and 2.)
   - Y48 `takefrom n` deletions (size 4→3 and speed 5→4): the training-goal
     false positive already rejected live; ledgered above.
   - Y13 low-percent `step se` deletion: identical to the queued
@@ -662,7 +694,9 @@ deterministic arrival order and that order still finishes; the live
 scheduler's order leaves a worker without a cube blocking the line
 forever.  The Year 26 else-merge (56→55) was withdrawn untested as the
 same class: an item action moved onto a path where it can fail, on a
-multi-worker level.
+multi-worker level.  (Re-measured 2026-10-26, with the game's hand-off:
+it wins every run, but in 110 s against the incumbent's 61, its live
+60, where the model before ran both in the same 7,407 frames.)
 
 Curation rule from this: **a deletion is only trustworthy when the
 model's item-action count is unchanged.**  Fewer frames plus fewer
@@ -783,7 +817,10 @@ the slow levels, so Years 30 and 58 were re-run before counting):
   5,111 against the record's 4,553) break the items rule, and each line's
   last worker now aims a bare `takefrom w,s` at its shredder, a take no
   published program makes and the game has never been shown.  The 5
-  stands.
+  stands.  (Since 2026-10-18 an empty-handed take at a shredder feeds
+  the worker to it, and the model loses both fours every run: each
+  line's last worker dies at that bare take and nothing is shredded;
+  0/200 plain and shuffled, re-measured 2026-10-26.)
 - Year 48 at 3: of 10,143 programs the only four winners are the
   `takefrom s` + nearest-shredder family — the live-rejected
   direct-south choreography riding the instructor-shred false
@@ -1188,7 +1225,10 @@ direction that can resolve to the printer, and the fallback measures
 (Decoded on 2026-10-18: the relay six's `giveto n,s` named the printer,
 and a give list takes a printer before any worker, so it went there
 whatever the receiver did; nothing fell through.  The refutation and the
-rule below stand; see the 2026-10-18 section.)
+rule below stand; see the 2026-10-18 section.  The fallback's `giveto
+n,s` names the printer too, and the model, which follows that rule,
+loses all three forms every run: 0/200 plain and shuffled each,
+re-measured 2026-10-26.)
 
 What this costs: the Year 15 size row stays 8 and Year 26 stays 7.  What
 it buys is a model that predicts the one program on Shred Lines with a

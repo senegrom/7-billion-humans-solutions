@@ -24,7 +24,11 @@ size evidence is unaffected.  (Re-run on 2026-10-23, the corrected model
 reads all three refuted candidates slower than their incumbents, the
 Year 40 ones by about the live margins, so a candidate it reads slower
 is now dropped without a live run; one it reads tied or faster still
-needs the control.)
+needs the control.)  (Re-run on 2026-10-26, with the printer's serve
+timed as the game's, the model reads the Year 40 incumbent and its two
+refuted candidates at exactly their live 36, 38 and 41 s, but the Year
+39 stack as a tie with its incumbent, 35 against 35, where the game
+showed 41 against 36: a modelled tie still needs the control.)
 
 Rates are quoted at the live 1,400 s clock, measured plain and under the
 shuffled-dispatch screen (the worker dispatch order shuffled every
@@ -107,6 +111,24 @@ six reads 67%, near its public 64%.  A candidate of our own that the
 model reads slower than its incumbent is now dropped without a live run
 (CLAUDE.md); none of the remaining tie-breaks does.
 
+**Model re-measured for the game's hand-off (2026-10-26):** the model
+now hands a cube from one worker to another as the game does (the giver
+or taker meets its partner, then a throw, the cube's flight and a
+catch), hands a printer's sheet over a tick sooner, grades the shredding
+rooms on the cubes left in them, and keeps a worker that reaches into a
+shredder on its square until the shredder has it.  Every queued program
+was measured again, and four entries move.  The Year 15 community six
+now wins 76% of plain runs and the Year 30 probabilistic four 76% on
+both screens; yifeixuer's Year 40 program reads 3 s slower than the
+incumbent, which the model now reads at its live 36; the Year 30
+alternate five still reads about 8 s faster than the size-5 row plain,
+but slower shuffled.  A give to a worker, or a take from one, meets its
+partner on a tick that depends on the order the two take their turns,
+which the shuffled screen redraws every frame and the game never does,
+so a program that hands cubes between workers can lose far more runs
+shuffled than plain: the Year 15 six wins about 45% there (see
+CLAUDE.md's jitter rule).
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -119,9 +141,9 @@ model reads slower than its incumbent is now dropped without a live run
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
    Year 58 at 102, then Year 40 at 93 (yifeixuer's 2018 program, which
-   the model now reads about 2 s slower than the incumbent).
+   the model now reads 3 s slower than the incumbent).
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); about 67% here.  Skip it if the
+   row on public evidence (16/25 live); about 76% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
@@ -161,10 +183,11 @@ under the game's 25-round check none of them can realistically be kept.
      it runs but never completes, the paste kept the command but the goal
      wants more than equal numbers; try the next two entries anyway,
      since neither relies on that.
-- Left out on purpose: the same trick also wins in the model on Budget
-  Brigade 2 at size 4 (the all-left relay plus `write 0`), but its give
-  list can land on a printer, which is how the relay six died in the
-  game.
+- Left out on purpose: the same trick on Budget Brigade 2 at size 4 (the
+  all-left relay plus `write 0`).  Its give list names the printer, and
+  a give list takes a printer before any worker, which is how the relay
+  six died in the game; the model, which follows that rule since
+  2026-10-18, loses it every run (0/200 plain and shuffled, 2026-10-26).
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 16 - Little Exterminator 2 - nearest one-shot at size 4 📋
@@ -322,9 +345,12 @@ under the game's 25-round check none of them can realistically be kept.
   frames, 39 s by the game's rule, but only 262/1000 shuffled, while the
   incumbent wins 1000/1000 on both screens at 2,322 frames (37 s; live
   36).  So the model reads it about 2 s slower and far more fragile, and
-  under the speed rule a candidate of our own would be dropped.  It stays
-  queued at the maintainer's request as the live test of the 36 s its
-  author reported.
+  under the speed rule a candidate of our own would be dropped.  With the
+  printer's serve timed as the game's (2026-10-26) it runs 2,457 frames,
+  still 39 s, and wins 263/1000 shuffled, while the incumbent runs 2,302
+  frames, 36 s, its live speed, and wins every run on both screens: 3 s
+  slower by the game's rule.  It stays queued at the maintainer's request
+  as the live test of the 36 s its author reported.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
   and the editor size.  A completion at 36 s or faster takes the speed
@@ -354,7 +380,13 @@ under the game's 25-round check none of them can realistically be kept.
   a completion is kept on about 61% of attempts.  Three of the review's
   corrections each cost it some runs: the directional `if` reading its
   squares later, the look a give aimed by direction pays first, and
-  lists finding workers where their bodies are.
+  lists finding workers where their bodies are.  With the game's hand-off
+  (2026-10-26) it wins **152/200 plain** (756/1000), about 62,300 frames,
+  a completion kept on about 75% of attempts, but only **91/200
+  shuffled** (180/400; kept on about 9%): when its `giveto s` finds a
+  worker below, the two meet on a tick that depends on the order they
+  take their turns, which the shuffled screen redraws every frame and
+  the game never does.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -395,11 +427,13 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 146/200 plain and 133/200 shuffled
-  (2026-10-23; 147/200 and 149/200 on 2026-10-18, 618/1000 and 616/1000
-  on 2026-09-14), a completion kept on about 60% of attempts.  Winning
-  runs average about 1,165 s, so they often finish only just before the
-  game deadline.
+- Current emulator evidence: 152/200 plain and 152/200 shuffled
+  (2026-10-26, with the game's hand-off: its take also takes sheets from
+  other workers' hands; 301/400 and 309/400 over 400 runs; 146/200 and
+  133/200 on 2026-10-23, 147/200 and 149/200 on 2026-10-18, 618/1000
+  and 616/1000 on 2026-09-14), a completion kept on about 75% of
+  attempts.  Winning runs average about 1,137 s, so they often finish
+  only just before the game deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
@@ -424,7 +458,11 @@ under the game's 25-round check none of them can realistically be kept.
   641 against 199/200 at 647, an edge of about 6 seconds.  Re-measured
   2026-10-23 over 200 worlds: plain, candidate 199/200 at 607 seconds
   against the incumbent's 200/200 at 617; shuffled, 199/200 at 609
-  against 198/200 at 629.
+  against 198/200 at 629.  Re-measured 2026-10-26, with the printer's
+  serve timed as the game's: plain, candidate 200/200 at 617 seconds
+  against the incumbent's 200/200 at 625; shuffled, 200/200 at 621
+  against 198/200 at 599, so under the shuffled screen the incumbent
+  now runs faster.
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
