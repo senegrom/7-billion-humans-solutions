@@ -129,6 +129,15 @@ so a program that hands cubes between workers can lose far more runs
 shuffled than plain: the Year 15 six wins about 45% there (see
 CLAUDE.md's jitter rule).
 
+**Model re-measured for the trade (2026-10-28):** a walker in the model
+now trades places with a worker standing idle at its pin's stop, as in
+the game, and pushes a worker aside from the tick its program reaches
+its end.  Every queued program was measured again, and two entries move,
+by little: the Year 30 probabilistic four wins 154/200 plain and 151/200
+shuffled (301/400 on both screens), and yifeixuer's Year 40 program runs
+a frame faster, still 3 s slower than the incumbent by the game's rule.
+The Year 15 community six keeps its figures.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -349,8 +358,10 @@ under the game's 25-round check none of them can realistically be kept.
   printer's serve timed as the game's (2026-10-26) it runs 2,457 frames,
   still 39 s, and wins 263/1000 shuffled, while the incumbent runs 2,302
   frames, 36 s, its live speed, and wins every run on both screens: 3 s
-  slower by the game's rule.  It stays queued at the maintainer's request
-  as the live test of the 36 s its author reported.
+  slower by the game's rule.  With walkers trading places with a worker
+  idle at its pin's stop (2026-10-28) it runs 2,456 frames, still 39 s,
+  and still wins 263/1000 shuffled.  It stays queued at the maintainer's
+  request as the live test of the 36 s its author reported.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
   and the editor size.  A completion at 36 s or faster takes the speed
@@ -427,13 +438,16 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 152/200 plain and 152/200 shuffled
-  (2026-10-26, with the game's hand-off: its take also takes sheets from
-  other workers' hands; 301/400 and 309/400 over 400 runs; 146/200 and
+- Current emulator evidence: 154/200 plain and 151/200 shuffled
+  (2026-10-28, with walkers trading places with a worker its take has
+  pinned; 301/400 on both screens over 400 runs; 152/200 and 152/200 on
+  2026-10-26, with the game's hand-off: its take also takes sheets from
+  other workers' hands, 301/400 and 309/400 over 400 runs; 146/200 and
   133/200 on 2026-10-23, 147/200 and 149/200 on 2026-10-18, 618/1000
-  and 616/1000 on 2026-09-14), a completion kept on about 75% of
-  attempts.  Winning runs average about 1,137 s, so they often finish
-  only just before the game deadline.
+  and 616/1000 on 2026-09-14), a completion kept on about 77% of
+  attempts (75% over 400 runs).  Winning runs average about 1,133 s
+  (1,142 s over 400), so they often finish only just before the game
+  deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
