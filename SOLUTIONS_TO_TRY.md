@@ -138,6 +138,21 @@ shuffled (301/400 on both screens), and yifeixuer's Year 40 program runs
 a frame faster, still 3 s slower than the incumbent by the game's rule.
 The Year 15 community six keeps its figures.
 
+**Model re-measured for the approach square (2026-10-31):** a giver or
+taker walking up to its partner in the model now heads, stride by
+stride, for the floor square beside the partner nearest it, whoever
+stands there, as the game does.  It waits for a worker it cannot push
+aside, where it used to walk round to another square, and a worker
+waiting there on the same partner holds all three until a fourth
+worker's walk trades squares with the walker.  Every queued program was
+measured again, and two entries move: the Year 30 probabilistic four
+wins 131/200 plain and 130/200 shuffled (250/400 and 243/400 over 400
+runs), and the Year 15 community six 142/200 plain and 93/200 shuffled
+(730/1000 and 185/400).  On the game's own code, on the real levels, the
+walk takes the new square wherever the old and new walks part, 20 times
+in 20, and stands still in the same shapes.  Both programs stay above
+the floor and keep their places in the list.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -152,7 +167,7 @@ The Year 15 community six keeps its figures.
    Year 58 at 102, then Year 40 at 93 (yifeixuer's 2018 program, which
    the model now reads 3 s slower than the incumbent).
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); about 76% here.  Skip it if the
+   row on public evidence (16/25 live); about 73% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four; and the Year 30
@@ -397,7 +412,10 @@ under the game's 25-round check none of them can realistically be kept.
   shuffled** (180/400; kept on about 9%): when its `giveto s` finds a
   worker below, the two meet on a tick that depends on the order they
   take their turns, which the shuffled screen redraws every frame and
-  the game never does.
+  the game never does.  With givers heading for the square beside the
+  receiver nearest them (2026-10-31) it wins **142/200 plain** (730/1000),
+  about 61,800 frames, a completion kept on about 69% of attempts (72%
+  over 1000 runs), and **93/200 shuffled** (185/400; kept on about 10%).
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -438,16 +456,18 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 154/200 plain and 151/200 shuffled
-  (2026-10-28, with walkers trading places with a worker its take has
-  pinned; 301/400 on both screens over 400 runs; 152/200 and 152/200 on
-  2026-10-26, with the game's hand-off: its take also takes sheets from
-  other workers' hands, 301/400 and 309/400 over 400 runs; 146/200 and
-  133/200 on 2026-10-23, 147/200 and 149/200 on 2026-10-18, 618/1000
-  and 616/1000 on 2026-09-14), a completion kept on about 77% of
-  attempts (75% over 400 runs).  Winning runs average about 1,133 s
-  (1,142 s over 400), so they often finish only just before the game
-  deadline.
+- Current emulator evidence: 131/200 plain and 130/200 shuffled
+  (2026-10-31, with takers heading for the square beside the partner
+  nearest them and waiting for it; 250/400 and 243/400 over 400 runs;
+  154/200 and 151/200 on 2026-10-28, with walkers trading places with a
+  worker its take has pinned, 301/400 on both screens over 400 runs;
+  152/200 and 152/200 on 2026-10-26, with the game's hand-off: its take
+  also takes sheets from other workers' hands, 301/400 and 309/400 over
+  400 runs; 146/200 and 133/200 on 2026-10-23, 147/200 and 149/200 on
+  2026-10-18, 618/1000 and 616/1000 on 2026-09-14), a completion kept
+  on about 58% of attempts (51% over 400 runs).  Winning runs average
+  about 1,140 s (1,142 s over 400), so they often finish only just
+  before the game deadline.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the

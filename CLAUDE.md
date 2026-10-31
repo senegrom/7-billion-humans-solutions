@@ -99,8 +99,8 @@ steeply.
   which the game never changes and the shuffled screen redraws every
   frame (modelled since 2026-10-26).  Such a program can lose far more
   runs shuffled than plain: Year 24's speed record wins every plain run
-  and no shuffled one, and the Year 15 community six about 76% plain and
-  45% shuffled.
+  and no shuffled one, and the Year 15 community six about 73% plain and
+  46% shuffled.
 
 ## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
 

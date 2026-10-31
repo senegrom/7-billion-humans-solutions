@@ -39,7 +39,8 @@ the new ones.
   load-bearing on Shred Lines; no shuffled test was run.  (Re-measured
   2026-10-26, with the game's hand-off: 11/200 plain and 5/200
   shuffled, against the six's 152/200 and 91/200, still far below the
-  win-rate floor.)
+  win-rate floor; 2026-10-31, with the approach square: 12/200 and 6/200,
+  against the six's 142/200 and 93/200.)
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
