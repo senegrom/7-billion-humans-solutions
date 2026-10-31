@@ -170,9 +170,10 @@ the floor and keep their places in the list.
    row on public evidence (16/25 live); about 73% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
-   community speed 6-7 and Year 30 probabilistic four; and the Year 30
-   alternate five, an unpublished edit of the size-5 row whose only claim
-   is a small model speed edge that a live A/B has to confirm.
+   community speed 6-7 and Year 30 probabilistic four (read its crash
+   warning first); and the Year 30 alternate five, an unpublished edit of
+   the size-5 row whose only claim is a small model speed edge that a live
+   A/B has to confirm.
 6. Optional, the one low-percent item above the floor: the Year 23
    low-percent speed row at size 21, then 19 (in the model a completion
    is kept about once in 17 attempts and once in 95); stop at the first
@@ -468,6 +469,22 @@ under the game's 25-round check none of them can realistically be kept.
   on about 58% of attempts (51% over 400 runs).  Winning runs average
   about 1,140 s (1,142 s over 400), so they often finish only just
   before the game deadline.
+- **Crash warning (2026-10-31), not tested by the maintainer:** a walker
+  on a rising diagonal onto a cube passes through a third square for
+  about ten ticks, so one square can hold two bodies, and this program's
+  `takefrom nw,sw,ne` can then reach six things with no printer among
+  the first five.  On the game's own code, on the real level, that
+  overruns the list at the take's first tick, which would end the game.
+  This has not been run in the real game, and what a crash would do to
+  the save is unknown.  How often it happens is a model figure: about 1
+  run in 65 once the model's bodies follow the game's swing (the model
+  behind the rates above, whose bodies do not, reads about 1 in 1,000),
+  so about one attempt in five over the visible run and its 25 rounds,
+  and the kept figures above do not allow for that.
+  The confirmation only re-checks a row that is already published, so
+  copy the save aside first, or skip it.  CLAUDE.md's rule against a
+  list that can crash was written for one that crashes in every run;
+  this entry stays queued with this warning by the maintainer's choice.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
