@@ -71,7 +71,7 @@ steeply.
   shredder giver runs after its give.  That is what killed the Year 21
   merge's givers live: its `takefrom s` then named the shredder, and an
   empty-handed take there feeds the worker to it (the model now loses
-  that merge 195 runs in 200).  The records' paste-only `takefrom sw,s`
+  that merge 1,975 runs in 2,000).  The records' paste-only `takefrom sw,s`
   (Year 19) and `takefrom s,se` (Year 21 size) settle on the printer
   first and keep their workers alive; their `takefrom s` forms lose
   every run.

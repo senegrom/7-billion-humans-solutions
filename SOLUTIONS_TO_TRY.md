@@ -153,6 +153,19 @@ walk takes the new square wherever the old and new walks part, 20 times
 in 20, and stands still in the same shapes.  Both programs stay above
 the floor and keep their places in the list.
 
+**Model re-measured for the look (2026-11-01):** a take aimed by direction
+that finds a printer in the model now looks at its squares first and
+walks to the printer's front only once the look is over, as the game
+does; it used to set off at once and pay what was left of the look on
+arrival.  Every queued program was measured again, and one entry moves:
+the Year 30 probabilistic four wins 119/200 plain and 125/200 shuffled
+(238/400 and 243/400 over 400 runs).  The fall over 200 runs is the
+seeds, not the change: over 2,000 runs it wins 1,262 plain, against
+1,273 before.  On the game's own code, on the real levels, each of the
+222 printer takes by direction in its runs of eight published programs
+ends its look 33 ticks after it came up, before the worker moves.  The
+four stays above the floor and keeps its place in the list.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -457,18 +470,22 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 131/200 plain and 130/200 shuffled
-  (2026-10-31, with takers heading for the square beside the partner
-  nearest them and waiting for it; 250/400 and 243/400 over 400 runs;
-  154/200 and 151/200 on 2026-10-28, with walkers trading places with a
-  worker its take has pinned, 301/400 on both screens over 400 runs;
-  152/200 and 152/200 on 2026-10-26, with the game's hand-off: its take
-  also takes sheets from other workers' hands, 301/400 and 309/400 over
-  400 runs; 146/200 and 133/200 on 2026-10-23, 147/200 and 149/200 on
-  2026-10-18, 618/1000 and 616/1000 on 2026-09-14), a completion kept
-  on about 58% of attempts (51% over 400 runs).  Winning runs average
-  about 1,140 s (1,142 s over 400), so they often finish only just
-  before the game deadline.
+- Current emulator evidence: 119/200 plain and 125/200 shuffled
+  (2026-11-01, with a take by direction at a printer looking before it
+  walks to the front; 238/400 and 243/400 over 400 runs; 131/200 and
+  130/200 on 2026-10-31, with takers heading for the square beside the
+  partner nearest them and waiting for it, 250/400 and 243/400 over 400
+  runs; 154/200 and 151/200 on 2026-10-28, with walkers trading places
+  with a worker its take has pinned, 301/400 on both screens over 400
+  runs; 152/200 and 152/200 on 2026-10-26, with the game's hand-off: its
+  take also takes sheets from other workers' hands, 301/400 and 309/400
+  over 400 runs; 146/200 and 133/200 on 2026-10-23, 147/200 and 149/200
+  on 2026-10-18, 618/1000 and 616/1000 on 2026-09-14), a completion kept
+  on about 43% of attempts (43% over 400 runs).  The fall from 131 to
+  119 over 200 runs is the seeds, not the change: over 2,000 runs the
+  program wins 1,262 plain, against 1,273 before it, a completion kept
+  on about 52% of attempts.  Winning runs average about 1,127 s (1,130 s
+  over 400), so they often finish only just before the game deadline.
 - **Crash warning (2026-10-31), not tested by the maintainer:** a walker
   on a rising diagonal onto a cube passes through a third square for
   about ten ticks, so one square can hold two bodies, and this program's

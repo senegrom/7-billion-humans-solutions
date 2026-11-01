@@ -350,7 +350,10 @@ the new ones.
   square, so the diagonal give walks the giver onto the front, where it
   stays.  Its next command, `takefrom s`, then names the shredder, and an
   empty-handed take at a shredder feeds the worker to it.  The model now
-  loses the merge 195 runs in 200 (197 shuffled).  The records'
+  loses the merge 1,975 runs in 2,000, 1,982 shuffled, both before and
+  after its takes by direction began to look before they walk to a
+  printer (2026-11-01), though that change moves which runs it survives:
+  over the first 200 it lost 195 before and 199 after.  The records'
   paste-only take lists, `takefrom sw,s` on Year 19 and `takefrom s,se`
   on Year 21's size row, settle on the printer first and keep their
   workers alive; their `takefrom s` forms lose every run.)
