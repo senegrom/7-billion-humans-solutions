@@ -71,7 +71,7 @@ steeply.
   shredder giver runs after its give.  That is what killed the Year 21
   merge's givers live: its `takefrom s` then named the shredder, and an
   empty-handed take there feeds the worker to it (the model now loses
-  that merge 1,975 runs in 2,000).  The records' paste-only `takefrom sw,s`
+  that merge 1,988 runs in 2,000).  The records' paste-only `takefrom sw,s`
   (Year 19) and `takefrom s,se` (Year 21 size) settle on the printer
   first and keep their workers alive; their `takefrom s` forms lose
   every run.
@@ -99,8 +99,8 @@ steeply.
   which the game never changes and the shuffled screen redraws every
   frame (modelled since 2026-10-26).  Such a program can lose far more
   runs shuffled than plain: Year 24's speed record wins every plain run
-  and no shuffled one, and the Year 15 community six about 73% plain and
-  46% shuffled.
+  and no shuffled one, and the Year 15 community six about 68% plain and
+  40% shuffled.
 
 ## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
 

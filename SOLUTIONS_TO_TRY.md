@@ -166,6 +166,27 @@ seeds, not the change: over 2,000 runs it wins 1,262 plain, against
 ends its look 33 ticks after it came up, before the worker moves.  The
 four stays above the floor and keeps its place in the list.
 
+**Model re-measured for the list draw (2026-11-02):** a step naming several
+directions in the model now picks its square at random as the game
+does, passing over a square with a body or a claim on it, and gives way
+to a walker it blocks while it waits, keeping the square it picked; a
+step at a remembered thing gives way too once it has set out; and the
+model draws the game's random numbers for a look aimed by several
+directions, and twice at a printer's serve, as the game does.  Every
+queued program was measured again, and four entries above the parked
+long shots move.  The Year 15 community six wins 146/200 plain and
+77/200 shuffled (698/1000 and 165/400), 68.5% of 8,000 plain runs
+against 74.3% before; the Year 30 probabilistic four 115/200 and
+123/200 (240/400 and 215/400; 1,198/2,000 plain against 1,262);
+yifeixuer's Year 40 program now reads level with the incumbent, 36 s by
+the game's rule; and the Year 30 alternate five reads slower than the
+size-5 row over 200 worlds on both screens but faster over 1,000.  On
+the game's own code, on the real levels, the model now follows all four
+runs of the Year 15 six tick for tick, every square it draws included,
+and the three whole runs of the Year 30 four for 1,617 to 9,527 ticks.
+No entry falls below the floor, and the order stands.  Four parked long
+shots move a little.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -178,9 +199,9 @@ four stays above the floor and keeps its place in the list.
 3. **Speed tie-breaks**, each with the incumbent control run first, every
    run under a minute: Year 38 at 140, Year 09 at 14, Year 59 at 142,
    Year 58 at 102, then Year 40 at 93 (yifeixuer's 2018 program, which
-   the model now reads 3 s slower than the incumbent).
+   the model now reads level with the incumbent, 36 s by the game's rule).
 4. Optional control: the Year 15 community six, already the Solutions50+
-   row on public evidence (16/25 live); about 73% here.  Skip it if the
+   row on public evidence (16/25 live); about 68% here.  Skip it if the
    Year 15 five in item 2 completes.
 5. Optional, for a patient session: confirmations of the published Year 38
    community speed 6-7 and Year 30 probabilistic four (read its crash
@@ -389,8 +410,13 @@ under the game's 25-round check none of them can realistically be kept.
   frames, 36 s, its live speed, and wins every run on both screens: 3 s
   slower by the game's rule.  With walkers trading places with a worker
   idle at its pin's stop (2026-10-28) it runs 2,456 frames, still 39 s,
-  and still wins 263/1000 shuffled.  It stays queued at the maintainer's
-  request as the live test of the 36 s its author reported.
+  and still wins 263/1000 shuffled.  With steps at a remembered thing
+  giving way once they have set out, as the game's do (2026-11-02), it
+  runs 2,292 frames, 36 s by the game's rule, against the incumbent's
+  2,302 frames, also 36 s, and still wins 263/1000 shuffled; on the
+  game's own code its last cube lands at about frame 2,311 (36.98 s).
+  It stays queued at the maintainer's request as the live test of the
+  36 s its author reported.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
   and the editor size.  A completion at 36 s or faster takes the speed
@@ -430,6 +456,14 @@ under the game's 25-round check none of them can realistically be kept.
   receiver nearest them (2026-10-31) it wins **142/200 plain** (730/1000),
   about 61,800 frames, a completion kept on about 69% of attempts (72%
   over 1000 runs), and **93/200 shuffled** (185/400; kept on about 10%).
+  With its step drawing its square as the game does (2026-11-02) it wins
+  **146/200 plain** (698/1000), about 61,600 frames, a completion kept on
+  about 72% of attempts (67% over 1000 runs), and **77/200 shuffled**
+  (165/400; kept on about 2%).  The rise over 200 runs is the seeds: over
+  8,000 runs it wins 68.5%, against 74.3% before, more of its workers fed
+  to the shredders on the way.  On the game's own code, on the real
+  level, the model now follows all four of the game's runs of this
+  program tick for tick.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -470,22 +504,27 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 119/200 plain and 125/200 shuffled
-  (2026-11-01, with a take by direction at a printer looking before it
-  walks to the front; 238/400 and 243/400 over 400 runs; 131/200 and
-  130/200 on 2026-10-31, with takers heading for the square beside the
-  partner nearest them and waiting for it, 250/400 and 243/400 over 400
-  runs; 154/200 and 151/200 on 2026-10-28, with walkers trading places
-  with a worker its take has pinned, 301/400 on both screens over 400
-  runs; 152/200 and 152/200 on 2026-10-26, with the game's hand-off: its
-  take also takes sheets from other workers' hands, 301/400 and 309/400
-  over 400 runs; 146/200 and 133/200 on 2026-10-23, 147/200 and 149/200
-  on 2026-10-18, 618/1000 and 616/1000 on 2026-09-14), a completion kept
-  on about 43% of attempts (43% over 400 runs).  The fall from 131 to
-  119 over 200 runs is the seeds, not the change: over 2,000 runs the
-  program wins 1,262 plain, against 1,273 before it, a completion kept
-  on about 52% of attempts.  Winning runs average about 1,127 s (1,130 s
-  over 400), so they often finish only just before the game deadline.
+- Current emulator evidence: 115/200 plain and 123/200 shuffled
+  (2026-11-02, with its step drawing its square as the game does and
+  giving way while it waits; 240/400 and 215/400 over 400 runs; 119/200
+  and 125/200 on 2026-11-01, with a take by direction at a printer
+  looking before it walks to the front, 238/400 and 243/400 over 400
+  runs; 131/200 and 130/200 on 2026-10-31, with takers heading for the
+  square beside the partner nearest them and waiting for it, 250/400 and
+  243/400 over 400 runs; 154/200 and 151/200 on 2026-10-28, with walkers
+  trading places with a worker its take has pinned, 301/400 on both
+  screens over 400 runs; 152/200 and 152/200 on 2026-10-26, with the
+  game's hand-off: its take also takes sheets from other workers' hands,
+  301/400 and 309/400 over 400 runs; 146/200 and 133/200 on 2026-10-23,
+  147/200 and 149/200 on 2026-10-18, 618/1000 and 616/1000 on
+  2026-09-14), a completion kept on about 37% of attempts (44% over 400
+  runs).  Over 2,000 runs the program wins 1,198 plain, against 1,262
+  before, a completion kept on about 44% of attempts, and 60.1% of 8,000
+  runs against 64.3%: more of its runs end with a worker on its step,
+  holding a cube, waiting for a square that a worker waiting in its own
+  take on it holds, a standstill the game's own code shows on the real
+  level too.  Winning runs average about 1,128 s (1,138 s over 400), so
+  they often finish only just before the game deadline.
 - **Crash warning (2026-10-31), not tested by the maintainer:** a walker
   on a rising diagonal onto a cube passes through a third square for
   about ten ticks, so one square can hold two bodies, and this program's
@@ -530,7 +569,14 @@ under the game's 25-round check none of them can realistically be kept.
   serve timed as the game's: plain, candidate 200/200 at 617 seconds
   against the incumbent's 200/200 at 625; shuffled, 200/200 at 621
   against 198/200 at 599, so under the shuffled screen the incumbent
-  now runs faster.
+  now runs faster.  Re-measured 2026-11-02, with list steps picking their
+  squares at random as the game does: plain, candidate
+  200/200 at 615 seconds against the incumbent's 200/200 at 603;
+  shuffled, 200/200 at 638 against 197/200 at 634, so over 200 worlds the
+  candidate now reads slower on both screens.  Over 1,000 worlds it reads
+  faster on both: plain 614 against 631 seconds, shuffled 618 against
+  632 (998/1000 on both screens, against 997 and 992).  The 200-world
+  difference is within noise: its standard error is about 17 seconds.
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
@@ -653,8 +699,13 @@ Nothing below this line needs game time.
   frame-identical to the incumbent at 326 frames and modelled speed 6, while
   using 21 instead of 24 item actions.  Re-measured 2026-10-18: 235/1000
   plain, every win at the incumbent's 370 frames (it wins 1000/1000), and
-  175/1000 shuffled, averaging 399; 24 item actions to its 27.  Canonical
-  sizes are 17 and 20; the incumbent's authoritative live score is 5.
+  175/1000 shuffled, averaging 399; 24 item actions to its 27.
+  Re-measured 2026-11-02: 117/1000 plain, every win still at 370 frames,
+  and 121/1000 shuffled, averaging 399.  Its two workers take their
+  steps up on one tick, and as in the game both now find the square
+  free, so the second draws its other square half the time; the model
+  used to count the first one's claim at once.  Canonical sizes are 17
+  and 20; the incumbent's authoritative live score is 5.
 - Construction caveat: the random diagonal step is paste-only, so retain the
   clipboard marker and LowPercent classification.
 - Suggested live test: a handful of attempts should normally produce a win;
@@ -695,6 +746,9 @@ Nothing below this line needs game time.
   level's 0-6 at the start of every run, as the game does): **73/1000
   plain and 92/1000 shuffled**, in line with the live source's "10%".
   It read 0/20 while the model drew those seven cubes independently.
+  Re-measured 2026-11-02: **65/1000 plain and 85/1000 shuffled**, winning
+  runs about 20 s by the game's rule, from 18; over 2,000 plain runs 130
+  against 149, within noise.
 - Expected editor size: **4**.
 - Suggested live test: 10-20 runs; capture the final cube/worker arrangement on
   every failure.
@@ -715,9 +769,10 @@ Nothing below this line needs game time.
 - Model evidence (2026-10-18, now that the model deals the level's 0-6 at
   the start of every run, as the game does): **10/1000 plain and 17/1000
   shuffled**, on the 1-in-100 line, so it moved up from the parked long
-  shots.  The model now wins the public size-4 program too (73/1000 plain,
-  92/1000 shuffled).  The figure first given here, `7! / 7^7` (about
-  0.612%) for value uniqueness, assumed independent draws.
+  shots; 11/1000 and 15/1000 on 2026-11-02.  The model now wins the public
+  size-4 program too (65/1000 plain, 85/1000 shuffled).  The figure first
+  given here, `7! / 7^7` (about 0.612%) for value uniqueness, assumed
+  independent draws.
 - Expected editor size: **3**.
 - Suggested live test: repeated fresh runs, capturing every exactly-seven
   survivor pattern and the first completion panel.
@@ -756,7 +811,9 @@ Nothing below this line needs game time.
   leaves collision-free successful routes reachable.
 - Capped-emulator evidence: 14/100 wins; winning speed averaged 365.9, ranged
   from 59 to 1,223, and used 3,635-76,436 frames.  Re-measured 2026-10-18:
-  33/200 plain and 30/200 shuffled, winning runs averaging about 437 s.
+  33/200 plain and 30/200 shuffled, winning runs averaging about 437 s;
+  on 2026-11-02 40/200 plain and 42/200 shuffled, about 444 s plain
+  (385 of 2,000 plain runs against 346, within noise).
 - Expected editor size: **5**.
 - Entry method: paste the text because the six-direction random step is not
   constructible from the normal editor controls.

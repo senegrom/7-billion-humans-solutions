@@ -40,7 +40,8 @@ the new ones.
   2026-10-26, with the game's hand-off: 11/200 plain and 5/200
   shuffled, against the six's 152/200 and 91/200, still far below the
   win-rate floor; 2026-10-31, with the approach square: 12/200 and 6/200,
-  against the six's 142/200 and 93/200.)
+  against the six's 142/200 and 93/200; 2026-11-02, with the list draw:
+  9/200 and 10/200, against the six's 146/200 and 77/200.)
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
@@ -350,10 +351,13 @@ the new ones.
   square, so the diagonal give walks the giver onto the front, where it
   stays.  Its next command, `takefrom s`, then names the shredder, and an
   empty-handed take at a shredder feeds the worker to it.  The model now
-  loses the merge 1,975 runs in 2,000, 1,982 shuffled, both before and
-  after its takes by direction began to look before they walk to a
-  printer (2026-11-01), though that change moves which runs it survives:
-  over the first 200 it lost 195 before and 199 after.  The records'
+  loses the merge 1,988 runs in 2,000, 1,983 shuffled, since its list
+  steps pick their squares at random as the game does and its looks and
+  serves draw the game's random numbers (2026-11-02); it lost 1,975 and
+  1,982 both before and after its takes by direction began to look
+  before they walk to a printer (2026-11-01), a change that moved which
+  runs it survives, not how many: over the first 200 it lost 195 before
+  and 199 after.  The records'
   paste-only take lists, `takefrom sw,s` on Year 19 and `takefrom s,se`
   on Year 21's size row, settle on the printer first and keep their
   workers alive; their `takefrom s` forms lose every run.)
