@@ -788,7 +788,10 @@ Nothing below this line needs game time.
 - Same-seed emulator A/B evidence: candidate and incumbent won the identical
   5/20 seeds, each in exactly 411 frames with modelled speed 7 and 11 item
   actions.  Re-measured 2026-10-18: both 322/1000 plain and shuffled, at
-  the same 411 frames and 11 item actions.  Canonical sizes are 83 and 84.
+  the same 411 frames and 11 item actions.  Re-measured 2026-11-03: both
+  still win the same 322/1000 runs on both screens, each run in the same
+  frames, but a win now takes 414-421 frames, 417 on average (6 s by the
+  game's rule), with 11 item actions.  Canonical sizes are 83 and 84.
 - Expected editor size: **83**; expected displayed speed: **about 6**.
 - Suggested live test: run repeated candidate attempts until it wins, then
   capture the completion panel and editor size.
@@ -896,8 +899,10 @@ Nothing below this line needs game time.
   maximum for more than a second; losing the last maximum cube ends the run.
 - Emulator evidence (2026-10-18, with the game's own goal and its deal of
   ten different numbers): 93/1,000 plain and 95/1,000 shuffled, winning runs
-  averaging 1,018 frames (about 16 s); 84/1,000 before.  Every win
-  completes far before the deadline.
+  averaging 1,018 frames (about 16 s); 84/1,000 before.  Re-measured
+  2026-11-03: still 93/1,000 plain and 95/1,000 shuffled, the winning
+  runs now averaging 1,033 frames plain (16 s by the game's rule) and
+  1,064 shuffled (17 s).  Every win completes far before the deadline.
 - Expected editor size: **3**.
 - Entry method: paste the text because `step n,s` is a random multi-direction
   command unavailable from the normal editor controls.
@@ -1021,6 +1026,9 @@ Nothing below this line needs game time.
   predicted the first winning world at seed 69,510 with counts `[13,9,11,11,12,8]` and samples
   `[5,1,3,3,4,0]`.  The capped emulator then found exactly 1/69,510 wins, at
   that final seed, completing in 342 frames with displayed speed 6.
+  Re-measured 2026-11-03: still exactly 1/69,510, at that seed, in 342
+  frames, which by the game's rule (16 ms a tick, whole seconds) shows 5
+  s.
 - Expected editor size: **6**; every command is available in Year 52.
 - Suggested live test: this is mathematically sound but far too rare for a
   practical manual campaign.  Preserve it for a lucky natural run or a future
@@ -1042,6 +1050,9 @@ Nothing below this line needs game time.
 - Witness: an independent search of the model's random worlds found seed
   3,868,438.  All five eight-value groups sum to 36, and the isolated seed-offset emulator
   won in 2,099 frames with displayed speed 34 and 172 item actions.
+  Re-measured 2026-11-03: that seed still wins, in 2,099 frames with 172
+  item actions, which by the game's rule (16 ms a tick, whole seconds)
+  shows 33 s.
 - Expected editor size: **5**.
 - Entry method: paste the text because the ordered multi-target `pickup c,s`
   is not constructible from Year 55's normal editor controls.
@@ -1067,8 +1078,10 @@ Nothing below this line needs game time.
   group's maximum.
 - Witness: an independent search of the model's random worlds found seed
   3,281,406.  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
-  group.  An isolated seed-offset emulator run then won in 310 frames with
-  displayed speed 5 and 14 item actions.
+  group.  An isolated seed-offset emulator run then won in 310 frames
+  with displayed speed 5 and 14 item actions.  Re-measured 2026-11-03:
+  that seed still wins, with 14 item actions, but now in 718 frames, 11
+  s by the game's rule (16 ms a tick, whole seconds).
 - Expected editor size: **3**; all commands are available in Year 56.
 - Suggested live test: preserve this as a mathematically witnessed rare record;
   natural manual verification is impractical without a reproducible RNG-start
@@ -1107,7 +1120,9 @@ Nothing below this line needs game time.
   equidistant cubes, and overwrites the selected cube.  The correct nearest
   tie choice in all eight pairs has probability close to `1/2^8`.
 - Capped-emulator evidence: 44/10,000 wins (0.44%); every win completed in 146
-  frames with displayed speed 3.
+  frames with displayed speed 3.  Re-measured 2026-11-03: still
+  44/10,000, every win in 146 frames, which by the game's rule (16 ms a
+  tick, whole seconds) shows 2 s.
 - Expected editor size: **5**; all commands are available in Year 33.
 - Suggested live test: repeated quick runs; roughly a few hundred attempts per
   observed win is plausible, but record the actual tie behavior.
