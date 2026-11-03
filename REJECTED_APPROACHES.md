@@ -41,7 +41,9 @@ the new ones.
   shuffled, against the six's 152/200 and 91/200, still far below the
   win-rate floor; 2026-10-31, with the approach square: 12/200 and 6/200,
   against the six's 142/200 and 93/200; 2026-11-02, with the list draw:
-  9/200 and 10/200, against the six's 146/200 and 77/200.)
+  9/200 and 10/200, against the six's 146/200 and 77/200; 2026-11-03, with
+  the bodies' paths: 7/200 and 11/200, against the six's 147/200 and
+  76/200.)
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
