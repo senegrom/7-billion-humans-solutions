@@ -95,15 +95,15 @@ steeply.
   say so.  The game runs its workers in one fixed order every tick, the
   emulator's plain order, so the plain rate is the model's own rate; the
   shuffled screen measures how much a choreography leans on exact timing
-  (Year 44's speed record wins every plain run and about one shuffled run
-  in twenty).  Programs that hand cubes from worker to worker lean on
-  that order hardest: a give to a worker, or a take from one, meets its
-  partner on a tick that depends on the order the two take their turns,
-  which the game never changes and the shuffled screen redraws every
-  frame (modelled since 2026-10-26).  Such a program can lose far more
-  runs shuffled than plain: Year 24's speed record wins every plain run
-  and no shuffled one, and the Year 15 community six about 68% plain and
-  40% shuffled.
+  (Year 44's old 17-command speed record wins every plain run and about
+  one shuffled run in twenty).  Programs that hand cubes from worker to
+  worker lean on that order hardest: a give to a worker, or a take from
+  one, meets its partner on a tick that depends on the order the two
+  take their turns, which the game never changes and the shuffled screen
+  redraws every frame (modelled since 2026-10-26).  Such a program can
+  lose far more runs shuffled than plain: Year 24's speed record wins
+  every plain run and no shuffled one, and the Year 15 community six
+  about 68% plain and 40% shuffled.
 
 ## Machine and list rules (learned live, 2026-08-17 to 2026-09-06)
 

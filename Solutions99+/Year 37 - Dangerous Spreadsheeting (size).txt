@@ -1,13 +1,16 @@
 -- 7 Billion Humans (2214M) --
 -- 37: Dangerous Spreadsheeting --
--- Size 12 Speed 30s --
+-- Size 12 Speed 26s --
 
 a:
-if c == 0 and
- e == wall or
- e == hole:
+if w == nothing and
+ e == nothing or
+ e == datacube:
+	step e
+else:
 	step se
-	if e == wall or
+	if c == 0 and
+	 e == wall or
 	 ne == hole:
 		step e
 		pickup c
@@ -15,8 +18,6 @@ if c == 0 and
 		drop
 	endif
 	step ne
-else:
-	step e
 endif
 mem1 = calc mem1 + c
 jump a

@@ -531,8 +531,8 @@ the new ones.
     its 134-second average was slower than the size-9 incumbent's 130.
   - Y44 speed-at-size-8: completes live at displayed speed 2 -- the
     source's claimed 1 did not reproduce, and speed ranks first, so the
-    17-command speed-1 row stands.  Re-rolls might show 1; parked until
-    someone feels lucky.
+    speed-1 row stands (17 commands then, motlin's 11 since 2026-11-06).
+    Re-rolls might show 1; parked until someone feels lucky.
 - Set/if fold class EXHAUSTED corpus-wide: after Year 36's four live-
   confirmed folds, dead-store analysis of every remaining
   `memN = set X` + `if memN` pair in the published set (five more in
