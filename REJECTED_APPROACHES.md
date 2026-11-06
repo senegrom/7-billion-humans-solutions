@@ -41,9 +41,10 @@ the new ones.
   shuffled, against the six's 152/200 and 91/200, still far below the
   win-rate floor; 2026-10-31, with the approach square: 12/200 and 6/200,
   against the six's 142/200 and 93/200; 2026-11-02, with the list draw:
-  9/200 and 10/200, against the six's 146/200 and 77/200; 2026-11-03, with
-  the bodies' paths: 7/200 and 11/200, against the six's 147/200 and
-  76/200.)
+  9/200 and 10/200, against the six's 146/200 and 77/200; 2026-11-03,
+  with the bodies' paths: 7/200 and 11/200, against the six's 147/200
+  and 76/200; 2026-11-06, with the walks' timing: 8/200 and 11/200,
+  against the six's 146/200 and 75/200.)
 - Y16 size-4 random `step s,e` route: a finite three-cube path exists, but two
   buffered witness batches timed out without yielding a result and the static
   route probability is too low for a practical live test.  Retain as theory,
@@ -353,16 +354,17 @@ the new ones.
   square, so the diagonal give walks the giver onto the front, where it
   stays.  Its next command, `takefrom s`, then names the shredder, and an
   empty-handed take at a shredder feeds the worker to it.  The model now
-  loses the merge 1,988 runs in 2,000, 1,983 shuffled, since its list
-  steps pick their squares at random as the game does and its looks and
-  serves draw the game's random numbers (2026-11-02); it lost 1,975 and
-  1,982 both before and after its takes by direction began to look
-  before they walk to a printer (2026-11-01), a change that moved which
-  runs it survives, not how many: over the first 200 it lost 195 before
-  and 199 after.  The records'
-  paste-only take lists, `takefrom sw,s` on Year 19 and `takefrom s,se`
-  on Year 21's size row, settle on the printer first and keep their
-  workers alive; their `takefrom s` forms lose every run.)
+  loses the merge 1,985 runs in 2,000, 1,986 shuffled, since its walks
+  are timed as the game's (2026-11-06); it lost 1,988 and 1,983 once its
+  list steps picked their squares at random as the game does and its
+  looks and serves drew the game's random numbers (2026-11-02), and
+  1,975 and 1,982 both before and after its takes by direction began to
+  look before they walk to a printer (2026-11-01), a change that moved
+  which runs it survives, not how many: over the first 200 it lost 195
+  before and 199 after.  The records' paste-only take lists,
+  `takefrom sw,s` on Year 19 and `takefrom s,se` on Year 21's size row,
+  settle on the printer first and keep their workers alive; their
+  `takefrom s` forms lose every run.)
 - Y24 size-4 one-sided relay (`if myitem == something or w == hole:
   takefrom s; giveto e,s`): REFUTED LIVE by the maintainer -- "immediately
   throws the cube back in the printer and then dies (not allowed)".  The
@@ -410,8 +412,13 @@ the new ones.
   live control.)  (Re-run on 2026-10-26 with the printer's serve timed
   as the game's: the Year 40 three show 36, 38 and 41, exactly the live
   figures, and the Year 39 stack ties its incumbent at 35, so only the
-  jitter rule drops it now, with 50 shuffled wins in 200 against the
-  incumbent's 200.)
+  jitter rule dropped it then, with 50 shuffled wins in 200 against the
+  incumbent's 200.)  (Re-run on 2026-11-06 with the walks timed as the
+  game's: the Year 40 three still show 36, 38 and 41, and the Year 39
+  stack shows 36 against its incumbent's 35 again, so the model reads it
+  slower, as the game did, with 58 shuffled wins in 200; it now does one
+  item action fewer than its incumbent, its last take not served before
+  the room completes.)
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results

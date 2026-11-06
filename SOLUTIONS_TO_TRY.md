@@ -28,7 +28,10 @@ needs the control.)  (Re-run on 2026-10-26, with the printer's serve
 timed as the game's, the model reads the Year 40 incumbent and its two
 refuted candidates at exactly their live 36, 38 and 41 s, but the Year
 39 stack as a tie with its incumbent, 35 against 35, where the game
-showed 41 against 36: a modelled tie still needs the control.)
+showed 41 against 36: a modelled tie still needs the control.)  (Re-run
+on 2026-11-06, with the walks timed as the game's, the model still reads
+the Year 40 three at 36, 38 and 41 s, and now the Year 39 stack slower
+than its incumbent, 36 against 35, as the game showed.)
 
 Rates are quoted at the live 1,400 s clock, measured plain and under the
 shuffled-dispatch screen (the worker dispatch order shuffled every
@@ -214,6 +217,41 @@ Year 15 six tick for tick, and the three whole runs of the Year 30 four
 now for 1,617 to 19,923 ticks.  No entry falls below the floor, and the
 order stands.  One parked long shot moves a little.
 
+**Model re-measured for the walks' timing (2026-11-06):** the model now
+times a worker's walks as the game does.  A walk along a route that ends
+short of its last square's centre leaves the next walk a tick late; a
+step at a remembered worker that ends beside it once its stride is
+refused, and an errand given up where it stands, forget the refused
+stride, so the worker stands and walkers go round it; every item command
+that walks to its thing sets out a tick after it comes up, and a feed
+hands its cube to the shredder a tick or two sooner; a worker that lands
+from a direction step, or from a step at a remembered thing on its
+walk's last square, stands on its square to the other workers' routes
+from the tick it lands, unless another direction step comes next; and a
+walk refused while its body stands short of its square's centre walks
+the body on to the centre first, claiming its next square only once the
+body is there.  Every queued program was measured again, and six entries
+above the parked long shots move.  The Year 15 community six wins
+146/200 plain and 75/200 shuffled (691/1000 and 160/400), 68.8% of 8,000
+plain runs as before; the Year 30 probabilistic four 120/200 and 106/200
+(228/400 and 214/400), 58.4% of 8,000 plain runs against 60.1%, and
+about 1 run in 53 now crashes, against 1 in 70 (see its warning); the
+Year 38 speed tie-break wins 988/1000 plain and 989 shuffled, and its
+fallback and the incumbent 997/1000 as before; yifeixuer's Year 40
+program runs 2,298 frames and wins 223/1000 shuffled, from 263, while
+the incumbent runs 2,295, as on the game's own code, both still 36 s by
+the game's rule; the Year 38 community six-seven averages 437 frames,
+from 438; and the Year 30 alternate five now reads faster than the
+size-5 row on both screens over 200 and over 1,000 worlds, within noise.
+Every other rate and average over 200 to 1,000 runs moves within noise.
+The model now reads the Year 39 diagonal stack slower than its
+incumbent, as the game showed (see the speed note above).  On the game's
+own code, on the real levels, the model now follows all three whole runs
+of the Year 30 four and the Year 40 incumbent's run to their ends, and
+matches every worker's hands in the four runs of the Year 15 six too.
+No entry falls below the floor, and the order stands.  Two parked long
+shots move a little.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -342,7 +380,10 @@ under the game's 25-round check none of them can realistically be kept.
   following the game's paths: the candidate 989 on both screens at 616
   frames plain and 617 shuffled, the fallback and the incumbent 997 on
   both at 628, a few runs fewer each, within noise; still 9 s against 10
-  by the game's rule.
+  by the game's rule.  Re-measured 2026-11-06, with the walks timed as
+  the game's: the candidate 988 plain and 989 shuffled at 615 frames,
+  the fallback and the incumbent 997 on both screens at 627, within
+  noise; still 9 s against 10 by the game's rule.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
 - Result: _not yet tested in the game_.
@@ -450,6 +491,11 @@ under the game's 25-round check none of them can realistically be kept.
   2,292 frames and wins 263/1000 shuffled, while the incumbent now runs
   2,291 frames, its walkers refused in the middle of a route walking on
   toward their squares' centres as the game's do: a frame faster than
+  this program, both 36 s by the game's rule.  With the walks timed as
+  the game's (2026-11-06) it runs 2,298 frames and wins 223/1000
+  shuffled, its errands now setting out a tick after they come up, while
+  the incumbent runs 2,295 frames, as its run on the game's own code
+  does, which the model now follows to the end: 3 frames faster than
   this program, both 36 s by the game's rule.  It stays queued at the
   maintainer's request as the live test of the 36 s its author reported.
 - Suggested live test: run the incumbent once as the control, then this
@@ -504,7 +550,14 @@ under the game's 25-round check none of them can realistically be kept.
   runs), and **76/200 shuffled** (162/400; kept on about 2%), within
   noise of the figures before: over 8,000 plain runs it wins 68.8%,
   against 68.5%.  On the game's own code the model still follows the
-  game's four runs of this program tick for tick.
+  game's four runs of this program tick for tick.  With the walks timed
+  as the game's (2026-11-06) it wins **146/200 plain** (691/1000), about
+  61,900 frames, a completion kept on about 72% of attempts (65% over
+  1000 runs), and **75/200 shuffled** (160/400; kept on about 2%),
+  within noise: over 8,000 plain runs it wins 68.8%, as before.  On the
+  game's own code the model now matches every worker's hands in those
+  four runs too, where a feed used to let its cube go a tick or two
+  late.
 - Mechanism: a random seven-direction walk with a guarded pickup/give; the
   give lands on the south shredder row.  No `myitem` anywhere, so the
   refuted Year 15 gated-form class does not apply.
@@ -522,10 +575,10 @@ under the game's 25-round check none of them can realistically be kept.
   (found in the 2026-08-17 source audit; it was never in our tables).
 - Public evidence: 67/125 real-game wins (53.6%) at displayed speed 6-7.
 - Local emulator: 669/1000 plain and shuffled (2026-10-18, and again
-  2026-10-23 and 2026-11-03; 36/50 before), average 437 frames (438 on
-  2026-11-03, within noise), a completion kept on about 61% of attempts
-  (win/fail evidence only; the model's speed is an estimate, and theirs
-  is live-measured).
+  2026-10-23, 2026-11-03 and 2026-11-06; 36/50 before), average 437
+  frames (438 on 2026-11-03, and 437 again on 2026-11-06, within noise),
+  a completion kept on about 61% of attempts (win/fail evidence only;
+  the model's speed is an estimate, and theirs is live-measured).
 - Expected editor size: **122**; glitchless, so it should also be
   typable/editable normally.
 - Suggested live test: repeated runs until a win; capture displayed speed
@@ -546,34 +599,37 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 125/200 plain and 106/200 shuffled
-  (2026-11-03, with the bodies following the game's paths; 249/400 and
-  208/400 over 400 runs; 115/200 and 123/200 on 2026-11-02, with its
-  step drawing its square as the game does and giving way while it
-  waits, 240/400 and 215/400 over 400 runs; 119/200 and 125/200 on
-  2026-11-01, with a take by direction at a printer looking before it
-  walks to the front, 238/400 and 243/400 over 400 runs; 131/200 and
-  130/200 on 2026-10-31, with takers heading for the square beside the
-  partner nearest them and waiting for it, 250/400 and 243/400 over 400
-  runs; 154/200 and 151/200 on 2026-10-28, with walkers trading places
-  with a worker its take has pinned, 301/400 on both screens over 400
-  runs; 152/200 and 152/200 on 2026-10-26, with the game's hand-off: its
-  take also takes sheets from other workers' hands, 301/400 and 309/400
-  over 400 runs; 146/200 and 133/200 on 2026-10-23, 147/200 and 149/200
-  on 2026-10-18, 618/1000 and 616/1000 on 2026-09-14), a completion kept
-  on about 51% of attempts (50% over 400 runs).  The rise over 200 runs
-  is the seeds: over 2,000 runs the program wins 1,216 plain, against
-  1,198 before (and 1,262 before 2026-11-02), a completion kept on about
-  46% of attempts, and 60.1% of 8,000 runs, as before, its crashes
-  (below) taking the place of other losses.  That 60.1% fell from 64.3%
-  on 2026-11-02, more of its runs ending with a worker on its step,
-  holding a cube, waiting for a square that a worker waiting in its own
-  take on it holds, a standstill the game's own code shows on the real
-  level too.  Shuffled it now wins 2,065 of 4,000 runs, against 2,194:
-  the crashes and more standstills at a meeting take the difference.
-  Winning runs average about 1,133 s (1,143 s over 400), so they often
-  finish only just before the game deadline.
-- **Crash warning (2026-10-31, re-measured 2026-11-03), not tested by
+- Current emulator evidence: 120/200 plain and 106/200 shuffled
+  (2026-11-06, with the walks timed as the game's; 228/400 and 214/400
+  over 400 runs; 125/200 and 106/200 on 2026-11-03, with the bodies
+  following the game's paths, 249/400 and 208/400 over 400 runs; 115/200
+  and 123/200 on 2026-11-02, with its step drawing its square as the
+  game does and giving way while it waits, 240/400 and 215/400 over 400
+  runs; 119/200 and 125/200 on 2026-11-01, with a take by direction at a
+  printer looking before it walks to the front, 238/400 and 243/400 over
+  400 runs; 131/200 and 130/200 on 2026-10-31, with takers heading for
+  the square beside the partner nearest them and waiting for it, 250/400
+  and 243/400 over 400 runs; 154/200 and 151/200 on 2026-10-28, with
+  walkers trading places with a worker its take has pinned, 301/400 on
+  both screens over 400 runs; 152/200 and 152/200 on 2026-10-26, with
+  the game's hand-off: its take also takes sheets from other workers'
+  hands, 301/400 and 309/400 over 400 runs; 146/200 and 133/200 on
+  2026-10-23, 147/200 and 149/200 on 2026-10-18, 618/1000 and 616/1000
+  on 2026-09-14), a completion kept on about 44% of attempts (35% over
+  400 runs).  Over 2,000 runs the program wins 1,176 plain, against
+  1,216 before (and 1,262 before 2026-11-02), a completion kept on about
+  41% of attempts, and 58.4% of 8,000 runs, against 60.1%: more of its
+  runs end in a standstill the game's own code shows on the real level
+  too, a worker walking up to its partner bound for a square held by a
+  worker waiting in its own take on that partner, and more of them crash
+  (below).  That 60.1% fell from 64.3% on 2026-11-02, more of its runs
+  ending with a worker on its step, holding a cube, waiting for a square
+  that a worker waiting in its own take on it holds, a standstill the
+  game's own code shows on the real level too.  Shuffled it now wins
+  2,110 of 4,000 runs, against 2,065 (and 2,194 before 2026-11-03),
+  within noise.  Winning runs average about 1,183 s (1,174 s over 400),
+  so they often finish only just before the game deadline.
+- **Crash warning (2026-10-31, re-measured 2026-11-06), not tested by
   the maintainer:** a walker on a rising diagonal onto a cube passes
   through a third square for about ten ticks, so one square can hold two
   bodies, and this program's `takefrom nw,sw,ne` can then reach six
@@ -581,14 +637,15 @@ under the game's 25-round check none of them can realistically be kept.
   on the real level, that overruns the list at the take's first tick,
   which would end the game.  This has not been run in the real game, and
   what a crash would do to the save is unknown.  How often it happens is
-  a model figure: since the model's bodies follow the game's paths
-  (2026-11-03) it crashes 115 of 8,000 plain runs, about 1 in 70, and 52
-  of 4,000 shuffled, so about one attempt in five over the visible run
-  and its 25 rounds.  The rates above count those runs as lost, but the
-  kept figures do not allow for a crash ending the attempt.  (On
-  2026-10-31 a model whose bodies followed the game's swing forecast
-  about 1 run in 65, while the model then behind the rates, whose bodies
-  did not, read about 1 in 1,000; 7 of 8,000 plain runs on 2026-11-02.)
+  a model figure: with the walks timed as the game's (2026-11-06) it
+  crashes 150 of 8,000 plain runs, about 1 in 53, and 52 of 4,000
+  shuffled, so about one attempt in four over the visible run and its 25
+  rounds.  The rates above count those runs as lost, but the kept
+  figures do not allow for a crash ending the attempt.  (On 2026-10-31 a
+  model whose bodies followed the game's swing forecast about 1 run in
+  65, while the model then behind the rates, whose bodies did not, read
+  about 1 in 1,000; 7 of 8,000 plain runs on 2026-11-02, and 115, about
+  1 in 70, on 2026-11-03, once the bodies followed the game's paths.)
   The confirmation only re-checks a row that is already published, so
   copy the save aside first, or skip it.  CLAUDE.md's rule against a
   list that can crash was written for one that crashes in every run;
@@ -635,9 +692,15 @@ under the game's 25-round check none of them can realistically be kept.
   at 614.  Over 1,000 worlds, plain, 998/1000 at 620 seconds against
   995/1000 at 624; shuffled, 995/1000 at 623 against 991/1000 at 623.
   Every difference is within noise (a standard error of about 17 seconds
-  over 200 worlds and 8 over 1,000).  Though it reads slower over 200
-  worlds, it stays queued for now by the maintainer's choice
-  (2026-11-02).
+  over 200 worlds and 8 over 1,000).  Re-measured 2026-11-06, with the
+  walks timed as the game's: over 200 worlds, plain, candidate 200/200
+  at 622 seconds against the incumbent's 200/200 at 637; shuffled,
+  198/200 at 628 against 199/200 at 644.  Over 1,000 worlds, plain,
+  999/1000 at 613 seconds against 993/1000 at 627; shuffled, 994/1000 at
+  619 against 994/1000 at 632.  It now reads faster on both screens over
+  200 and over 1,000 worlds, by 13 to 16 seconds, each time within two
+  standard errors (about 18 seconds over 200 worlds and 8 over 1,000).
+  It stays queued for now by the maintainer's choice (2026-11-02).
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
@@ -791,7 +854,10 @@ Nothing below this line needs game time.
   the same 411 frames and 11 item actions.  Re-measured 2026-11-03: both
   still win the same 322/1000 runs on both screens, each run in the same
   frames, but a win now takes 414-421 frames, 417 on average (6 s by the
-  game's rule), with 11 item actions.  Canonical sizes are 83 and 84.
+  game's rule), with 11 item actions; and on 2026-11-06, with the walks
+  timed as the game's, they still win the same runs, each in the same
+  frames on both programs, a win in 412-420 frames, 416 on average,
+  still 6 s.  Canonical sizes are 83 and 84.
 - Expected editor size: **83**; expected displayed speed: **about 6**.
 - Suggested live test: run repeated candidate attempts until it wins, then
   capture the completion panel and editor size.
@@ -1080,8 +1146,10 @@ Nothing below this line needs game time.
   3,281,406.  Its selected values are `[70,87,83,79,96,98,90]`, each the maximum of its
   group.  An isolated seed-offset emulator run then won in 310 frames
   with displayed speed 5 and 14 item actions.  Re-measured 2026-11-03:
-  that seed still wins, with 14 item actions, but now in 718 frames, 11
-  s by the game's rule (16 ms a tick, whole seconds).
+  that seed still wins, with 14 item actions, but now in 718 frames,
+  11 s by the game's rule (16 ms a tick, whole seconds); and on
+  2026-11-06, with the walks timed as the game's, in 704 frames, still
+  11 s.
 - Expected editor size: **3**; all commands are available in Year 56.
 - Suggested live test: preserve this as a mathematically witnessed rare record;
   natural manual verification is impractical without a reproducible RNG-start

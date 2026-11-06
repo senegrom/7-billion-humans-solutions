@@ -52,14 +52,17 @@ steeply.
   exact: in the 2026-08-15 Year 39 and 40 A/Bs the old model ran the
   candidates in their incumbents' frames or fewer, yet they showed 41 s
   and 38 s against 36 s live.  Re-run on 2026-10-26, with the printer's
-  serve timed as the game's, the model reads the Year 40 incumbent, its
+  serve timed as the game's, the model read the Year 40 incumbent, its
   dead-calc deletion and its diagonal stack as 36, 38 and 41, the live
   figures, but the Year 39 diagonal stack as a tie with its incumbent at
-  35, a sixth of a second behind (live 41 against 36); only the jitter
-  rule drops it there (50 shuffled wins in 200 against 200).  So a
-  candidate whose `speed` line reads slower than its incumbent's is
-  dropped, but a modelled tie or gain does NOT establish displayed speed;
-  only a live incumbent-vs-candidate A/B does.
+  35, a sixth of a second behind (live 41 against 36), which only the
+  jitter rule dropped (50 shuffled wins in 200 against 200); with the
+  walks timed as the game's (2026-11-06) it reads the Year 40 three the
+  same and that stack at 36 against 35, slower, as in the game (58
+  shuffled wins in 200).  So a candidate whose `speed` line reads slower
+  than its incumbent's is dropped, but a modelled tie or gain does NOT
+  establish displayed speed; only a live incumbent-vs-candidate A/B
+  does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
 - Machines serve from their front square only: a take from a printer is
@@ -71,7 +74,7 @@ steeply.
   shredder giver runs after its give.  That is what killed the Year 21
   merge's givers live: its `takefrom s` then named the shredder, and an
   empty-handed take there feeds the worker to it (the model now loses
-  that merge 1,988 runs in 2,000).  The records' paste-only `takefrom sw,s`
+  that merge 1,985 runs in 2,000).  The records' paste-only `takefrom sw,s`
   (Year 19) and `takefrom s,se` (Year 21 size) settle on the printer
   first and keep their workers alive; their `takefrom s` forms lose
   every run.
