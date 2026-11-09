@@ -59,10 +59,11 @@ steeply.
   jitter rule dropped (50 shuffled wins in 200 against 200); with the
   walks timed as the game's (2026-11-06) it reads the Year 40 three the
   same and that stack at 36 against 35, slower, as in the game (58
-  shuffled wins in 200).  So a candidate whose `speed` line reads slower
-  than its incumbent's is dropped, but a modelled tie or gain does NOT
-  establish displayed speed; only a live incumbent-vs-candidate A/B
-  does.
+  shuffled wins in 200; with the first stride and the bodies' reads as
+  the game's, 2026-11-09, the same readings and 59 such wins).  So a
+  candidate whose `speed` line reads slower than its incumbent's is
+  dropped, but a modelled tie or gain does NOT establish displayed
+  speed; only a live incumbent-vs-candidate A/B does.
 - **Diagonal step substitutions are dead as a speed tool**: collapsing two
   cardinal steps into one diagonal regressed 36 to 41 live on two levels.
 - Machines serve from their front square only: a take from a printer is

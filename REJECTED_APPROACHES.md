@@ -147,6 +147,14 @@ the new ones.
   779 plain runs per 1000 (644 and 713 shuffled) against the
   incumbent's 980 and 773.  The deleted `mem1 = set myitem` stores are
   load-bearing timing, as the 2026-10-18 shuffled screen had hinted.
+- Y59 speed tie-break size 142 (queued 2026-08-18: the else-arm walk's
+  cancelling `step w` and `step e` deleted), withdrawn 2026-11-09 under
+  the speed rule: with a walker's fall into a hole beginning as its body
+  nears the hole's middle, as in the game, the model runs it in 444
+  frames against the incumbent's 429, 7 s against 6 by the game's rule,
+  the incumbent at its live 6.  It always ran a few frames slower in the
+  model (455 against 447 when it was queued, 467 against 458 on
+  2026-10-23), which the whole seconds hid while both read 7 s.
 - Y31 unconditional size 5: 0/100; removing the parity/obstacle guard causes
   irreversible wrong-square drops rather than an absorbing checkerboard fill.
 - Y31 diagonal size-4 families: `takefrom` failed 0/10 because workers steal
@@ -394,11 +402,12 @@ the new ones.
   live wall-time (~1 s per site per pass; machine-queue phase alignment
   suspected).  Diagonalization is dead as a speed/tie-break transform;
   the earlier Y38/Y59 diagonal-stack variants were withdrawn untested as
-  the same class.  The currently queued Y38 size-140 and Y59 size-142
-  programs instead delete cancelling opposite steps and remain separate
-  live-control experiments.  Y40 falls back to the PR-92 ladder (176
-  live-verified 36, then 175).  Frame-based speed evidence anywhere in the
-  queue is downgraded to "requires live incumbent control first".
+  the same class.  The Y38 size-140 and Y59 size-142 programs queued
+  instead delete cancelling opposite steps, as separate live-control
+  experiments (the Y59 one withdrawn 2026-11-09 under the speed rule;
+  see the list at the top).  Y40 falls back to the PR-92 ladder (176
+  live-verified 36, then 175).  Frame-based speed evidence anywhere in
+  the queue is downgraded to "requires live incumbent control first".
   (Explained on 2026-10-19 from the game itself: the displayed speed is
   not wall time but a fixed 16 ms per tick, averaged over the 25 random
   rounds the game plays after a visible win.  Both results are timing the
@@ -418,7 +427,9 @@ the new ones.
   stack shows 36 against its incumbent's 35 again, so the model reads it
   slower, as the game did, with 58 shuffled wins in 200; it now does one
   item action fewer than its incumbent, its last take not served before
-  the room completes.)
+  the room completes.)  (Re-run on 2026-11-09 with the first stride and
+  the bodies' reads as the game's: the same readings, and 59 shuffled
+  wins in 200.)
 - Y40 size-175 (PR-92 plus the data-dead `mem2 = calc [blank] + [blank]`
   deletion): REFUTED LIVE at 38 s versus the PR form's 36 s, despite
   frame-identical simulator evidence.  With the Y39/Y40 diagonal results
