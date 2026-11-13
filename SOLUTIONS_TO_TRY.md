@@ -292,6 +292,44 @@ parked long shots move: the Year 44 four and three a few runs in 1,000,
 and the Year 68 ladder's incumbent, which the model now wins every plain
 run at its live 16 s.
 
+**Model re-measured for the trades, the walk-ups and the glances
+(2026-11-13):** the model now follows thirteen more of the game's rules.
+A walker with a route that a swap, a give-way or a rotation moves
+strides as on a walk of its own, from where its body stands, and lands
+as after a stride of its own, settling a tick before it acts again and
+still wanting the square it was bound for; the walker whose step closes
+a swap or a rotation sets off on that tick, whatever it was doing, and
+the others on their next turns; a printer serves every sheet it is asked
+for, in a room graded on what its shredders took too; a step at a
+remembered thing is over on the tick its walk lands where it finds its
+thing; a step that gives way round a floor cube, its own square still to
+walk on to, lands at the last point before the centre and walks on from
+there; a direction stride's points are laid from the square the worker
+held as it set out; a give's or a take's walk up to its partner heads
+for the floor square beside the partner nearest the walker's body, asks
+for its first square only as it sets out, and stands to the other
+workers' routes from the tick it lands; a `foreachdir` glance at a
+square where a worker stands with no cube names the worker, and a glance
+reads its square's floor a tick sooner, so it still finds a cube that a
+worker earlier in the turn lifts as the glance is taken up; and a memory
+slot reads a cube's number wherever the cube is, in a falling worker's
+hands or in the air between two workers.  Every queued program was
+measured again, and two entries above the parked long shots move, both
+on Year 30 and both within noise.  The probabilistic four wins 111/200
+plain and 120/200 shuffled (223/400 and 232/400), 58.4% of 8,000 plain
+runs against 58.3%, and about 1 run in 58 crashes, against 1 in 53 (see
+its warning); and the alternate five still reads faster than the size-5
+row on both screens over 200 and over 1,000 worlds, now by 2 to 15
+seconds.  Every other entry keeps its figures as quoted: the Year 15
+nearest loop five runs 994 frames, from 992, still about 15 s, and the
+Year 38 speed tie-break loses one run more in 2,000 on each screen,
+neither in its first 1,000.  On the game's own code, on the real levels,
+the model still follows all three whole runs of the Year 30 four, the
+Year 40 incumbent's run and the four runs of the Year 15 six to their
+ends, and now the Year 30 speed record's run, the Year 59 size record's
+and the Year 50 size record's too.  No entry falls below the floor, and
+the order stands.  No parked long shot moves.
+
 **Next session (CLAUDE.md's floor: 35% of plain runs):**
 
 1. **Year 23 paste test, size 2**: one paste and one look at the editor,
@@ -638,9 +676,11 @@ under the game's 25-round check none of them can realistically be kept.
   diagonal shredder give walked them onto the shredder's front, where
   their next `takefrom s` named the shredder.
 - Public evidence: abfipes12 and martinez8859 report 15/25 wins (60%).
-- Current emulator evidence: 117/200 plain and 106/200 shuffled
-  (2026-11-09, with the first stride and the bodies' reads as the
-  game's; 228/400 and 219/400 over 400 runs; 120/200 and 106/200 on
+- Current emulator evidence: 111/200 plain and 120/200 shuffled
+  (2026-11-13, with walkers that trade places striding and landing as
+  the game's do; 223/400 and 232/400 over 400 runs; 117/200 and 106/200
+  on 2026-11-09, with the first stride and the bodies' reads as the
+  game's, 228/400 and 219/400 over 400 runs; 120/200 and 106/200 on
   2026-11-06, with the walks timed as the game's, 228/400 and 214/400
   over 400 runs; 125/200 and 106/200 on 2026-11-03, with the bodies
   following the game's paths, 249/400 and 208/400 over 400 runs; 115/200
@@ -656,24 +696,26 @@ under the game's 25-round check none of them can realistically be kept.
   the game's hand-off: its take also takes sheets from other workers'
   hands, 301/400 and 309/400 over 400 runs; 146/200 and 133/200 on
   2026-10-23, 147/200 and 149/200 on 2026-10-18, 618/1000 and 616/1000
-  on 2026-09-14), a completion kept on about 40% of attempts (35% over
-  400 runs).  Over 2,000 runs the program wins 1,178 plain, against
-  1,176 before (1,216 before 2026-11-06 and 1,262 before 2026-11-02), a
-  completion kept on about 41% of attempts, and 58.3% of 8,000 runs,
-  against 58.4%, within noise: the first stride deals its runs afresh,
-  and it loses them in the kinds it lost before.  That 58.4% fell from
-  60.1% on 2026-11-06: more of its runs end in a standstill the game's
-  own code shows on the real level too, a worker walking up to its
-  partner bound for a square held by a worker waiting in its own take on
-  that partner, and more of them crash (below).  The 60.1% fell from
-  64.3% on 2026-11-02, more of its runs ending with a worker on its
-  step, holding a cube, waiting for a square that a worker waiting in
-  its own take on it holds, a standstill the game's own code shows on
-  the real level too.  Shuffled it now wins 2,125 of 4,000 runs, against
-  2,110 (2,065 before 2026-11-06 and 2,194 before 2026-11-03), within
-  noise.  Winning runs average about 1,174 s (1,169 s over 400), so they
-  often finish only just before the game deadline.
-- **Crash warning (2026-10-31, re-measured 2026-11-09), not tested by
+  on 2026-09-14), a completion kept on about 31% of attempts (32% over
+  400 runs).  Over 2,000 runs the program wins 1,179 plain, against
+  1,178 before (1,176 before 2026-11-09, 1,216 before 2026-11-06 and
+  1,262 before 2026-11-02), a completion kept on about 41% of attempts,
+  and 58.4% of 8,000 runs, against 58.3%, within noise: the trades deal
+  its long runs afresh, 555 of the 8,000 lost and 565 gained, and it
+  loses them in the kinds it lost before.  That 58.3% stood against
+  58.4% on 2026-11-09, within noise too, and the 58.4% fell from 60.1%
+  on 2026-11-06: more of its runs end in a standstill the game's own
+  code shows on the real level too, a worker walking up to its partner
+  bound for a square held by a worker waiting in its own take on that
+  partner, and more of them crash (below).  The 60.1% fell from 64.3% on
+  2026-11-02, more of its runs ending with a worker on its step, holding
+  a cube, waiting for a square that a worker waiting in its own take on
+  it holds, a standstill the game's own code shows on the real level
+  too.  Shuffled it wins 2,125 of 4,000 runs, as before, 271 lost and
+  271 gained (2,110 before 2026-11-09, 2,065 before 2026-11-06 and 2,194
+  before 2026-11-03).  Winning runs average about 1,173 s (1,156 s over
+  400), so they often finish only just before the game deadline.
+- **Crash warning (2026-10-31, re-measured 2026-11-13), not tested by
   the maintainer:** a walker on a rising diagonal onto a cube passes
   through a third square for about ten ticks, so one square can hold two
   bodies, and this program's `takefrom nw,sw,ne` can then reach six
@@ -681,22 +723,24 @@ under the game's 25-round check none of them can realistically be kept.
   on the real level, that overruns the list at the take's first tick,
   which would end the game.  This has not been run in the real game, and
   what a crash would do to the save is unknown.  How often it happens is
-  a model figure: with the first stride and the bodies' reads as the
-  game's (2026-11-09) it crashes 150 of 8,000 plain runs, about 1 in 53,
-  136 of them the runs that crashed before, and 56 of 4,000 shuffled, so
-  about one attempt in four over the visible run and its 25 rounds.  The
+  a model figure: with walkers that trade places striding and landing as
+  the game's do (2026-11-13) it crashes 139 of 8,000 plain runs, about 1
+  in 58, within noise of the 150 before, 102 of them the runs that
+  crashed before, and 56 of 4,000 shuffled, as before, so about one
+  attempt in four or five over the visible run and its 25 rounds.  The
   rates above count those runs as lost, but the kept figures do not
   allow for a crash ending the attempt.  (On 2026-10-31 a model whose
   bodies followed the game's swing forecast about 1 run in 65, while the
   model then behind the rates, whose bodies did not, read about 1 in
   1,000; 7 of 8,000 plain runs on 2026-11-02, 115, about 1 in 70, on
-  2026-11-03, once the bodies followed the game's paths, and 150, with
-  52 of 4,000 shuffled, on 2026-11-06, with the walks timed as the
-  game's.)  The confirmation only re-checks a row that is already
-  published, so copy the save aside first, or skip it.  CLAUDE.md's rule
-  against a list that can crash was written for one that crashes in
-  every run; this entry stays queued with this warning by the
-  maintainer's choice.
+  2026-11-03, once the bodies followed the game's paths, 150, with 52 of
+  4,000 shuffled, on 2026-11-06, with the walks timed as the game's, and
+  150, about 1 in 53, with 56 of 4,000 shuffled, on 2026-11-09, with the
+  first stride and the bodies' reads as the game's.)  The confirmation
+  only re-checks a row that is already published, so copy the save aside
+  first, or skip it.  CLAUDE.md's rule against a list that can crash was
+  written for one that crashes in every run; this entry stays queued
+  with this warning by the maintainer's choice.
 - Expected editor size: **4**; paste-only because of the multi-direction
   `takefrom`.
 - Suggested live test: 10 uninterrupted runs, allowing every run to reach the
@@ -755,8 +799,16 @@ under the game's 25-round check none of them can realistically be kept.
   998/1000 at 620.  It still reads faster on both screens over 200 and
   over 1,000 worlds, now by 1 to 12 seconds, each time within one
   standard error: the size-5 row now runs about 11 seconds faster over
-  1,000 plain worlds, the candidate about where it was.  It stays queued
-  for now by the maintainer's choice (2026-11-02).
+  1,000 plain worlds, the candidate about where it was.  Re-measured
+  2026-11-13, with walkers that trade places striding and landing as the
+  game's do: over 200 worlds, plain, candidate 200/200 at 609 seconds
+  against the incumbent's 199/200 at 623; shuffled, 199/200 at 628
+  against 199/200 at 630.  Over 1,000 worlds, plain, 998/1000 at 615
+  seconds against 993/1000 at 618; shuffled, 999/1000 at 616 against
+  996/1000 at 622.  It still reads faster on both screens over 200 and
+  over 1,000 worlds, now by 2 to 15 seconds, each time within one
+  standard error.  It stays queued for now by the maintainer's choice
+  (2026-11-02).
 - Suggested live test: five alternating fresh runs of the incumbent and this
   candidate; compare medians and timeout count.
 - Result: _not yet tested in the game_.
