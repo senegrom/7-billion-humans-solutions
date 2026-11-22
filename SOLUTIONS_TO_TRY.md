@@ -369,6 +369,12 @@ Year 68 ladder at 170 and 171 are overtaken by rows of 99 and 153
 commands (see REJECTED_APPROACHES.md).  Yifeixuer's Year 40 program now
 stands against a 126-command row.
 
+**Search resumed (2026-11-22):** a scan for speed rows at fewer commands
+runs again.  It trims each published speed program, one or two commands
+at a time, and keeps what the model runs in the same shown second,
+world for world, with the same item count and no worse shuffled.  Its
+first entry is the Year 21 tie-break at size 40 below.
+
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt](<SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt>)
@@ -478,6 +484,29 @@ stands against a 126-command row.
   still 9 s against 10 by the game's rule.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 21 - Big Data - speed tie-break at size 40
+
+- **Paste-ready program:** [SolutionsToTry/Year 21 - Big Data - speed tie-break at size 40.txt](<SolutionsToTry/Year 21 - Big Data - speed tie-break at size 40.txt>)
+- Goal: retain the displayed 16-22 while reducing the size from 41 to
+  **40** (commonnickname and abfipes12's program).
+- Exact edit: delete the first `if myitem < 50:` and its `endif`, right
+  after the opening `step s`, `takefrom s` and `if myitem == datacube:`;
+  the four commands it guarded (`step ne`, `drop`, `step s`, `jump a`)
+  stay.
+- Why the test is never needed: that first take gives a sheet only to
+  the worker standing north of its printer, and a fresh printer's first
+  sheet is always a 0 (a sheet carries the number rolled at the serve
+  before it), so the test holds every time it is reached.
+- Emulator evidence (2026-11-22): 1000/1000 plain and 1000/1000
+  shuffled, as the incumbent.  On the plain screen every world ends
+  exactly one frame sooner than the incumbent's, the deleted test's own
+  frame (1,354 frames on average against 1,355, 21.66 s against 21.68),
+  with the same item count (63.1).
+- Suggested live test: incumbent once as control, then the candidate;
+  20-second runs.  A kept completion at 40 commands inside the
+  incumbent's range takes the row.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
