@@ -1325,3 +1325,24 @@ A review of the emulator against the game's own code landed 23 changes on
 - **The two Year 44 records now win in the model.**  Unique Fashion
   Party's run start deals 0..randmax once each to the first cubes it meets,
   so the rare-luck reading the model needed for them is gone.
+
+## Overtaken by rows taken from another table (2026-11-22)
+
+Twenty-two rows of the record table were replaced on 2026-11-22 with
+programs from the abfipes12 table.  Two queued speed tie-breaks are
+larger than the rows that replaced their incumbents, so neither can
+take a row any more; their paste files are deleted.
+
+- **Year 58, Good Neighbors — the list merge at 102.**  It turned the
+  105-command record's `if mem2 == nothing: pickup ne / else: pickup nw
+  / endif` into the one list `pickup nw,ne`, paste only.  The row is now
+  a 99-command program at 2 s.  The merge was never run in the game; in
+  the model it ran frame for frame with the 105-command program (187
+  frames, 1000 plain wins in 1000, 844 shuffled).
+- **Year 68, Goodbye, Humans! — the tell-only ladder at 170 and 171.**
+  It deleted one or both of the 172-command record's two consecutive
+  `tell everyone hi` commands.  The row is now a 153-command program at
+  16 s.  The ladder was parked on 2026-10-20: the 172-command program
+  failed its three live attempts on 2026-08-22 and the 171 rung its
+  one, and the model, which wins the 172-command program every plain
+  run, lost both rungs every run.

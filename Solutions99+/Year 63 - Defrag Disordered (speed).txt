@@ -1,5 +1,10 @@
 -- 7 Billion Humans (2145) --
 -- 63: Defrag Disordered --
+-- Size 56 Speed 5s --
+-- author: n05ucc4u
+-- author: commonnickname
+-- contributor: motlin
+-- time: 5.968
 
 step n
 jump a
@@ -48,7 +53,6 @@ mem1 = foreachdir nw:
 						step sw
 						pickup sw
 						step n
-						step n
 					else:
 						pickup ne
 						step ne
@@ -59,8 +63,8 @@ mem1 = foreachdir nw:
 						drop
 						step sw
 						pickup s
-						step n
 					endif
+					step n
 				endif
 			endif
 		endfor

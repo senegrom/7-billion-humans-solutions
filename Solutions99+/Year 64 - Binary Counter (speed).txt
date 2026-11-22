@@ -1,5 +1,9 @@
 -- 7 Billion Humans (2214M) --
 -- 64: Binary Counter --
+-- Size 98 Speed 8s --
+-- author: commonnickname
+-- contributor: motlin
+-- time: 8.976
 
 mem4 = set se
 if mem4 == nothing:
@@ -10,8 +14,8 @@ if mem4 == nothing:
 	pickup c
 	jump a
 else:
+	step s
 	if mem4 == worker:
-		step s
 		step se
 		step s
 		step n
@@ -35,7 +39,6 @@ else:
 		step n
 		step s
 	else:
-		step s
 		if e == nothing:
 			pickup c
 			step s
@@ -86,7 +89,6 @@ else:
 				mem1 = set myitem
 				mem1 = set myitem
 				step ne
-				step w
 			else:
 				pickup e
 				step se

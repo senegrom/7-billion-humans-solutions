@@ -1,6 +1,10 @@
--- 7 Billion Humans (2214M) --
+-- 7 Billion Humans (2059) --
 -- 41: Image Decrypter --
--- Size 45 Speed 6s --
+-- Size 44 Speed 6s --
+-- author: commonnickname
+-- contributor: abfipes
+-- contributor: motlin
+-- time: 6.96
 
 mem4 = nearest datacube
 step w
@@ -36,33 +40,31 @@ if myitem == 6 or
 	endif
 	jump f
 endif
-if myitem == 5:
-	jump g
-endif
-if myitem == 4:
-	if mem3 == 4:
-		step nw
-		f:
-		jump h
+if myitem != 5:
+	if myitem == 4:
+		if mem3 == 4:
+			step nw
+			f:
+			jump h
+		endif
+		jump i
 	endif
-	jump i
+	if myitem == 3:
+		jump j
+	endif
+	if myitem == 1:
+		jump k
+	endif
+	a:
+	step w
+	e:
+	step w
+	step w
+	d:
+	step w
+	h:
+	step w
 endif
-if myitem == 3:
-	jump j
-endif
-if myitem == 1:
-	jump k
-endif
-a:
-step w
-e:
-step w
-step w
-d:
-step w
-h:
-step w
-g:
 step w
 i:
 step w
@@ -72,4 +74,3 @@ step w
 k:
 drop
 mem1 = calc 0 / 0
-

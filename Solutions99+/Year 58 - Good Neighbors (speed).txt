@@ -1,6 +1,9 @@
 -- 7 Billion Humans (2214M) --
 -- 58: Good Neighbors --
--- Size 105 Speed 2s --
+-- Size 99 Speed 2s --
+-- author: commonnickname
+-- contributor: motlin
+-- time: 2.976
 
 mem1 = nearest datacube
 mem2 = nearest worker
@@ -23,11 +26,10 @@ mem3 = foreachdir se:
 			c:
 			if mem1 == 8 and
 			 mem2 == 5:
+				step mem1
 				if mem3 == mem4:
-					step mem1
 					pickup s
 				else:
-					step mem1
 					pickup sw
 				endif
 			else:
@@ -65,8 +67,6 @@ mem3 = foreachdir se:
 			if mem2 == mem3 and
 			 mem1 == 3:
 				step sw
-				step s
-				step w
 				pickup sw
 				mem1 = calc 0 / 0
 			endif
@@ -123,11 +123,7 @@ else:
 			else:
 				step nw
 				mem1 = nearest datacube
-				if mem1 == 5:
-					step w
-				else:
-					step n
-				endif
+				step mem1
 				pickup nw
 			endif
 		endfor
@@ -152,4 +148,3 @@ else:
 	endif
 endif
 mem1 = calc 0 / 0
-

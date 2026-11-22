@@ -1,9 +1,13 @@
 -- 7 Billion Humans (2214M) --
 -- 66: Decimal Counter --
+-- Size 232 Speed 24s --
+-- author: commonnickname
+-- contributor: motlin
+-- time: 24.704
 
 mem2 = set s
+step s
 if mem2 != datacube:
-	step s
 	tell everyone hi
 	mem1 = set myitem
 	step s
@@ -45,7 +49,6 @@ if mem2 != datacube:
 	step w
 	drop
 	step w
-	listenfor ready
 	mem1 = set c
 	pickup c
 	write 2
@@ -53,13 +56,11 @@ if mem2 != datacube:
 	mem1 = set myitem
 	drop
 else:
-	step s
 	pickup c
 	step s
 	drop
 	if mem2 == 0:
 		listenfor ready
-		mem1 = set myitem
 		mem1 = set myitem
 		mem1 = set myitem
 		mem1 = set myitem
@@ -85,8 +86,7 @@ else:
 			step n
 			tell everyone hi
 			step s
-			step w
-			step ne
+			step n
 			step s
 			step w
 			step ne
@@ -119,7 +119,6 @@ else:
 			step e
 			step n
 			pickup w
-			mem1 = set myitem
 			mem1 = set myitem
 			mem1 = set myitem
 			step s
@@ -161,16 +160,13 @@ else:
 				write 7
 				step s
 				drop
-				step w
-				step s
+				step sw
 				listenfor ready
 				mem1 = set c
 				pickup nw
 				step e
 				step e
 				step w
-				step ne
-				step s
 			else:
 				write 9
 				drop
@@ -188,20 +184,7 @@ else:
 					step s
 					drop
 					step mem2
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
-					mem1 = set myitem
+					mem1 = set c
 					pickup e
 					drop
 					pickup e
@@ -215,17 +198,16 @@ else:
 					step e
 					drop
 					step w
-					step n
-					step e
+					step ne
 					pickup s
 					write 9
 					step s
 					drop
 					step e
 					pickup w
-					mem1 = set c
 					step s
-					step w
+					step n
+					step s
 				else:
 					if e != worker:
 						step ne
@@ -261,5 +243,3 @@ else:
 		endif
 	endif
 endif
-
-

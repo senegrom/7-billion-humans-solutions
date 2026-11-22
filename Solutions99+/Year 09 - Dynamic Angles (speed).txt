@@ -1,10 +1,18 @@
--- 7 Billion Humans (2214M) --
+-- 7 Billion Humans (2059) --
 -- 9: Dynamic Angles --
--- Size 15 Speed 3s --
+-- Size 14 Speed 3s --
+-- author: martinez8859
+-- contributor: n05ucc4u
+-- contributor: abfipes
+-- contributor: motlin
+-- time: 3.68
 
 pickup s
 step s
 step s
+if e == nothing:
+	step s
+endif
 if e == nothing:
 	step s
 	jump a
@@ -16,11 +24,6 @@ if e == nothing:
 endif
 if e == nothing:
 	b:
-	step s
-	jump c
-endif
-if e == nothing:
-	c:
 	step s
 endif
 drop

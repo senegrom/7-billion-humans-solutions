@@ -1,17 +1,19 @@
--- 7 Billion Humans (2059) --
+-- 7 Billion Humans (2214M) --
 -- 26: Budget Brigade 2 --
+-- Size 6 Speed 111-118s --
+-- author: motlin
+-- times: 111 118
 
 a:
-if myitem == nothing or
- myitem < 50 and
- s != shredder:
-	giveto w
+if s == printer or
+ myitem >= 50:
+	giveto n,e
 	takefrom s
 endif
-if s == shredder and
- myitem == datacube or
- w >= 50:
-	takefrom w
-	giveto s
+if s == shredder or
+ myitem < 50 and
+ s != printer and
+ myitem == datacube:
+	giveto nw,w,n,s
 endif
 jump a

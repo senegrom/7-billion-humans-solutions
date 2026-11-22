@@ -359,6 +359,16 @@ the order stands.  No parked long shot moves.
 The other low-percent leads sit with the parked long shots at the end:
 under the game's 25-round check none of them can realistically be kept.
 
+**Rows taken from another table (2026-11-22):** twenty-two rows of the
+record table now carry programs from the abfipes12 table, whose times
+are read from the game to the tick, and three entries leave this queue
+with them.  The Year 09 tie-break at size 14 is settled: that table
+lists this very program, its labels renamed, at 3.68 s, so it is the
+Year 09 speed row now.  The Year 58 list merge at 102 and the parked
+Year 68 ladder at 170 and 171 are overtaken by rows of 99 and 153
+commands (see REJECTED_APPROACHES.md).  Yifeixuer's Year 40 program now
+stands against a 126-command row.
+
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
 - **Paste-ready program:** [SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt](<SolutionsToTry/Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2.txt>)
@@ -470,72 +480,11 @@ under the game's 25-round check none of them can realistically be kept.
   9-second runs.
 - Result: _not yet tested in the game_.
 
-### [ ] Year 09 - Dynamic Angles - speed tie-break at size 14
-
-- **Paste-ready program:** [SolutionsToTry/Year 09 - Dynamic Angles - speed tie-break at size 14.txt](<SolutionsToTry/Year 09 - Dynamic Angles - speed tie-break at size 14.txt>)
-- Goal: retain the displayed speed of 3 while reducing the size from 15 to
-  **14** (martinez8859, n05ucc4u and abfipes12's program; keep the credits).
-- Exact edit: delete the first `jump a` (inside the first `if e == nothing:`
-  block) **and the label `a:` it pointed to** (labels are free, so the size
-  is unchanged).  Without the jump, the workers on the longest route re-test
-  `e == nothing` at each following block instead of jumping past the test;
-  on this level's diagonal edge those tests are always true, so the walk is
-  the same.
-- **Paste-validity fix after the first live attempt (2026-08-17):** the
-  first cut deleted only the jump and left `a:` behind, and the game
-  refused the paste — a label can only exist as some jump's destination,
-  so an orphaned label makes the whole program invalid.  The paste file
-  now removes the pair.  (Standing rule for deletion candidates: a deleted
-  jump takes its label with it.)
-- Emulator evidence (corpus deletion sweep, re-run on the fixed file):
-  100/100 wins at exactly the incumbent's 230.0 frames, and 200/200
-  under the shuffled-dispatch screen re-taken 2026-09-03.  Re-measured
-  2026-10-18 and 2026-10-23: 1000/1000 plain and shuffled for both, at
-  230 frames.  The
-  candidate counts 25 item actions to the incumbent's 24; the one extra
-  is the `if e == nothing` re-test the deleted jump used to skip, with
-  every step, pickup and drop the same.  The only live
-  risk is that the three extra tests cost time on the longest route that
-  the model does not count (Year 47 showed an `if` is not free live) — a
-  3-second A/B decides it.
-- Suggested live test: incumbent once as control, then the candidate.
-- Result: _first paste refused (orphaned label, 2026-08-17); the fixed
-  file has not been run yet_.
-
-### [ ] Year 58 - Good Neighbors - list-merge speed tie-break at size 102 📋
-
-- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - list-merge speed tie-break at size 102.txt](<SolutionsToTry/Year 58 - Good Neighbors - list-merge speed tie-break at size 102.txt>)
-- Goal: retain the displayed speed record of 2 while reducing the size
-  from 105 to **102**.
-- Exact edit: the `if mem2 == nothing: pickup ne / else: pickup nw /
-  endif` block becomes the one list `pickup nw,ne`.  A pickup list passes
-  over a bare square and takes the first thing it meets in slot order, so
-  the list lifts the north-west cube when it is there and the north-east
-  one otherwise, as the block did.
-- Emulator evidence (2026-10-18, on the corrected model): 1000/1000
-  plain and 1000/1000 shuffled, frame-identical to the incumbent at 230
-  frames with the same item-action count (38); unchanged on 2026-10-23.
-  Re-measured 2026-11-09, with a division by zero killing its worker as
-  soon as the game's does and `nearest worker` reading the bodies where
-  they are: 1000/1000 plain at 187 frames, 2 s by the game's rule, the
-  record's live 2, and 844/1000 shuffled, still run for run the
-  incumbent's, which loses the same 156 shuffled runs: in each a
-  worker's `nearest worker`, between two workers two squares either side
-  of it, comes out the other one when the turn order is redrawn, and the
-  room is lost.
-- History: this merge was closed on 2026-08-17 on the old reading of the
-  Year 60 failure (that a list never passes over an empty square); the
-  corrected reading reopens it.  Paste-only: the editor gives `pickup` no
-  lists.
-- Suggested live test: incumbent once as control, then the candidate;
-  2-second runs; discard it on any displayed-speed regression.
-- Result: _not yet tested in the game_.
-
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
 
 - **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - yifeixuer speed at size 93.txt>)
 - Goal: match the speed record of 36 at size **93**, against the
-  incumbent's 176.
+  incumbent's 126 (176 until 2026-11-22).
 - Source: yifeixuer's Steam post "Year 40 36s" of 2018-10-06
   ([thread](https://steamcommunity.com/app/792100/discussions/0/1728711392737304334/)),
   from game version 2145.  The same day commonnickname withdrew the
@@ -571,9 +520,13 @@ under the game's 25-round check none of them can realistically be kept.
   the bodies' reads as the game's (2026-11-09) it runs 2,311 frames, the
   frame its last cube lands at on the game's own code, and still wins
   223/1000 shuffled, while the incumbent still runs 2,295 frames: 16
-  frames faster than this program, both 36 s by the game's rule.  It
-  stays queued at the maintainer's request as the live test of the 36 s
-  its author reported.
+  frames faster than this program, both 36 s by the game's rule.  Since
+  2026-11-22 the table's row is a 126-command program (commonnickname
+  and senegrom's, timed at 36.672 s in the game by the table it comes
+  from): the model runs it in 2,292 frames, that very time, and wins
+  every run on both screens, 19 frames faster than this program, both
+  36 s by the game's rule.  It stays queued at the maintainer's request
+  as the live test of the 36 s its author reported.
 - Suggested live test: run the incumbent once as the control, then this
   program a few times; capture the completion panel, the displayed speed
   and the editor size.  A completion at 36 s or faster takes the speed
@@ -850,7 +803,7 @@ a candidate needs about a 35% win rate per run; below that, one kept
 completion costs more than 100 attempts (about 4,400 at 25% and 650
 million at 10%).  Nothing here clears it.  First come the low-percent
 leads (valid programs for the SolutionsLowPercent tier, at about 1% to
-25% per run), then two speed ladders that cannot be settled, then the
+25% per run), then a speed ladder that cannot be settled, then the
 long shots below 1 in 100 runs.  All stay here with their paste-ready
 files in case the rule changes or a higher-rate variant turns up.
 Nothing below this line needs game time.
@@ -1136,26 +1089,6 @@ Nothing below this line needs game time.
 - Suggested live test: none.  Screen any future Year 67 speed edit on the
   corrected model first.
 - Result: _not tested in the game_.
-
-### [ ] Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170 (fallback 171)
-
-- **Paste-ready program:** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed tie-break at size 170.txt>)
-- **Fallback (size 171):** [SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt](<SolutionsToTry/Year 68 - Goodbye, Humans! - tell-only speed fallback at size 171.txt>)
-- Goal: retain the displayed speed record of 16 while reducing the secondary
-  size from 172 to **170** (or 171 at the conservative rung).
-- Exact edit: delete both consecutive top-level `tell everyone hi` commands at
-  incumbent lines 195-196; restore either one for the size-171 fallback.
-- Why it is parked (2026-10-20): the ladder needs a passing control run of
-  the published size-172 program, and none can be had.  That program
-  failed all three live attempts on 2026-08-22, the correctly pasted
-  size-171 rung failed its one attempt, and the review's corrected model
-  lost the incumbent and both rungs (none of 20 each).  Since
-  2026-11-09, with a walker's fall into a hole beginning as the game's
-  does, the model wins the incumbent every plain run (1000/1000), in
-  1,060 frames, 16 s by the game's rule, its live speed, but no shuffled
-  one, and still loses both rungs on both screens (none of 20 each).
-- Result: _live attempt inconclusive_ (2026-08-22, above); size 170 was
-  never run.
 
 ### [ ] Year 44 - Unique Fashion Party - divide-by-zero long-shot size 2
 

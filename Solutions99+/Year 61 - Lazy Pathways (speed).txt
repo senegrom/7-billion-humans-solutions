@@ -1,5 +1,9 @@
 -- 7 Billion Humans (2145) --
 -- 61: Lazy Pathways --
+-- Size 231 Speed 15s --
+-- author: commonnickname
+-- contributor: motlin
+-- time: 15.904
 
 step w
 step w
@@ -117,9 +121,7 @@ else:
 	step w
 	if mem1 == 99 and
 	 mem2 == 1:
-		jump g
 		mem4 = foreachdir n:
-			g:
 			if mem4 == wall:
 				step w
 				step w
@@ -135,12 +137,12 @@ else:
 				drop
 				step sw
 				pickup c
-				h:
+				g:
 				write 8
 				drop
 				pickup n
 				step n
-				jump h
+				jump g
 			else:
 				step s
 				mem3 = nearest datacube

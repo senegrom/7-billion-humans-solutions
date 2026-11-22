@@ -1,3 +1,11 @@
+-- 7 Billion Humans (2235) --
+-- 26: Budget Brigade 2 --
+-- Size 54 Speed 60s --
+-- author: psam
+-- author: n05ucc4u
+-- contributor: motlin
+-- time: 60.992
+
 if s == printer:
 	takefrom s
 	a:
@@ -74,14 +82,12 @@ if w == worker and
 		jump e
 	endif
 	if myitem > 49:
-		giveto e
 		f:
 		if myitem == something:
 			giveto e
 		endif
 		jump f
 	endif
-	giveto w
 	g:
 	if myitem == something:
 		giveto w

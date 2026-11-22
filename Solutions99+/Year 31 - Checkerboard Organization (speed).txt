@@ -1,191 +1,195 @@
--- 7 Billion Humans (2145) --
+-- 7 Billion Humans (2214M) --
 -- 31: Checkerboard Organization --
+-- Size 183 Speed 31s --
+-- author: motlin
+-- time: 31.712
 
-mem1 = nearest wall
 mem2 = nearest hole
-step sw
 mem3 = nearest wall
-mem4 = nearest hole
-if mem1 == mem3:
+step s
+mem1 = nearest hole
+mem4 = nearest wall
+if mem1 != mem2 and
+ mem4 == mem3:
+	mem4 = nearest printer
+	takefrom mem4
 	step nw
-	step ne
-	step ne
-	step ne
-	mem1 = nearest printer
-	takefrom mem1
 	step e
-	step e
-	step e
-	step ne
-	drop
-	takefrom mem1
-	step sw
-	step w
-	drop
-	takefrom mem1
-	step sw
-	step s
-	drop
-	step nw
-	takefrom mem1
 	step se
 	step se
 	step se
+	step se
+	drop
+	takefrom mem4
+	step e
+	step e
+	step e
+	step se
+	drop
+	takefrom mem4
+	step e
+	step se
+	step se
+	drop
+	takefrom mem4
+	step e
+	step e
 	step e
 	drop
-	takefrom mem1
-	step w
+	takefrom mem4
+	step e
+	step ne
 else:
-	if mem2 == mem4:
-		mem1 = nearest worker
-		step mem1
-		mem1 = nearest wall
-		if mem1 == mem3:
-			mem1 = nearest printer
-			takefrom mem1
-			step nw
-			step nw
-			step w
-			drop
-			takefrom mem1
-			step nw
-			step w
-			step w
-			step w
-			drop
-			takefrom mem1
-			step se
+	if mem1 != mem2:
+		mem4 = nearest printer
+		step ne
+		takefrom mem4
+		step n
+		step w
+		step w
+		step w
+		step w
+		drop
+		takefrom mem4
+		step sw
+		step w
+		step w
+		step w
+		drop
+		takefrom mem4
+		step sw
+		step w
+		step sw
+		drop
+		takefrom mem4
+		step nw
+		step nw
+		step w
+		drop
+		takefrom mem4
+		step nw
+		step n
+	else:
+		if mem4 != mem3:
+			mem4 = nearest printer
+			step ne
+			takefrom mem4
 			step e
+			step se
+			step se
+			step s
+			step s
 			drop
-			takefrom mem1
-			step sw
-			step sw
-			step sw
-			step w
-			drop
-			takefrom mem1
-			step sw
-			step s
-			step s
-			step s
-		else:
 			step n
-			mem3 = nearest wall
-			if mem1 == mem3:
-				mem1 = nearest printer
-				takefrom mem1
-				step nw
-				step n
-				drop
-				takefrom mem1
-				step nw
+			step n
+			takefrom mem4
+			step e
+			step e
+			step e
+			step ne
+			drop
+			takefrom mem4
+			step e
+			step ne
+			step ne
+			drop
+			takefrom mem4
+			step e
+			step n
+			step n
+			drop
+			step se
+			takefrom mem4
+			step e
+		else:
+			mem4 = nearest printer
+			if sw == printer:
+				step ne
+				step w
+				step w
+				step sw
+				step ne
+				takefrom mem4
+				step sw
+				step sw
+				step sw
 				step w
 				drop
-				takefrom mem1
-				step e
-				step e
-				step e
-				drop
-				takefrom mem1
-				step se
-				step e
-				step e
-				step e
-				drop
-				takefrom mem1
+				takefrom mem4
 				step sw
 				step sw
 				step s
 				drop
+				takefrom mem4
+				step sw
+				step w
+				drop
+				takefrom mem4
 				step nw
-				takefrom mem1
-				step se
-				step s
-				step s
-				step s
+				step sw
+				step w
+				drop
+				takefrom mem4
+				step n
 			else:
-				mem4 = nearest worker
-				step mem4
-				step mem4
-				mem2 = nearest wall
-				if mem2 == mem3:
-					step ne
-					step ne
-					mem1 = nearest printer
-					takefrom mem1
+				if s == wall:
+					takefrom mem4
 					step sw
 					step sw
-					step w
-					drop
-					takefrom mem1
-					step se
-					step se
+					step sw
 					step s
 					drop
-					step ne
-					takefrom mem1
-					step n
+					takefrom mem4
+					step sw
+					step s
+					step s
+					step s
+					drop
+					takefrom mem4
+					step sw
+					step s
+					drop
+					takefrom mem4
+					step nw
 				else:
-					mem1 = nearest printer
-					takefrom mem1
+					step ne
 					step ne
 					step n
-					drop
-					takefrom mem1
-					step ne
+					takefrom mem4
 					step e
-					drop
-					takefrom mem1
-					step sw
-					step sw
-					step nw
-					step w
-					drop
-					takefrom mem1
-					step sw
-					step se
+					step s
+					step s
+					step s
 					step s
 					drop
-					step nw
-					step nw
-					takefrom mem1
-					step se
-					step se
+					step ne
+					step n
+					step n
+					takefrom mem4
+					step e
 					step se
 					step s
+					step s
+					drop
+					step ne
+					takefrom mem4
+					step e
+					step s
+					step sw
+					step s
+					drop
+					step n
+					step ne
+					step n
+					takefrom mem4
+					step e
+					step se
+					drop
+					takefrom mem4
 				endif
+				step w
 			endif
 		endif
-	else:
-		mem1 = nearest printer
-		takefrom mem1
-		step ne
-		step ne
-		step e
-		drop
-		takefrom mem1
-		step w
-		step w
-		step w
-		drop
-		step e
-		step e
-		takefrom mem1
-		step se
-		step se
-		step e
-		drop
-		takefrom mem1
-		step sw
-		step sw
-		step sw
-		step s
-		drop
-		step nw
-		takefrom mem1
-		step e
 	endif
 endif
 drop
-
-
