@@ -373,7 +373,8 @@ stands against a 126-command row.
 runs again.  It trims each published speed program, one or two commands
 at a time, and keeps what the model runs in the same shown second,
 world for world, with the same item count and no worse shuffled.  Its
-first entry is the Year 21 tie-break at size 40 below.
+first entry is the Year 21 tie-break at size 40 below; the Year 29
+tie-break at size 199 followed on 2026-11-23.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -484,6 +485,10 @@ first entry is the Year 21 tie-break at size 40 below.
   still 9 s against 10 by the game's rule.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
+- Note (2026-11-23): an open pull request to the abfipes12 table
+  (motlin's, of 2026-11-22) has this row at 135 commands, which the
+  model wins 200/200 on both screens at 9.9 s on average.  If that
+  program is taken into the table, this entry is overtaken.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 21 - Big Data - speed tie-break at size 40
@@ -507,6 +512,27 @@ first entry is the Year 21 tie-break at size 40 below.
 - Suggested live test: incumbent once as control, then the candidate;
   20-second runs.  A kept completion at 40 commands inside the
   incumbent's range takes the row.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 29 - Biometric Access - speed tie-break at size 199
+
+- **Paste-ready program:** [SolutionsToTry/Year 29 - Biometric Access - speed tie-break at size 199.txt](<SolutionsToTry/Year 29 - Biometric Access - speed tie-break at size 199.txt>)
+- Goal: retain the displayed 52 while reducing the size from 200 to
+  **199** (motlin's program).
+- Exact edit: delete the `step e` that stands right before `jump g`.
+- Why it can go: only one worker reaches that step, and it stands in
+  the two-square passage with a wall to its east, so the step is
+  refused and costs it one tick; it jumps on from the same square
+  either way.
+- Emulator evidence (2026-11-23): 1000/1000 plain and 1000/1000
+  shuffled, as the incumbent.  On the plain screen every world runs
+  3,278 frames against the incumbent's 3,277 (52.45 s against 52.43):
+  that worker is a tick ahead, the others meet it differently in the
+  passage, and the last cube is shredded one frame later.  The item
+  count is the same (140), and the next shown second is 34 frames
+  away.  Shuffled, the two average 55.4 s and 55.1 s.
+- Suggested live test: incumbent once as control, then the candidate;
+  52-second runs.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93

@@ -1,0 +1,222 @@
+-- 7 Billion Humans (2214M) --
+-- 29: Biometric Access --
+-- Size 199 Speed 52s --
+
+mem1 = nearest shredder
+mem4 = nearest wall
+step n
+mem3 = nearest wall
+mem2 = nearest datacube
+if mem4 != mem3:
+	step sw
+	mem4 = nearest shredder
+	if mem4 == mem1:
+		mem4 = nearest wall
+		jump a
+	else:
+		step mem2
+		pickup n
+		giveto mem1
+		step mem2
+		step e
+		pickup c
+		giveto mem1
+		step mem2
+		step n
+		step nw
+		pickup e
+		giveto mem1
+		pickup mem2
+		giveto mem1
+	endif
+endif
+step n
+step n
+mem4 = nearest wall
+if mem3 != mem4:
+	step w
+	mem4 = nearest shredder
+	if mem4 == mem1:
+		mem4 = nearest wall
+		step nw
+		step w
+		step w
+		step w
+		pickup nw
+		giveto mem1
+		step n
+		step n
+		step n
+		step n
+		step nw
+		step w
+		step nw
+		step nw
+		pickup nw
+		giveto mem1
+		step n
+		step n
+		step n
+		step n
+		step nw
+		step w
+		step nw
+		step nw
+		step nw
+		pickup n
+		jump b
+	else:
+		if n == wall:
+		endif
+		step nw
+		step w
+		step w
+		step w
+		pickup w
+		giveto mem1
+		step n
+		step n
+		step n
+		step nw
+		step nw
+		step w
+		step w
+		step nw
+		pickup nw
+		jump c
+	endif
+endif
+step ne
+mem4 = nearest shredder
+if mem4 != mem1:
+	step n
+	step n
+	step nw
+	step nw
+	step nw
+	step nw
+	pickup nw
+	jump d
+endif
+step nw
+mem4 = nearest shredder
+if mem4 != mem1:
+	step n
+	step n
+	step n
+	step n
+	step n
+	step n
+	pickup nw
+	jump e
+endif
+step w
+mem3 = nearest shredder
+step nw
+mem4 = nearest shredder
+if mem3 != mem4:
+	step n
+	step n
+	step nw
+	step nw
+	step nw
+	step nw
+	pickup nw
+	jump f
+endif
+step w
+mem4 = nearest shredder
+step nw
+mem3 = nearest shredder
+if mem3 != mem4:
+	jump g
+endif
+step w
+mem4 = nearest shredder
+if mem3 != mem4:
+	step mem2
+	step n
+	step ne
+	pickup e
+	giveto mem1
+	step mem2
+	step ne
+	step ne
+	pickup s
+	giveto mem1
+	step mem2
+	pickup n
+	giveto mem1
+	step mem2
+	step n
+	step nw
+	pickup e
+	giveto mem1
+	pickup mem2
+	b:
+	c:
+	e:
+	giveto mem1
+	g:
+	step mem2
+	step n
+	pickup n
+	giveto mem1
+	step mem2
+	pickup n
+	giveto mem1
+	step mem2
+	step n
+	step n
+	pickup n
+	giveto mem1
+	step mem2
+	step n
+	step n
+	step n
+	pickup n
+	giveto mem1
+	if mem4 != wall:
+		step mem2
+		step n
+		step n
+		step n
+		step n
+		pickup n
+		giveto mem1
+	endif
+	pickup mem2
+	d:
+	f:
+	giveto mem1
+	a:
+endif
+step mem2
+pickup n
+giveto mem1
+step mem2
+step n
+step n
+pickup n
+giveto mem1
+step mem2
+step n
+pickup n
+giveto mem1
+step mem2
+step n
+step n
+step n
+pickup n
+giveto mem1
+if mem4 != wall:
+	step mem2
+	step n
+	step n
+	step n
+	step n
+	pickup n
+	giveto mem1
+endif
+pickup mem2
+giveto mem1
