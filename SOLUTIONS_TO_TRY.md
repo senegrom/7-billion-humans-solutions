@@ -340,9 +340,10 @@ the order stands.  No parked long shot moves.
 2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first,
-   every run under a minute: Year 38 at 140, Year 09 at 14, Year 58 at
-   102, then Year 40 at 93 (yifeixuer's 2018 program, which the model
-   now reads level with the incumbent, 36 s by the game's rule).
+   every run under a minute: Year 58 at 97, Year 38 at 140, Year 21 at
+   40, Year 40 at 120 (then 123), Year 29 at 199, then Year 40 at 93
+   (yifeixuer's 2018 program, which the model now reads level with the
+   incumbent, 36 s by the game's rule).
 4. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); about 68% here.  Skip it if the
    Year 15 five in item 2 completes.
@@ -374,7 +375,9 @@ runs again.  It trims each published speed program, one or two commands
 at a time, and keeps what the model runs in the same shown second,
 world for world, with the same item count and no worse shuffled.  Its
 first entry is the Year 21 tie-break at size 40 below; the Year 29
-tie-break at size 199 followed on 2026-11-23.
+tie-break at size 199 and the Year 58 and Year 40 ones followed on
+2026-11-23.  Where a level's runs do not vary, a candidate is also run
+on the game's own code; the entries say where that has been done.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -450,6 +453,34 @@ tie-break at size 199 followed on 2026-11-23.
   three times.
 - Result: _not yet tested in the game_.
 
+### [ ] Year 58 - Good Neighbors - speed tie-break at size 97 (fallback 98)
+
+- **Paste-ready program:** [SolutionsToTry/Year 58 - Good Neighbors - speed tie-break at size 97.txt](<SolutionsToTry/Year 58 - Good Neighbors - speed tie-break at size 97.txt>)
+- **Fallback (size 98):** [SolutionsToTry/Year 58 - Good Neighbors - speed tie-break fallback at size 98.txt](<SolutionsToTry/Year 58 - Good Neighbors - speed tie-break fallback at size 98.txt>)
+- Goal: retain the displayed speed record of 2 while reducing the size
+  from 99 to **97** (commonnickname's program).
+- Exact edit: delete the test `if mem4 != worker:` with its `endif`,
+  and the test `if mem4 == worker:` with its `endif`; the commands each
+  guarded stay, a tab to the left.  The fallback deletes only the first
+  pair.
+- What changes: five workers reach the two tests.  For three the test
+  holds, and they run a tick sooner.  The other two are surplus workers
+  that the record sends straight to its closing division; without the
+  tests they run the guarded commands instead (one walks at the thing
+  it remembers, the other takes two steps and tries a pickup that is
+  refused), and both are still alive, with empty hands, when the room
+  completes.
+- Evidence (2026-11-23): on the game's own code the 97-command program
+  completes after 185 ticks (2.96 s), a tick sooner than the record's
+  186, and stays complete.  The model agrees to the tick: 1000/1000
+  plain and 1000/1000 shuffled at 185 frames, the record 186 on both
+  screens, the fallback 185.  Its count of non-step effects differs
+  from the record's, 36 against 38: the surplus workers' two divisions
+  and one glance are never reached, and one pickup is added.
+- Suggested live test: incumbent once as control, then the candidate;
+  2-second runs; discard it on any displayed-speed regression.
+- Result: _not yet tested in the game_.
+
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
 
 - **Paste-ready program:** [SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt](<SolutionsToTry/Year 38 - Seek and Destroy 3 - speed tie-break at size 140.txt>)
@@ -512,6 +543,36 @@ tie-break at size 199 followed on 2026-11-23.
 - Suggested live test: incumbent once as control, then the candidate;
   20-second runs.  A kept completion at 40 commands inside the
   incumbent's range takes the row.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 40 - Printing Etiquette 2 - speed tie-break at size 120 (fallback 123)
+
+- **Paste-ready program:** [SolutionsToTry/Year 40 - Printing Etiquette 2 - speed tie-break at size 120.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - speed tie-break at size 120.txt>)
+- **Fallback (size 123):** [SolutionsToTry/Year 40 - Printing Etiquette 2 - speed tie-break fallback at size 123.txt](<SolutionsToTry/Year 40 - Printing Etiquette 2 - speed tie-break fallback at size 123.txt>)
+- Goal: retain the displayed 36 while reducing the size from 126 to
+  **120** (commonnickname and senegrom's program).
+- Exact edit: six steps go, each of which only places a worker before
+  it takes a sheet or sets one down: the `step ne` and `step e` between
+  the first `drop` and the `takefrom mem1` after it; the `step ne`
+  between `drop` and `takefrom mem1` under `if c == nothing:`; the
+  `step nw` before `step n` and the label `a:`; the first of the three
+  `step n` before `write 3`; and the `step e` between `drop` and
+  `takefrom mem1` just above the label `c:`.  The fallback deletes only
+  the first three.
+- Why they can go: the level lets a sheet lie anywhere on the floor,
+  and a `takefrom mem1` walks its worker to the printer by itself.
+- Evidence (2026-11-23): the model runs the incumbent in 2,292 frames,
+  36.672 s, the time the table it came from gives.  The 120-command
+  program wins 1000/1000 plain at 2,309 frames (36.94 s) and 1000/1000
+  shuffled, with the same item count (91): 3.5 frames short of 37 s.
+  The fallback wins 1000/1000 on both screens at 2,296 frames plain
+  (36.74 s), and on the game's own code it completes after 2,296
+  ticks, the same count.  The six steps are not independent: the
+  workers queue at one printer, and other subsets of them run seconds
+  slower or lose a sheet (without that `step n` alone every run is
+  lost), so paste the files as they are.
+- Suggested live test: incumbent once as control, then the 120; if it
+  shows 37, the 123; 36-second runs.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 29 - Biometric Access - speed tie-break at size 199

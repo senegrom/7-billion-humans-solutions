@@ -1,0 +1,135 @@
+-- 7 Billion Humans (2235) --
+-- 40: Printing Etiquette 2 --
+-- Size 123 Speed 36s --
+
+mem1 = nearest printer
+takefrom mem1
+step w
+step w
+write 1
+if nw == nothing:
+	step nw
+	drop
+	takefrom mem1
+	step e
+	write 2
+	drop
+	takefrom mem1
+	step e
+	step e
+	write 3
+	step ne
+	drop
+	takefrom mem1
+	step n
+	step n
+	step n
+	write 4
+	drop
+	takefrom mem1
+	step sw
+	step sw
+	jump a
+endif
+step n
+if c == nothing:
+	drop
+	takefrom mem1
+	step w
+	step w
+	write 2
+	step w
+	drop
+	takefrom mem1
+	step w
+	step nw
+	step n
+	write 3
+	drop
+	takefrom mem1
+	step e
+	step e
+	write 4
+	drop
+	takefrom mem1
+	step nw
+	step n
+	a:
+	jump b
+endif
+step e
+if c == nothing:
+	drop
+	step e
+	takefrom mem1
+	step sw
+	write 2
+	drop
+	step nw
+	pickup ne
+	step sw
+	drop
+	takefrom mem1
+	step w
+	step n
+	step n
+	step n
+	write 3
+	drop
+	takefrom mem1
+	step ne
+	step e
+	write 4
+	drop
+	takefrom mem1
+	step w
+	step w
+	b:
+	jump c
+endif
+step ne
+if c == nothing:
+	drop
+	takefrom mem1
+	step se
+	write 2
+	step sw
+	drop
+	takefrom mem1
+	step e
+	step e
+	step e
+	write 3
+	drop
+	takefrom mem1
+	step nw
+	write 4
+	drop
+	step e
+	takefrom mem1
+	step w
+	c:
+	jump d
+endif
+step e
+drop
+takefrom mem1
+step e
+step s
+write 2
+drop
+step ne
+takefrom mem1
+step w
+step sw
+write 3
+drop
+takefrom mem1
+step ne
+write 4
+drop
+step w
+takefrom mem1
+d:
+write 5
+drop
