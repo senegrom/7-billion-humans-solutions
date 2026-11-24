@@ -342,9 +342,9 @@ the order stands.  No parked long shot moves.
 3. **Speed tie-breaks**, each with the incumbent control run first,
    every run under a minute and a half: Year 58 at 97, Year 59 at 132,
    Year 38 at 140, Year 21 at 40, Year 40 at 120 (then 123), Year 29
-   at 199, Year 30 at 216 (then 217), then Year 40 at 93 (yifeixuer's
-   2018 program, which the model now reads level with the incumbent,
-   36 s by the game's rule).
+   at 199, Year 30 at 216 (then 217), Year 66 at 231, then Year 40 at
+   93 (yifeixuer's 2018 program, which the model now reads level with
+   the incumbent, 36 s by the game's rule).
 4. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); about 68% here.  Skip it if the
    Year 15 five in item 2 completes.
@@ -377,9 +377,10 @@ at a time, and keeps what the model runs in the same shown second,
 world for world, with the same item count and no worse shuffled.  Its
 first entry is the Year 21 tie-break at size 40 below; the Year 29
 tie-break at size 199 and the Year 58 and Year 40 ones followed on
-2026-11-23, the Year 59 and Year 30 ones on 2026-11-24.  Where a
-level's runs do not vary, a candidate is also run on the game's own
-code; the entries say where that has been done.
+2026-11-23, the Year 59, Year 30 and Year 66 ones on 2026-11-24.
+Where a level's runs do not vary, a candidate is also run on the
+game's own code; the entries say where that has been done, and Year
+38's and Year 66's rest on the model alone.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -645,6 +646,27 @@ code; the entries say where that has been done.
   82 s begins at 5,125 frames, five past the record itself.
 - Suggested live test: incumbent once as control, then the 216; if it
   shows 82, the 217; 81-second runs.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 66 - Decimal Counter - speed tie-break at size 231
+
+- **Paste-ready program:** [SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 231.txt](<SolutionsToTry/Year 66 - Decimal Counter - speed tie-break at size 231.txt>)
+- Goal: retain the displayed 24 while reducing the size from 232 to
+  **231** (commonnickname's program).
+- Exact edit: delete the `step w` that ends the branch `listenfor
+  ready`, `mem1 = set c`, `pickup nw`, `step e`, `step e`, `step w`.
+- What changes: one worker takes that branch, as the last thing it
+  does.  It now ends a square further east, on the square another
+  worker's closing `step s` is aimed at, so that worker trades places
+  with it, and the run ends two frames later.
+- Emulator evidence (2026-11-24): 1000/1000 plain at 1,546 frames
+  (24.74 s) against the record's 1,544 (24.704 s, the time the table
+  it came from gives), with the same item count (128), and 340
+  shuffled wins in 1000 against the record's 358.  The next shown
+  second is 16 frames away.  This room does not run on the game's own
+  code here, so the model's count stands alone.
+- Suggested live test: incumbent once as control, then the candidate;
+  24-second runs.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
