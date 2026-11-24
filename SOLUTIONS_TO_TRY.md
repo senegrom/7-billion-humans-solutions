@@ -541,10 +541,13 @@ game's own code; the entries say where that has been done, and Year
   still 9 s against 10 by the game's rule.
 - Suggested live test: incumbent once as control, then the candidate;
   9-second runs.
-- Note (2026-11-23): an open pull request to the abfipes12 table
-  (motlin's, of 2026-11-22) has this row at 135 commands, which the
-  model wins 200/200 on both screens at 9.9 s on average.  If that
-  program is taken into the table, this entry is overtaken.
+- Note (2026-11-24): the abfipes12 table has had this row at 139
+  commands since 2026-11-23, timed there at about 10.5 s (ten batches,
+  each of which shows 10).  The model wins that program 1000/1000 on
+  both screens at 10.2 s on average, against 10.05 s for the incumbent
+  and 9.9 s for this candidate.  It is three commands smaller than the
+  incumbent but reads slower than its 9-10, so by this table's ranking
+  it does not replace the row, and this entry stands.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 21 - Big Data - speed tie-break at size 40
