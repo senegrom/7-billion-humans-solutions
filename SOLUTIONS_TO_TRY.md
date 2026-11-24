@@ -340,10 +340,11 @@ the order stands.  No parked long shot moves.
 2. **Only if item 1 kept its command:** the Year 16 four (record 6) and
    the Year 15 five (records 8 and 6), each a couple of short runs.
 3. **Speed tie-breaks**, each with the incumbent control run first,
-   every run under a minute: Year 58 at 97, Year 38 at 140, Year 21 at
-   40, Year 40 at 120 (then 123), Year 29 at 199, then Year 40 at 93
-   (yifeixuer's 2018 program, which the model now reads level with the
-   incumbent, 36 s by the game's rule).
+   every run under a minute and a half: Year 58 at 97, Year 59 at 132,
+   Year 38 at 140, Year 21 at 40, Year 40 at 120 (then 123), Year 29
+   at 199, Year 30 at 216 (then 217), then Year 40 at 93 (yifeixuer's
+   2018 program, which the model now reads level with the incumbent,
+   36 s by the game's rule).
 4. Optional control: the Year 15 community six, already the Solutions50+
    row on public evidence (16/25 live); about 68% here.  Skip it if the
    Year 15 five in item 2 completes.
@@ -376,8 +377,9 @@ at a time, and keeps what the model runs in the same shown second,
 world for world, with the same item count and no worse shuffled.  Its
 first entry is the Year 21 tie-break at size 40 below; the Year 29
 tie-break at size 199 and the Year 58 and Year 40 ones followed on
-2026-11-23.  Where a level's runs do not vary, a candidate is also run
-on the game's own code; the entries say where that has been done.
+2026-11-23, the Year 59 and Year 30 ones on 2026-11-24.  Where a
+level's runs do not vary, a candidate is also run on the game's own
+code; the entries say where that has been done.
 
 ### [ ] Year 23 - Sorting Hall - paste test for a command the editor lacks at size 2 📋
 
@@ -472,13 +474,35 @@ on the game's own code; the entries say where that has been done.
   completes.
 - Evidence (2026-11-23): on the game's own code the 97-command program
   completes after 185 ticks (2.96 s), a tick sooner than the record's
-  186, and stays complete.  The model agrees to the tick: 1000/1000
-  plain and 1000/1000 shuffled at 185 frames, the record 186 on both
-  screens, the fallback 185.  Its count of non-step effects differs
-  from the record's, 36 against 38: the surplus workers' two divisions
-  and one glance are never reached, and one pickup is added.
+  186, and stays complete; the fallback takes 185 there too.  The
+  model agrees to the tick: 1000/1000 plain and 1000/1000 shuffled at
+  185 frames, the record 186 on both screens, the fallback 185.  Its
+  count of non-step effects differs from the record's, 36 against 38:
+  the surplus workers' two divisions and one glance are never reached,
+  and one pickup is added.
 - Suggested live test: incumbent once as control, then the candidate;
   2-second runs; discard it on any displayed-speed regression.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 59 - Glory Hole - speed tie-break at size 132
+
+- **Paste-ready program:** [SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 132.txt](<SolutionsToTry/Year 59 - Glory Hole - speed tie-break at size 132.txt>)
+- Goal: retain the displayed 6 while reducing the size from 134 to
+  **132** (commonnickname's program).
+- Exact edit: in the `mem1 = foreachdir n:` block that follows the
+  label `c:`, the last `else:` branch is `step nw`, `step nw`,
+  `step w`; delete the two `step nw`.
+- Why they can go: one worker takes that branch.  Without the two
+  steps it steps west, leaves the block and runs on into the section
+  under the label `d:`, whose first two `step nw` take it into the same
+  hole, three strides either way.
+- Evidence (2026-11-24): on the game's own code it completes after 435
+  ticks (6.96 s) against the record's 429 (6.864 s, the time the table
+  it came from gives), and the model agrees to the tick: 1000/1000
+  plain at 435 frames, and 1000/1000 shuffled.  It is 2.5 frames short
+  of 7 s.
+- Suggested live test: incumbent once as control, then the candidate;
+  6-second runs; discard it if it shows 7.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 38 - Seek and Destroy 3 - speed tie-break at size 140 (fallback 141)
@@ -539,7 +563,9 @@ on the game's own code; the entries say where that has been done.
   shuffled, as the incumbent.  On the plain screen every world ends
   exactly one frame sooner than the incumbent's, the deleted test's own
   frame (1,354 frames on average against 1,355, 21.66 s against 21.68),
-  with the same item count (63.1).
+  with the same item count (63.1).  On the game's own code
+  (2026-11-23), on one deal of the room's sheets, it completes after
+  1,110 ticks, a tick sooner than the incumbent's 1,111 on that deal.
 - Suggested live test: incumbent once as control, then the candidate;
   20-second runs.  A kept completion at 40 commands inside the
   incumbent's range takes the row.
@@ -566,8 +592,9 @@ on the game's own code; the entries say where that has been done.
   program wins 1000/1000 plain at 2,309 frames (36.94 s) and 1000/1000
   shuffled, with the same item count (91): 3.5 frames short of 37 s.
   The fallback wins 1000/1000 on both screens at 2,296 frames plain
-  (36.74 s), and on the game's own code it completes after 2,296
-  ticks, the same count.  The six steps are not independent: the
+  (36.74 s).  On the game's own code the incumbent, the 120 and the
+  fallback complete after 2,292, 2,309 and 2,296 ticks, the model's
+  counts.  The six steps are not independent: the
   workers queue at one printer, and other subsets of them run seconds
   slower or lose a sheet (without that `step n` alone every run is
   lost), so paste the files as they are.
@@ -591,9 +618,33 @@ on the game's own code; the entries say where that has been done.
   that worker is a tick ahead, the others meet it differently in the
   passage, and the last cube is shredded one frame later.  The item
   count is the same (140), and the next shown second is 34 frames
-  away.  Shuffled, the two average 55.4 s and 55.1 s.
+  away.  Shuffled, the two average 55.4 s and 55.1 s.  On the game's
+  own code they complete after 3,278 and 3,277 ticks, the model's
+  counts.
 - Suggested live test: incumbent once as control, then the candidate;
   52-second runs.
+- Result: _not yet tested in the game_.
+
+### [ ] Year 30 - Fill the Floor - speed tie-break at size 216 (fallback 217)
+
+- **Paste-ready program:** [SolutionsToTry/Year 30 - Fill the Floor - speed tie-break at size 216.txt](<SolutionsToTry/Year 30 - Fill the Floor - speed tie-break at size 216.txt>)
+- **Fallback (size 217):** [SolutionsToTry/Year 30 - Fill the Floor - speed tie-break fallback at size 217.txt](<SolutionsToTry/Year 30 - Fill the Floor - speed tie-break fallback at size 217.txt>)
+- Goal: retain the displayed 81 while reducing the size from 218 to
+  **216** (commonnickname's program).
+- Exact edit: two steps go, each standing between a `takefrom mem4`
+  and a `step mem2`: the first `step se` so placed and the last
+  `step ne` so placed.  The fallback deletes only the `step se`.
+- Why they can go: each only places its worker before a `step mem2`,
+  which walks it to the cube it remembers either way.
+- Evidence (2026-11-24): on the game's own code the record completes
+  after 5,120 ticks (81.92 s, the time the table it came from gives),
+  the 216-command program after 5,123 and the fallback after 5,121,
+  and the model agrees to the tick on all three, in every one of 1000
+  plain runs each, with the same item count (156).  Shuffled, the 216
+  wins 771 runs in 1000 against the record's 777.  The margin is thin:
+  82 s begins at 5,125 frames, five past the record itself.
+- Suggested live test: incumbent once as control, then the 216; if it
+  shows 82, the 217; 81-second runs.
 - Result: _not yet tested in the game_.
 
 ### [ ] Year 40 - Printing Etiquette 2 - yifeixuer's speed program at size 93
